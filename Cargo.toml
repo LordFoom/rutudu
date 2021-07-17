@@ -1,0 +1,17 @@
+[package]
+name = "rudu"
+version = "0.1.0"
+authors = ["lordfoom <timothys@soliditech.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sqlite = "0.26.0"
+clap = "3.0.0-beta.2"
+tui = "0.15.0"
+termion = "1.5.6"
+log = "0.4.14"
+simple_logger = "1.11.0"
+regex="1.5.4"
+chrono="0.4.19"

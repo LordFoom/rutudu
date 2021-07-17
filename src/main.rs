@@ -1,0 +1,266 @@
+use std::error::Error;
+
+use chrono::prelude::*;
+use clap::{App, ArgMatches};
+use log::{debug, error, LevelFilter};
+use regex::Regex;
+use simple_logger::SimpleLogger;
+use termion::{clear, raw::IntoRawMode};
+use termion::event::Key;
+use tui::backend::TermionBackend;
+use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::style::{Color, Modifier, Style};
+use tui::Terminal;
+use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph};
+
+use model::InputMode;
+
+use crate::events::{Event, Events};
+use crate::model::{Item, RutuduList};
+use tui::text::{Span, Spans};
+
+mod events;
+mod model;
+
+const DATE_FMT: &str = "%Y%m%d";
+
+fn init() -> ArgMatches {
+    App::new("Rutudu Todo List")
+        .version("1.0")
+        .author("FOOM")
+        .about("Todo List, Terminal style, Rust vibes")
+        .arg("-v, --verbose 'All that info'")
+        .arg("-d, --create-default 'Create rutudu$DATE.db'")
+        .get_matches()
+}
+
+fn init_logger(verbose: bool) {
+    let log_level = if verbose {
+        LevelFilter::Debug
+    } else {
+        LevelFilter::Warn
+    };
+    SimpleLogger::new()
+        .with_level(log_level)
+        .init()
+        .unwrap();
+}
+
+///
+/// This wil read all the 'rutudu*db' file names and return them in result
+///
+fn scan_directory() -> Result<Vec<String>, Box<dyn Error>> {
+    let mut lists = Vec::new();
+    let rx = Regex::new(r"rutudu.*\.db")?;
+    //get the current directory,
+    let current_dir = std::env::current_dir()?;
+    for entry in std::fs::read_dir(current_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        let path_str = path.into_os_string().into_string().unwrap();
+        if rx.is_match(&path_str) {
+            &lists.push(path_str);
+        }
+    }
+    Ok(lists)
+}
+
+///Create "rutuduTODAY.db" file with rutudu_list table where today is %Y%m%d
+fn create_default_rutudu_list() -> Result<String, Box<dyn Error>> {
+    //get the date
+    let today = Utc::today().format(DATE_FMT);
+    debug!("About to create rutudu list rutudu$DATE.db");
+    //create sqlite connection to rutudu$DATE.db
+    let list_name = format!("./rutudu{}.db", today);
+    let connection = sqlite::open(&list_name).unwrap();
+    connection.execute("
+        CREATE TABLE rutudu_list(
+            id INTEGER PRIMARY KEY ASC,
+            parent_id INTEGER,
+            title TEXT NOT NULL,
+            entry TEXT
+        );
+    ")?;
+    //return the rutudu name
+    return Ok(list_name);
+}
+
+/// helper function to create a centered rect using up
+/// certain percentage of the available rect `r`
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+                .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+                .as_ref(),
+        )
+        .split(popup_layout[1])[1]
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let args = init();
+    init_logger(args.is_present("verbose"));
+    //#######
+    //LET'S FIRST GET SOME SIMPLE STRINGS WORKING
+    //get todolists
+    // let mut lists = match scan_directory() {
+    //     Ok(paths) => paths,
+    //     Err(e) => panic!("Unable to scan current directory for paths because {}", e),
+    // };
+    // if lists.is_empty() {
+    //     debug!("No existing rutudu lists found");
+    //     if args.is_present("create-default") {
+    //         match create_default_rutudu_list() {
+    //             Ok(name) => lists.push(name),
+    //             Err(e) => error!("Failed to create default list{}", e),
+    //         }
+    //     }
+    // }
+    // for path in lists {
+    //     debug!("This is the path {}", path);
+    // }
+    //#######
+    //setup the gui display
+    let stdout = match std::io::stdout().into_raw_mode() {
+        Ok(outstream) => outstream,
+        Err(e) => panic!("Couldn't open up the outstream: {}", e),
+    };
+    let backend = TermionBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+    let events = Events::new();
+    // println!("{}", clear::All);
+    //display first/appropriate todolist
+    //display all cell and it's children (recursively)
+    //display add new list
+
+    //like in vim, 2 modes, edit and insert
+    // let mut edit_mode = true;
+    let mut tudu_list = RutuduList::default();
+    // let mut items = [ListItem::new("Item 1"),
+    //     ListItem::new("Item 2"), ListItem::new("Item 3")];
+    loop {
+        terminal.draw(|f| {
+            let b = Block::default()
+                .title("RUTUDU")
+                .borders(Borders::ALL);
+
+            let dispItems = vec![Item::new(String::from("test title"), String::from("test entry")), ];
+
+            // let items = [ListItem::new("Item 1"),
+            //     ListItem::new("Item 2"), ListItem::new("Item 3")];
+
+            let items: Vec<ListItem> = tudu_list.items
+                .iter()
+                .enumerate()
+                .map(|(i, msg)|{
+                    let content = vec![Spans::from(Span::raw(format!("{}: {}", i, msg)))];
+                    ListItem::new(content)
+
+                }).collect();
+                                            // .iter()
+
+
+            let tui_items = List::new(items)
+                .block(Block::default().title("List").borders(Borders::ALL))
+                .style(Style::default().fg(Color::White))
+                .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+                .highlight_symbol(">>");
+
+            let size = f.size();
+            let rect = centered_rect(40, 100, size);
+            f.render_stateful_widget(tui_items, rect, &mut ListState::default());
+
+            match tudu_list.input_mode {
+                InputMode::Insert => {
+                    let input_box = Paragraph::new(tudu_list.current_item.as_ref())
+                        .style(Style::default().fg(Color::Yellow))
+                        .block(Block::default().title("Todo Item").borders(Borders::ALL));
+                    let area = centered_rect(60, 20, size);
+                    f.render_widget(Clear, area); //this clears out the background
+                    f.render_widget(input_box, area);
+                    f.set_cursor(&area.x + 1 as u16, &area.y + 4 as u16)
+                }
+                InputMode::Edit => {}//don't do noooothing
+            }
+        });
+
+        if let Event::Input(input) = events.next()? {
+            match tudu_list.input_mode {
+                InputMode::Edit => match input {
+                    Key::Char('q') => {
+                        println!("{}", clear::All);
+                        break;
+                    }
+                    Key::Char('h') | Key::Left => {
+                        println!("{}", clear::All);
+                        break;
+                    }
+                    Key::Char('j') | Key::Down => {
+                        println!("{}", clear::All);
+                        break;
+                    }
+                    Key::Char('k') | Key::Up => {
+                        println!("{}", clear::All);
+                        break;
+                    }
+                    Key::Char('l') | Key::Right => {
+                        println!("{}", clear::All);
+                        break;
+                    }
+                    Key::Char('a') => {
+                        tudu_list.enter_insert_mode();
+                    }
+
+                    _ => {}
+                },
+                InputMode::Insert => match input {
+                    // Key::Char('A') | Key::Char('B') | Key::Char('C') | Key::Char('D') |
+                    // Key::Char('E') | Key::Char('F') | Key::Char('G') | Key::Char('H') |
+                    // Key::Char('I') | Key::Char('J') | Key::Char('K') | Key::Char('L') |
+                    // Key::Char('M') | Key::Char('N') | Key::Char('O') | Key::Char('P') |
+                    // Key::Char('Q') | Key::Char('R') | Key::Char('S') | Key::Char('T') |
+                    // Key::Char('U') | Key::Char('V') | Key::Char('X') | Key::Char('Y') |
+                    // Key::Char('Z') => tudu_list.current_item.push(&input),
+
+                    // Key::Char(key) => match key {
+
+                    Key::Char('\n') => {
+                        tudu_list.items.push(tudu_list.current_item.drain(..).collect());
+                        tudu_list.enter_edit_mode();
+                    }
+                    Key::Char(c) => tudu_list.current_item.push(c),
+                    // },
+                    // //insert mode
+                    // Key::Char('i') => {
+                    //     println!("Into insert mode!", );
+                    //     //how the heck do we accept text input? We'll work it out...somehow! Byte arrays gonna come into it no doubt
+                    // },
+                    Key::Esc => {
+                        println!("Back to edit mode!");
+                        tudu_list.enter_edit_mode();
+                    }
+                    _ => {}
+                }
+            }
+        };
+    };
+
+    Ok(())
+}
+
