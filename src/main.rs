@@ -18,6 +18,7 @@ use model::InputMode;
 use crate::events::{Event, Events};
 use crate::model::{Item, RutuduList};
 use tui::text::{Span, Spans};
+use unicode_width::UnicodeWidthStr;
 
 mod events;
 mod model;
@@ -160,18 +161,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .title("RUTUDU")
                 .borders(Borders::ALL);
 
-            let dispItems = vec![Item::new(String::from("test title"), String::from("test entry")), ];
-
-            // let items = [ListItem::new("Item 1"),
-            //     ListItem::new("Item 2"), ListItem::new("Item 3")];
 
             let items: Vec<ListItem> = tudu_list.items
+                .items
                 .iter()
                 .enumerate()
                 .map(|(i, msg)|{
                     let content = vec![Spans::from(Span::raw(format!("{}: {}", i, msg)))];
                     ListItem::new(content)
-
                 }).collect();
                                             // .iter()
 
@@ -184,17 +181,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             let size = f.size();
             let rect = centered_rect(40, 100, size);
-            f.render_stateful_widget(tui_items, rect, &mut ListState::default());
+
+            f.render_stateful_widget(tui_items, rect, &mut tudu_list.items.state);
 
             match tudu_list.input_mode {
                 InputMode::Insert => {
                     let input_box = Paragraph::new(tudu_list.current_item.as_ref())
                         .style(Style::default().fg(Color::Yellow))
                         .block(Block::default().title("Todo Item").borders(Borders::ALL));
+                    // let input_box_rect = Rect::new(rect.x + 20, rect.y + 20, 150, 16);
                     let area = centered_rect(60, 20, size);
                     f.render_widget(Clear, area); //this clears out the background
                     f.render_widget(input_box, area);
-                    f.set_cursor(&area.x + 1 as u16, &area.y + 4 as u16)
+                    f.set_cursor(&area.x +tudu_list.current_item.width()  as u16+ 1, area.y  as u16+ 1)
                 }
                 InputMode::Edit => {}//don't do noooothing
             }
@@ -212,12 +211,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                         break;
                     }
                     Key::Char('j') | Key::Down => {
-                        println!("{}", clear::All);
-                        break;
+                        tudu_list.down();
                     }
                     Key::Char('k') | Key::Up => {
-                        println!("{}", clear::All);
-                        break;
+                        tudu_list.up();
                     }
                     Key::Char('l') | Key::Right => {
                         println!("{}", clear::All);
@@ -241,9 +238,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                     // Key::Char(key) => match key {
 
                     Key::Char('\n') => {
-                        tudu_list.items.push(tudu_list.current_item.drain(..).collect());
+                        tudu_list.items.items.push(tudu_list.current_item.drain(..).collect());
                         tudu_list.enter_edit_mode();
-                    }
+                    },
+                    Key::Backspace => {
+                        tudu_list.current_item.pop();
+                        ()
+                    },
                     Key::Char(c) => tudu_list.current_item.push(c),
                     // },
                     // //insert mode
