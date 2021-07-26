@@ -1,21 +1,33 @@
 use tui::widgets::ListState;
 
+pub enum ItemStatus{
+    Undone,
+    Done,
+}
 ///Represent items on the todo list
 pub struct Item {
     pub title: String,
     pub entry: String,
+    pub status: ItemStatus,
     ///if None, this is on the root level
     pub parent: Box<Option<Item>>,
+    pub expand: bool,
 }
 
 impl Item {
+
+    // pub fn new(title:String)->{
+    //     Item{title, entry, status: ItemStatus::Undone, parent: Box::new(None)}
+    // }
+
     ///root constructor, no parent
     pub fn new(title: String, entry: String) -> Item {
-        Item { title, entry, parent: Box::new(None) }
+        // Item { title, entry, parent: Box::new(None) }
+        Item{title, entry, status: ItemStatus::Undone, parent: Box::new(None), expand:false}
     }
     ///yep, has a parent but may not be leaf
     pub fn new_child(title: String, entry: String, parent: Item) -> Item {
-        Item { title, entry, parent: Box::new(Some(parent)) }
+        Item { title, entry, status: ItemStatus::Undone, parent: Box::new(Some(parent)), expand:false }
     }
 }
 
@@ -78,28 +90,26 @@ pub enum InputMode {
 }
 
 pub struct RutuduList {
-    ///current value of the input box
-    pub input: String,
     ///what mode are we in?
     pub input_mode: InputMode,
     ///start with strings, advance to items
     // pub items:Vec<String>,
 
-    pub items: StatefulList<String>,
+    pub items: StatefulList<Item>,
 
     pub current_item: String,
-    //todo items
-    // items:Vec<Item>
+    /// This is the x,y of the cursor
+    pub cursor_position: [i32;2],
 }
 
 ///New todolist out of nuffink
 impl Default for RutuduList {
     fn default() -> Self {
         RutuduList {
-            input: String::new(),
             input_mode: InputMode::Edit,
             items: StatefulList::new(),
             current_item: "".to_string(),
+            cursor_position: [ 0,0 ],
         }
     }
 }
@@ -117,5 +127,26 @@ impl RutuduList {
 
     pub fn up(&mut self){
         self.items.previous();
+    }
+
+    pub fn right(&mut self){
+        if let Some(i) = self.items.state.selected(){
+            self.items.items[i].expand = true;
+        }
+    }
+
+    pub fn left(&mut self){
+        if let Some(i) = self.items.state.selected(){
+            self.items.items[i].expand = false;
+        }
+    }
+
+    pub fn get_current_input_as_item(&mut self) ->Item{
+        let mut entry:String = self.current_item.drain(..).collect();
+        //split by newlines
+        let first_new_line = entry.find("\n").unwrap_or(entry.len());
+        let title = entry.drain(..first_new_line).collect();
+        // content
+        Item{title, entry, expand: false, parent: Box::new(None), status: ItemStatus::Undone}
     }
 }

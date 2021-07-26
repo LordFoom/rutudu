@@ -167,17 +167,18 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .iter()
                 .enumerate()
                 .map(|(i, msg)|{
-                    let content = vec![Spans::from(Span::raw(format!("{}: {}", i, msg)))];
+                    let content = vec![Spans::from(Span::raw(format!("{}: {}", i, msg.title)))];
                     ListItem::new(content)
                 }).collect();
                                             // .iter()
 
 
             let tui_items = List::new(items)
-                .block(Block::default().title("List").borders(Borders::ALL))
+                .block(Block::default().title("Rutudu").borders(Borders::ALL))
                 .style(Style::default().fg(Color::White))
-                .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+                .highlight_style(Style::default().add_modifier(Modifier::BOLD).fg(Color::Cyan))
                 .highlight_symbol(">>");
+
 
             let size = f.size();
             let rect = centered_rect(40, 100, size);
@@ -237,8 +238,17 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                     // Key::Char(key) => match key {
 
-                    Key::Char('\n') => {
-                        tudu_list.items.items.push(tudu_list.current_item.drain(..).collect());
+                    //what's a better key combo? ctrl+[ does weird things...
+                    //terminal doesn't support ctrl+\n
+                    Key::Ctrl('n') => {
+                    //     Key::Ctrl('[') => {//this did not work, does escape, like vim
+                        //TODO split this into title and entry
+                        // let title = tudu_list.current_item.drain(..).collect();
+                        // //this should be everything from 2nd line onward
+                        // let entry =  String::new();
+                        // let item = Item::new(title, entry);
+                        let item = tudu_list.get_current_input_as_item();
+                        tudu_list.items.items.push(item);
                         tudu_list.enter_edit_mode();
                     },
                     Key::Backspace => {
@@ -256,6 +266,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                         println!("Back to edit mode!");
                         tudu_list.enter_edit_mode();
                     }
+                    // Key::Char(c) => {println!("{}", c)}
+                    Key::Ctrl(c) => {println!("{}", c)}
                     _ => {}
                 }
             }
@@ -264,4 +276,3 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
