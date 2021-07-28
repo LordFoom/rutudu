@@ -194,7 +194,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                     let area = centered_rect(60, 20, size);
                     f.render_widget(Clear, area); //this clears out the background
                     f.render_widget(input_box, area);
-                    f.set_cursor(&area.x +tudu_list.current_item.width()  as u16+ 1, area.y  as u16+ 1)
+
+                    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0], area.y  as u16+ tudu_list.cursor_position[1]);
+                    // f.set_cursor(&area.x +tudu_list.current_item.width()  as u16+ tudu_list.cursor_position[0], area.y  as u16+ tudu_list.cursor_position[1])
                 }
                 InputMode::Edit => {}//don't do noooothing
             }
@@ -255,7 +257,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         tudu_list.current_item.pop();
                         ()
                     },
-                    Key::Char(c) => tudu_list.current_item.push(c),
+                    Key::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
                     // },
                     // //insert mode
                     // Key::Char('i') => {

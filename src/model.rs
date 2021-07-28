@@ -99,7 +99,7 @@ pub struct RutuduList {
 
     pub current_item: String,
     /// This is the x,y of the cursor
-    pub cursor_position: [i32;2],
+    pub cursor_position: [u16;2],
 }
 
 ///New todolist out of nuffink
@@ -109,7 +109,7 @@ impl Default for RutuduList {
             input_mode: InputMode::Edit,
             items: StatefulList::new(),
             current_item: "".to_string(),
-            cursor_position: [ 0,0 ],
+            cursor_position: [ 1,1 ],
         }
     }
 }
@@ -149,4 +149,19 @@ impl RutuduList {
         // content
         Item{title, entry, expand: false, parent: Box::new(None), status: ItemStatus::Undone}
     }
+
+    ///Add character to current input
+    /// while keeping track of the cursor
+    pub fn add_character(&mut self, c:char){
+        self.current_item.push(c);
+        if c == '\n'{
+            // print!("Hello");
+            self.cursor_position[0] = 1;
+            self.cursor_position[1] = self.cursor_position[1]+1;
+        }else{
+            // print!("Goodbye");
+            self.cursor_position[0]= self.cursor_position[0]+1;
+        }
+    }
+
 }
