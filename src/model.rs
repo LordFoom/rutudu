@@ -154,13 +154,36 @@ impl RutuduList {
     /// while keeping track of the cursor
     pub fn add_character(&mut self, c:char){
         self.current_item.push(c);
-        if c == '\n'{
-            // print!("Hello");
+        if c == '\n'{ //newline!
             self.cursor_position[0] = 1;
             self.cursor_position[1] = self.cursor_position[1]+1;
         }else{
             // print!("Goodbye");
             self.cursor_position[0]= self.cursor_position[0]+1;
+        }
+    }
+
+    pub fn remove_character(&mut self){
+        //do nothing if current_item is zero length
+        if self.current_item.len()==0{
+            return ();
+        }
+        let c = self.current_item.pop().unwrap_or('\0');
+        if c == '\n' {//deleted a new line!
+            //reduce y by 1
+            self.cursor_position[1]=self.cursor_position[1]-1;
+            //we need the len of this line.....!
+            let mut line_len = 0;
+            //find out length of line we are at the end of
+            match self.current_item.rfind('\n') {
+                None => line_len = self.current_item.len(),
+                Some(nli) => line_len = self.current_item.len() - nli,
+            }
+            //put cursor at end of line
+            self.cursor_position[0]=line_len as u16;
+        }else{
+            //reduce x by 1
+            self.cursor_position[0]=self.cursor_position[0]-1;
         }
     }
 
