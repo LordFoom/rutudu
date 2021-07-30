@@ -116,8 +116,10 @@ impl Default for RutuduList {
 
 impl RutuduList {
     pub fn enter_edit_mode(&mut self) {
+        self.cursor_position = [1, 1];
         self.input_mode = InputMode::Edit;
     }
+
     pub fn enter_insert_mode(&mut self) {
         self.input_mode = InputMode::Insert;
     }
