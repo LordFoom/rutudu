@@ -124,12 +124,12 @@ impl RutuduList {
 
     pub fn close_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
-        self.items.items[i].expand = true;
+        self.items.items[i].expand = false;
     }
 
     pub fn open_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
-        self.items.items[i].expand = false;
+        self.items.items[i].expand = true;
     }
 
     pub fn down(&mut self){
