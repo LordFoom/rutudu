@@ -121,8 +121,19 @@ impl RutuduList {
     pub fn enter_insert_mode(&mut self) {
         self.input_mode = InputMode::Insert;
     }
+
+    pub fn close_selected(&mut self){
+        let i = self.items.state.selected().unwrap_or(0);
+        self.items.items[i].expand = true;
+    }
+
+    pub fn open_selected(&mut self){
+        let i = self.items.state.selected().unwrap_or(0);
+        self.items.items[i].expand = false;
+    }
+
     pub fn down(&mut self){
-       self.items.next();
+        self.items.next();
     }
 
     pub fn up(&mut self){

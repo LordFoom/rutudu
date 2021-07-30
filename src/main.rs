@@ -167,7 +167,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .iter()
                 .enumerate()
                 .map(|(i, msg)|{
-                    let content = vec![Spans::from(Span::raw(format!("{}: {}", i, msg.title)))];
+                    let mut content = vec![Spans::from(Span::raw(format!("{}: {}", i+1, msg.title)))];
+                    if msg.expand{
+                        content.push(Spans::from(Span::raw(format!("{}", msg.entry))));
+                    }
                     ListItem::new(content)
                 }).collect();
                                             // .iter()
@@ -210,8 +213,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         break;
                     }
                     Key::Char('h') | Key::Left => {
-                        println!("{}", clear::All);
-                        break;
+                        tudu_list.close_selected();
                     }
                     Key::Char('j') | Key::Down => {
                         tudu_list.down();
@@ -220,8 +222,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                         tudu_list.up();
                     }
                     Key::Char('l') | Key::Right => {
-                        println!("{}", clear::All);
-                        break;
+                        tudu_list.open_selected();
+                        // println!("{}", clear::All);
+                        // break;
                     }
                     Key::Char('a') => {
                         tudu_list.enter_insert_mode();
