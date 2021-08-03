@@ -1,4 +1,5 @@
-use tui::widgets::ListState;
+use tui::text::{Span, Spans};
+use tui::widgets::{ListItem, ListState};
 
 pub enum ItemStatus{
     Undone,
@@ -28,6 +29,25 @@ impl Item {
     ///yep, has a parent but may not be leaf
     pub fn new_child(title: String, entry: String, parent: Item) -> Item {
         Item { title, entry, status: ItemStatus::Undone, parent: Box::new(Some(parent)), expand:false }
+    }
+
+    ///Symbol to indicate if item is expanded or collapsed
+    pub fn expansion_state_symbol(&self)->String{
+        if self.expand{
+            String::from("[-]")
+        }else{
+            String::from("[+]")
+        }
+    }
+
+    ///Return the item as text, either just the title,
+    /// or the title and the entry, depending on expand status
+    pub fn text(&self, item_no:usize) -> Vec<Spans> {
+        let mut content = vec![Spans::from(Span::raw(format!("{}: {} {}", &item_no, &self.expansion_state_symbol(), self.title)))];
+        if (self.expand){
+           content.push(Spans::from(Span::raw(format!("    {}", self.entry))));
+        }
+        content
     }
 }
 
@@ -100,6 +120,8 @@ pub struct RutuduList {
     pub current_item: String,
     /// This is the x,y of the cursor
     pub cursor_position: [u16;2],
+
+
 }
 
 ///New todolist out of nuffink
@@ -132,6 +154,58 @@ impl RutuduList {
     pub fn open_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
         self.items.items[i].expand = true;
+    }
+
+    // pub fn get_item_list<'a>(&self, items: &'a StatefulList<Item>) ->&'a Vec<ListItem> {
+    //     // let lst_items = items
+    //     //             .items
+    //     //             .iter()
+    //     //             .enumerate()
+    //     //             .map(|(i, msg)| {
+    //     //                 let content = msg.text(i);
+    //     //                 ListItem::new(content)
+    //     //             }).collect();
+    //     //
+    //     // Box::new(lst_items)
+    //
+    //
+    //      items.items
+    //                 .iter()
+    //                 .enumerate()
+    //                 .map(|(i, msg)| {
+    //                     let content = msg.text(i);
+    //                     ListItem::new(content)
+    //                 }).collect()
+    //
+    //
+    // }
+
+
+    pub fn items_as_vec(&self)->Vec<ListItem>{
+        let item_ref = &self.items;
+            item_ref
+            .items
+            .iter()
+            .enumerate()
+            .map(|(i, msg)| {
+                // let mut content = vec![Spans::from(Span::raw(format!("{}: {} {}", i+1, collapse_state_symbol, &msg.title)))];
+                // if msg.expand{
+                //     content.push(Spans::from(Span::raw(format!("{}", msg.entry))));
+                // }
+
+                let mut content = msg.text(i);
+                ListItem::new(content)
+            }).collect()
+        // self.items
+        //     .items
+        //     .iter()
+        //     .enumerate()
+        //     .map(|(i, msg)|{
+        //     {
+        //         let content = msg.text(i);
+        //         ListItem::new(content);
+        //     }
+        // }).collect()
     }
 
     pub fn down(&mut self){

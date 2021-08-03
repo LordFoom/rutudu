@@ -114,6 +114,8 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1]
 }
 
+// fun make_vec_for_lest(items: )
+
 fn main() -> Result<(), Box<dyn Error>> {
     let args = init();
     init_logger(args.is_present("verbose"));
@@ -161,32 +163,33 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .title("RUTUDU")
                 .borders(Borders::ALL);
 
-
-            let items: Vec<ListItem> = tudu_list.items
-                .items
-                .iter()
-                .enumerate()
-                .map(|(i, msg)|{
-                    let mut content = vec![Spans::from(Span::raw(format!("{}: {}", i+1, msg.title)))];
-                    if msg.expand{
-                        content.push(Spans::from(Span::raw(format!("{}", msg.entry))));
-                    }
-                    ListItem::new(content)
-                }).collect();
-                                            // .iter()
-
-
+            // let items: Vec<ListItem> = tudu_list.items
+            //                                     .items
+            //                                     .iter()
+            //                                     .enumerate()
+            //                                     .map(|(i, msg)|{
+            //                                         // let mut content = vec![Spans::from(Span::raw(format!("{}: {} {}", i+1, collapse_state_symbol, &msg.title)))];
+            //                                         // if msg.expand{
+            //                                         //     content.push(Spans::from(Span::raw(format!("{}", msg.entry))));
+            //                                         // }
+            //
+            //                                         let mut content = msg.text(i);
+            //                                         ListItem::new(content)
+            //                                     }).collect();
+            // let mut items:Vec<ListItem> = tudu_list.get_item_list(&tudu_list.items).to_vec();
+            let mut lst_state = tudu_list.items.state.clone();
+            let mut items:Vec<ListItem> = tudu_list.items_as_vec();
             let tui_items = List::new(items)
                 .block(Block::default().title("Rutudu").borders(Borders::ALL))
                 .style(Style::default().fg(Color::White))
                 .highlight_style(Style::default().add_modifier(Modifier::BOLD).fg(Color::Cyan))
-                .highlight_symbol(">>");
+                .highlight_symbol(">");
 
 
             let size = f.size();
             let rect = centered_rect(40, 100, size);
 
-            f.render_stateful_widget(tui_items, rect, &mut tudu_list.items.state);
+            f.render_stateful_widget(tui_items, rect, &mut lst_state);
 
             match tudu_list.input_mode {
                 InputMode::Insert => {
