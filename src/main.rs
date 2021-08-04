@@ -157,26 +157,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut tudu_list = RutuduList::default();
     // let mut items = [ListItem::new("Item 1"),
     //     ListItem::new("Item 2"), ListItem::new("Item 3")];
+    let mut show_quit_dialog = false;
     loop {
         terminal.draw(|f| {
-            let b = Block::default()
-                .title("RUTUDU")
-                .borders(Borders::ALL);
 
-            // let items: Vec<ListItem> = tudu_list.items
-            //                                     .items
-            //                                     .iter()
-            //                                     .enumerate()
-            //                                     .map(|(i, msg)|{
-            //                                         // let mut content = vec![Spans::from(Span::raw(format!("{}: {} {}", i+1, collapse_state_symbol, &msg.title)))];
-            //                                         // if msg.expand{
-            //                                         //     content.push(Spans::from(Span::raw(format!("{}", msg.entry))));
-            //                                         // }
-            //
-            //                                         let mut content = msg.text(i);
-            //                                         ListItem::new(content)
-            //                                     }).collect();
-            // let mut items:Vec<ListItem> = tudu_list.get_item_list(&tudu_list.items).to_vec();
             let mut lst_state = tudu_list.items.state.clone();
             let mut items:Vec<ListItem> = tudu_list.items_as_vec();
             let tui_items = List::new(items)
@@ -203,8 +187,25 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                     f.set_cursor(area.x as u16 + tudu_list.cursor_position[0], area.y  as u16+ tudu_list.cursor_position[1]);
                     // f.set_cursor(&area.x +tudu_list.current_item.width()  as u16+ tudu_list.cursor_position[0], area.y  as u16+ tudu_list.cursor_position[1])
+
+
                 }
-                InputMode::Edit => {}//don't do noooothing
+                InputMode::Edit => {
+
+                    if show_quit_dialog{
+                        let block = Block::default()
+                            .title("Quit?")
+                            .borders(Borders::ALL);
+                        let quit_text = Paragraph::new("Really quit?")
+                            .style(Style::default().fg(Color::Cyan))
+                            .block(block);
+                        let button_text = Paragraph::new("[Y][N]")
+                            .style(Style::default().fg(Color::Cyan));
+                        let area = centered_rect(5, 10, size);
+                        f.render_widget(Clear, area);
+                        f.render_widget(quit_text, area);
+                    };
+                }
             }
         });
 
@@ -212,7 +213,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             match tudu_list.input_mode {
                 InputMode::Edit => match input {
                     Key::Char('q') => {
-                        println!("{}", clear::All);
+                        show_quit_dialog = true;
+                    }
+                    Key::Char('x') => {
+                         println!("{}", clear::All);
                         break;
                     }
                     Key::Char('h') | Key::Left => {
@@ -236,16 +240,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                     _ => {}
                 },
                 InputMode::Insert => match input {
-                    // Key::Char('A') | Key::Char('B') | Key::Char('C') | Key::Char('D') |
-                    // Key::Char('E') | Key::Char('F') | Key::Char('G') | Key::Char('H') |
-                    // Key::Char('I') | Key::Char('J') | Key::Char('K') | Key::Char('L') |
-                    // Key::Char('M') | Key::Char('N') | Key::Char('O') | Key::Char('P') |
-                    // Key::Char('Q') | Key::Char('R') | Key::Char('S') | Key::Char('T') |
-                    // Key::Char('U') | Key::Char('V') | Key::Char('X') | Key::Char('Y') |
-                    // Key::Char('Z') => tudu_list.current_item.push(&input),
-
-                    // Key::Char(key) => match key {
-
                     //what's a better key combo? ctrl+[ does weird things...
                     //terminal doesn't support ctrl+\n
                     Key::Ctrl('n') => {
