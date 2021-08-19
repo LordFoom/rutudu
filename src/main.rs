@@ -10,7 +10,7 @@ use termion::event::Key;
 use tui::backend::TermionBackend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
-use tui::Terminal;
+use tui::{Terminal, Frame};
 use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph};
 
 use model::InputMode;
@@ -19,6 +19,8 @@ use crate::events::{Event, Events};
 use crate::model::{Item, RutuduList};
 use tui::text::{Span, Spans};
 use unicode_width::UnicodeWidthStr;
+use termion::raw::RawTerminal;
+use std::io::Stdout;
 
 mod events;
 mod model;
@@ -191,19 +193,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                 }
                 InputMode::Edit => {
-
                     if show_quit_dialog{
-                        let block = Block::default()
-                            .title("Quit?")
-                            .borders(Borders::ALL);
-                        let quit_text = Paragraph::new("Really quit?")
-                            .style(Style::default().fg(Color::Cyan))
-                            .block(block);
-                        let button_text = Paragraph::new("[Y][N]")
-                            .style(Style::default().fg(Color::Cyan));
-                        let area = centered_rect(5, 10, size);
-                        f.render_widget(Clear, area);
-                        f.render_widget(quit_text, area);
+                        draw_quit_dialog(f, size);
                     };
                 }
             }
@@ -216,8 +207,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                         show_quit_dialog = true;
                     }
                     Key::Char('x') => {
-                         println!("{}", clear::All);
-                        break;
+                        tudu_list.toggle_selected_status();//println!("{}", clear::All);
+                        // break;
                     }
                     Key::Char('h') | Key::Left => {
                         tudu_list.close_selected();
@@ -236,7 +227,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('a') => {
                         tudu_list.enter_insert_mode();
                     }
+                    Key::Char('y') => if show_quit_dialog {
+                        println!("{}", clear::All);
+                        break;
+                    }
 
+                    Key::Char('n') => if show_quit_dialog {
+                        show_quit_dialog = false;
+                    }
                     _ => {}
                 },
                 InputMode::Insert => match input {
@@ -274,4 +272,26 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     Ok(())
+}
+
+fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>, size: Rect) {
+    let quit_text = Paragraph::new("Really quit?")
+        .style(Style::default().fg(Color::Cyan))
+        .block(Block::default().borders(Borders::ALL));
+    let button_text = Paragraph::new("[Y][N]")
+        .style(Style::default().fg(Color::Cyan))
+        .block(Block::default().borders(Borders::ALL));
+    let area = centered_rect(10, 16, size);
+    let quit_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(1)
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Length(1),
+        ].as_ref())
+        .split(area);
+
+    f.render_widget(Clear, area);
+    f.render_widget(quit_text, quit_chunks[0]);
+    f.render_widget(button_text, quit_chunks[1]);
 }

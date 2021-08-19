@@ -1,5 +1,6 @@
 use tui::text::{Span, Spans};
 use tui::widgets::{ListItem, ListState};
+use tui::style::{Style, Modifier};
 
 pub enum ItemStatus{
     Undone,
@@ -9,10 +10,10 @@ pub enum ItemStatus{
 pub struct Item {
     pub title: String,
     pub entry: String,
-    pub status: ItemStatus,
     ///if None, this is on the root level
     pub parent: Box<Option<Item>>,
     pub expand: bool,
+    pub complete: bool,
 }
 
 impl Item {
@@ -24,11 +25,11 @@ impl Item {
     ///root constructor, no parent
     pub fn new(title: String, entry: String) -> Item {
         // Item { title, entry, parent: Box::new(None) }
-        Item{title, entry, status: ItemStatus::Undone, parent: Box::new(None), expand:false}
+        Item{title, entry, parent: Box::new(None), expand:false, complete:false, }
     }
     ///yep, has a parent but may not be leaf
     pub fn new_child(title: String, entry: String, parent: Item) -> Item {
-        Item { title, entry, status: ItemStatus::Undone, parent: Box::new(Some(parent)), expand:false }
+        Item { title, entry, parent: Box::new(Some(parent)), expand:false, complete:false, }
     }
 
     ///Symbol to indicate if item is expanded or collapsed
@@ -43,8 +44,16 @@ impl Item {
     ///Return the item as text, either just the title,
     /// or the title and the entry, depending on expand status
     pub fn text(&self, item_no:usize) -> Vec<Spans> {
-        let mut content = vec![Spans::from(Span::raw(format!("{}: {} {}", &item_no, &self.expansion_state_symbol(), self.title)))];
-        if (self.expand){
+        let mut modifier = Modifier::empty();
+        if self.complete {
+            modifier = Modifier::CROSSED_OUT;
+        }
+        let mut content = vec![Spans::from(
+            Span::styled(format!("{}: {} {}",
+                              &item_no, &self.expansion_state_symbol(), self.title),
+            Style::default().add_modifier(modifier)))];
+        //show our expanded content if need be
+        if self.expand {
            content.push(Spans::from(Span::raw(format!("    {}", self.entry))));
         }
         content
@@ -156,6 +165,11 @@ impl RutuduList {
         self.items.items[i].expand = true;
     }
 
+    pub fn toggle_selected_status(&mut self){
+        let i = self.items.state.selected().unwrap_or(0);
+        self.items.items[i].complete = !self.items.items[i].complete;
+    }
+
     // pub fn get_item_list<'a>(&self, items: &'a StatefulList<Item>) ->&'a Vec<ListItem> {
     //     // let lst_items = items
     //     //             .items
@@ -234,7 +248,7 @@ impl RutuduList {
         let first_new_line = entry.find("\n").unwrap_or(entry.len());
         let title = entry.drain(..first_new_line).collect();
         // content
-        Item{title, entry, expand: false, parent: Box::new(None), status: ItemStatus::Undone}
+        Item{title, entry, expand: false, parent: Box::new(None), complete: false}
     }
 
     ///Add character to current input
