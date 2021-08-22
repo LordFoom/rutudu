@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::io::Stdout;
 
 use chrono::prelude::*;
 use clap::{App, ArgMatches};
@@ -7,20 +8,19 @@ use regex::Regex;
 use simple_logger::SimpleLogger;
 use termion::{clear, raw::IntoRawMode};
 use termion::event::Key;
+use termion::raw::RawTerminal;
+use tui::{Frame, Terminal};
 use tui::backend::TermionBackend;
-use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::layout::{Constraint, Direction, Layout, Rect, Alignment};
 use tui::style::{Color, Modifier, Style};
-use tui::{Terminal, Frame};
-use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph};
+use tui::text::{Span, Spans};
+use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, BorderType};
+use unicode_width::UnicodeWidthStr;
 
 use model::InputMode;
 
 use crate::events::{Event, Events};
 use crate::model::{Item, RutuduList};
-use tui::text::{Span, Spans};
-use unicode_width::UnicodeWidthStr;
-use termion::raw::RawTerminal;
-use std::io::Stdout;
 
 mod events;
 mod model;
@@ -162,9 +162,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut show_quit_dialog = false;
     loop {
         terminal.draw(|f| {
-
             let mut lst_state = tudu_list.items.state.clone();
-            let mut items:Vec<ListItem> = tudu_list.items_as_vec();
+            let mut items: Vec<ListItem> = tudu_list.items_as_vec();
             let tui_items = List::new(items)
                 .block(Block::default().title("Rutudu").borders(Borders::ALL))
                 .style(Style::default().fg(Color::White))
@@ -173,9 +172,57 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 
             let size = f.size();
+            //split into 3
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(3),
+                    Constraint::Min(2),
+                    Constraint::Length(3),
+                ].as_ref() )
+                .split(size);
+
+            let mnemonics_text = ["Add", "X-out", "Save", "Quit", ];
+            let mnemonics:Vec<Span> = mnemonics_text
+                .iter()
+                .cloned()
+                .flat_map(|t| {
+                    let (first, rest) = t.split_at(1);
+                        vec![
+                            Span::styled(" [", Style::default().fg(Color::Yellow)),
+                            Span::styled( first, Style::default().fg(Color::Yellow).add_modifier(Modifier::UNDERLINED)),
+                            Span::styled("]", Style::default().fg(Color::Yellow)),
+                            Span::styled(rest, Style::default().fg(Color::LightYellow)),
+                        ]
+                }).collect();
+
+            let menu = Spans::from(mnemonics);
+            // let menu_titles = ["Home", "Pets", "Add", "Delete", "Quit"];
+            // let menu:Vec<Spans> = menu_titles
+            //     .iter()
+            //     .cloned()
+            //     .map(|t| {
+            //         let (first, rest) = t.split_at(1);
+            //         Spans::from(vec![
+            //             Span::styled( first, Style::default() .fg(Color::Yellow) .add_modifier(Modifier::UNDERLINED) ),
+            //             Span::styled(rest, Style::default().fg(Color::White)),
+            //         ])
+            //     })
+            //     .collect();
+            let bottom_text = Paragraph::new(menu)
+                .style(Style::default().fg(Color::Cyan))
+                .alignment(Alignment::Center)
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .style(Style::default().fg(Color::LightGreen))
+                        .title("[M]nemonics")
+                        .border_type(BorderType::Double), );
             let rect = centered_rect(40, 100, size);
 
-            f.render_stateful_widget(tui_items, rect, &mut lst_state);
+            f.render_stateful_widget(tui_items, chunks[1], &mut lst_state);
+
+            f.render_widget(bottom_text, chunks[2]);
 
             match tudu_list.input_mode {
                 InputMode::Insert => {
@@ -187,13 +234,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                     f.render_widget(Clear, area); //this clears out the background
                     f.render_widget(input_box, area);
 
-                    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0], area.y  as u16+ tudu_list.cursor_position[1]);
+                    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0], area.y as u16 + tudu_list.cursor_position[1]);
                     // f.set_cursor(&area.x +tudu_list.current_item.width()  as u16+ tudu_list.cursor_position[0], area.y  as u16+ tudu_list.cursor_position[1])
-
-
                 }
                 InputMode::Edit => {
-                    if show_quit_dialog{
+                    if show_quit_dialog {
                         draw_quit_dialog(f, size);
                     };
                 }
@@ -241,7 +286,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     //what's a better key combo? ctrl+[ does weird things...
                     //terminal doesn't support ctrl+\n
                     Key::Ctrl('n') => {
-                    //     Key::Ctrl('[') => {//this did not work, does escape, like vim
+                        //     Key::Ctrl('[') => {//this did not work, does escape, like vim
                         //TODO split this into title and entry
                         // let title = tudu_list.current_item.drain(..).collect();
                         // //this should be everything from 2nd line onward
@@ -250,7 +295,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         let item = tudu_list.get_current_input_as_item();
                         tudu_list.items.items.push(item);
                         tudu_list.enter_edit_mode();
-                    },
+                    }
                     Key::Backspace => tudu_list.remove_character(),
                     Key::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
                     // },
@@ -264,7 +309,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         tudu_list.enter_edit_mode();
                     }
                     // Key::Char(c) => {println!("{}", c)}
-                    Key::Ctrl(c) => {println!("{}", c)}
+                    Key::Ctrl(c) => { println!("{}", c) }
                     _ => {}
                 }
             }
