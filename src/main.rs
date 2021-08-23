@@ -96,12 +96,10 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .constraints(
             [
                 Constraint::Percentage((100 - percent_y) / 2),
-                Constraint::Percentage(percent_y),
+                Constraint::Min(percent_y),
                 Constraint::Percentage((100 - percent_y) / 2),
-            ]
-                .as_ref(),
-        )
-        .split(r);
+            ].as_ref(),
+        ).split(r);
 
     Layout::default()
         .direction(Direction::Horizontal)
@@ -110,10 +108,34 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
                 Constraint::Percentage((100 - percent_x) / 2),
                 Constraint::Percentage(percent_x),
                 Constraint::Percentage((100 - percent_x) / 2),
-            ]
-                .as_ref(),
+            ].as_ref(),
         )
         .split(popup_layout[1])[1]
+}
+
+///For little popups we want to display in the middle of the screen, eg quit, etc
+fn little_popup(min_horizontal:u16, min_vertical:u16, r:Rect) -> Rect {
+    let v = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage(30),
+                Constraint::Min(min_vertical),
+                Constraint::Percentage(70),
+            ].as_ref(),
+        ).split(r);
+
+    //now we split the middle vertical one into three and return the middle one of that!
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage(40),
+                Constraint::Min(min_horizontal),
+                Constraint::Percentage(60),
+            ].as_ref(),
+        ).split(v[1])[1]
+
 }
 
 // fun make_vec_for_lest(items: )
@@ -160,6 +182,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // let mut items = [ListItem::new("Item 1"),
     //     ListItem::new("Item 2"), ListItem::new("Item 3")];
     let mut show_quit_dialog = false;
+    let mut show_save_dialog = false;
     loop {
         terminal.draw(|f| {
             let mut lst_state = tudu_list.items.state.clone();
@@ -209,6 +232,12 @@ fn main() -> Result<(), Box<dyn Error>> {
             //         ])
             //     })
             //     .collect();
+            let top_text = Paragraph::new(Spans::from(Span::styled("R U T U D U",
+                                                                   Style::default()
+                                                                       .fg(Color::LightCyan)
+                                                                       .add_modifier(Modifier::BOLD))));
+
+            f.render_widget(top_text, chunks[0]);
             let bottom_text = Paragraph::new(menu)
                 .style(Style::default().fg(Color::Cyan))
                 .alignment(Alignment::Center)
@@ -218,7 +247,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                         .style(Style::default().fg(Color::LightGreen))
                         .title("[M]nemonics")
                         .border_type(BorderType::Double), );
-            let rect = centered_rect(40, 100, size);
 
             f.render_stateful_widget(tui_items, chunks[1], &mut lst_state);
 
@@ -251,6 +279,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('q') => {
                         show_quit_dialog = true;
                     }
+
+
+                    Key::Char('s') => {
+                        show_save_dialog = true;
+                    }
+
                     Key::Char('x') => {
                         tudu_list.toggle_selected_status();//println!("{}", clear::All);
                         // break;
@@ -280,6 +314,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('n') => if show_quit_dialog {
                         show_quit_dialog = false;
                     }
+
                     _ => {}
                 },
                 InputMode::Insert => match input {
@@ -319,24 +354,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>, size: Rect) {
-    let quit_text = Paragraph::new("Really quit?")
-        .style(Style::default().fg(Color::Cyan))
-        .block(Block::default().borders(Borders::ALL));
+fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>, rect: Rect) {
+    // let quit_text = Paragraph::new("Really quit?")
+    //     .style(Style::default().fg(Color::Cyan))
+    //     .block(Block::default().borders(Borders::ALL));
     let button_text = Paragraph::new("[Y][N]")
         .style(Style::default().fg(Color::Cyan))
-        .block(Block::default().borders(Borders::ALL));
-    let area = centered_rect(10, 16, size);
-    let quit_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(1)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Length(1),
-        ].as_ref())
-        .split(area);
+        .block(Block::default().borders(Borders::ALL).title("Really Quit?"));
+    // let area = centered_rect(10, 16, size);
+    let area = little_popup(20, 3, rect);
+
 
     f.render_widget(Clear, area);
-    f.render_widget(quit_text, quit_chunks[0]);
-    f.render_widget(button_text, quit_chunks[1]);
+    // f.render_widget(quit_text, quit_chunks[0]);
+    f.render_widget(button_text, area);
 }
