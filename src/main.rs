@@ -265,6 +265,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         draw_save_dialog(&mut tudu_list, f);
                     }
                 }
+                InputMode::Save => draw_save_dialog(&mut tudu_list,f)
             }
         }).unwrap();
 
@@ -304,9 +305,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                         break;
                     }
 
-                    Key::Char('n') => if show_quit_dialog || show_save_dialog {
+                    Key::Char('n') => if show_quit_dialog {
                         show_quit_dialog = false;
-                        show_save_dialog = false;
                     }
 
                     _ => {}
@@ -338,10 +338,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::Save => match input{
                     Key::Char(c) => tudu_list.add_save_file_char(c),
                     Key::Backspace => tudu_list.remove_save_file_char(),
-                    Key::Esc => {
-                       tudu_list.enter_edit_mode();
-                        show_save_dialog = false;
-                    }
+                    Key::Esc => tudu_list.enter_edit_mode(),
+                    _ => {}
                 }
             }
         };
