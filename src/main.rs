@@ -3,7 +3,7 @@ use std::io::Stdout;
 
 use chrono::prelude::*;
 use clap::{App, ArgMatches};
-use log::{debug, error, LevelFilter};
+use log::{debug, LevelFilter};
 use regex::Regex;
 use simple_logger::SimpleLogger;
 use termion::{clear, raw::IntoRawMode};
@@ -182,7 +182,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     // let mut items = [ListItem::new("Item 1"),
     //     ListItem::new("Item 2"), ListItem::new("Item 3")];
     let mut show_quit_dialog = false;
-    let mut show_save_dialog = false;
     loop {
         terminal.draw(|f| {
             let mut lst_state = tudu_list.items.state.clone();
@@ -254,24 +253,20 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             match tudu_list.input_mode {
                 InputMode::Insert => {
-                    let input_box = Paragraph::new(tudu_list.current_item.as_ref())
-                        .style(Style::default().fg(Color::Yellow))
-                        .block(Block::default().title("Todo Item").borders(Borders::ALL));
-                    // let input_box_rect = Rect::new(rect.x + 20, rect.y + 20, 150, 16);
-                    let area = centered_rect(60, 20, size);
-                    f.render_widget(Clear, area); //this clears out the background
-                    f.render_widget(input_box, area);
+                    show_new_item_input(&mut tudu_list, f);
 
-                    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0], area.y as u16 + tudu_list.cursor_position[1]);
                     // f.set_cursor(&area.x +tudu_list.current_item.width()  as u16+ tudu_list.cursor_position[0], area.y  as u16+ tudu_list.cursor_position[1])
                 }
                 InputMode::Edit => {
                     if show_quit_dialog {
-                        draw_quit_dialog(f, size);
+                        draw_quit_dialog(f);
                     };
+                    if tudu_list.is_save_mode() {
+                        draw_save_dialog(&mut tudu_list, f);
+                    }
                 }
             }
-        });
+        }).unwrap();
 
         if let Event::Input(input) = events.next()? {
             match tudu_list.input_mode {
@@ -279,10 +274,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('q') => {
                         show_quit_dialog = true;
                     }
-
-
                     Key::Char('s') => {
-                        show_save_dialog = true;
+                        tudu_list.enter_edit_mode()
                     }
 
                     Key::Char('x') => {
@@ -311,8 +304,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                         break;
                     }
 
-                    Key::Char('n') => if show_quit_dialog {
+                    Key::Char('n') => if show_quit_dialog || show_save_dialog {
                         show_quit_dialog = false;
+                        show_save_dialog = false;
                     }
 
                     _ => {}
@@ -333,12 +327,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                     Key::Backspace => tudu_list.remove_character(),
                     Key::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
-                    // },
-                    // //insert mode
-                    // Key::Char('i') => {
-                    //     println!("Into insert mode!", );
-                    //     //how the heck do we accept text input? We'll work it out...somehow! Byte arrays gonna come into it no doubt
-                    // },
                     Key::Esc => {
                         println!("Back to edit mode!");
                         tudu_list.enter_edit_mode();
@@ -346,6 +334,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     // Key::Char(c) => {println!("{}", c)}
                     Key::Ctrl(c) => { println!("{}", c) }
                     _ => {}
+                },
+                InputMode::Save => match input{
+                    Key::Char(c) => tudu_list.add_save_file_char(c),
+                    Key::Backspace => tudu_list.remove_save_file_char(),
+                    Key::Esc => {
+                       tudu_list.enter_edit_mode();
+                        show_save_dialog = false;
+                    }
                 }
             }
         };
@@ -354,7 +350,21 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>, rect: Rect) {
+fn show_new_item_input(mut tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+    let size = f.size();
+    let input_box = Paragraph::new(tudu_list.current_item.as_ref())
+        .style(Style::default().fg(Color::Yellow))
+        .block(Block::default().title("Todo Item").borders(Borders::ALL));
+    // let input_box_rect = Rect::new(rect.x + 20, rect.y + 20, 150, 16);
+    let area = centered_rect(60, 20, size);
+    f.render_widget(Clear, area); //this clears out the background
+    f.render_widget(input_box, area);
+
+    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0], area.y as u16 + tudu_list.cursor_position[1]);
+}
+
+fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+    let rect = f.size();
     // let quit_text = Paragraph::new("Really quit?")
     //     .style(Style::default().fg(Color::Cyan))
     //     .block(Block::default().borders(Borders::ALL));
@@ -368,4 +378,15 @@ fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>, rect: Re
     f.render_widget(Clear, area);
     // f.render_widget(quit_text, quit_chunks[0]);
     f.render_widget(button_text, area);
+}
+
+fn draw_save_dialog(mut tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>){
+    let rect = f.size();
+    let save_text = Paragraph::new(&tudu_list.file_path)
+        .style(Style::default().fg(Color::Cyan))
+        .block(Block::default().borders(Borders::ALL).title("[S]ave?"));
+    let area = little_popup(20,5, rect);
+
+    f.render_widget(Clear,area);
+    f.render_widget(save_text, area);
 }

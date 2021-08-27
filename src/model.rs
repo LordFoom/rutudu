@@ -116,15 +116,16 @@ impl<T> StatefulList<T> {
 pub enum InputMode {
     Insert,
     Edit,
+    Save,
 }
 
 pub struct RutuduList {
     ///what mode are we in?
     pub input_mode: InputMode,
-    ///start with strings, advance to items
-    // pub items:Vec<String>,
-
     pub items: StatefulList<Item>,
+
+    ///if the list has been saved, this is where
+    pub file_path:String,
 
     pub current_item: String,
     /// This is the x,y of the cursor
@@ -141,6 +142,7 @@ impl Default for RutuduList {
             items: StatefulList::new(),
             current_item: "".to_string(),
             cursor_position: [ 1,1 ],
+            file_path: String::new()
         }
     }
 }
@@ -151,6 +153,14 @@ impl RutuduList {
         self.input_mode = InputMode::Edit;
     }
 
+    pub fn enter_save_mode(&mut self) {
+        self.cursor_position = [1, 1];
+        self.input_mode = InputMode::Save;
+    }
+
+    pub fn is_save_mode(&self)->bool{
+        return self.input_mode == InputMode::Save;
+    }
     pub fn enter_insert_mode(&mut self) {
         self.input_mode = InputMode::Insert;
     }
@@ -288,4 +298,13 @@ impl RutuduList {
         }
     }
 
+    pub fn add_save_file_char(&mut self, c:char){
+        self.file_path.push(c);//no need to check
+        self.cursor_position[0]=self.cursor_position[0]+1;
+    }
+
+    pub fn remove_save_file_char(&mut self){
+        self.file_path.pop();
+        self.cursor_position[0] = self.cursor_position[0]-1;
+    }
 }
