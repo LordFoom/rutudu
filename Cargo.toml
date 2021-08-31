@@ -7,7 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sqlite = "0.26.0"
 clap = "3.0.0-beta.2"
 tui = "0.15.0"
 unicode-width = "0.1.8"
@@ -16,3 +15,4 @@ log = "0.4.14"
 simple_logger = "1.11.0"
 regex="1.5.4"
 chrono="0.4.19"
+rusqlite = "0.25.3"

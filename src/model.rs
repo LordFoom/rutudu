@@ -1,6 +1,9 @@
 use tui::text::{Span, Spans};
 use tui::widgets::{ListItem, ListState};
 use tui::style::{Style, Modifier};
+use std::fs::File;
+use std::path::Path;
+use std::error::Error;
 
 pub enum ItemStatus{
     Undone,
@@ -113,6 +116,7 @@ impl<T> StatefulList<T> {
     }
 }
 
+#[derive(Eq, PartialEq)]
 pub enum InputMode {
     Insert,
     Edit,
@@ -130,7 +134,6 @@ pub struct RutuduList {
     pub current_item: String,
     /// This is the x,y of the cursor
     pub cursor_position: [u16;2],
-
 
 }
 
@@ -180,31 +183,6 @@ impl RutuduList {
         self.items.items[i].complete = !self.items.items[i].complete;
     }
 
-    // pub fn get_item_list<'a>(&self, items: &'a StatefulList<Item>) ->&'a Vec<ListItem> {
-    //     // let lst_items = items
-    //     //             .items
-    //     //             .iter()
-    //     //             .enumerate()
-    //     //             .map(|(i, msg)| {
-    //     //                 let content = msg.text(i);
-    //     //                 ListItem::new(content)
-    //     //             }).collect();
-    //     //
-    //     // Box::new(lst_items)
-    //
-    //
-    //      items.items
-    //                 .iter()
-    //                 .enumerate()
-    //                 .map(|(i, msg)| {
-    //                     let content = msg.text(i);
-    //                     ListItem::new(content)
-    //                 }).collect()
-    //
-    //
-    // }
-
-
     pub fn items_as_vec(&self)->Vec<ListItem>{
         let item_ref = &self.items;
             item_ref
@@ -212,24 +190,9 @@ impl RutuduList {
             .iter()
             .enumerate()
             .map(|(i, msg)| {
-                // let mut content = vec![Spans::from(Span::raw(format!("{}: {} {}", i+1, collapse_state_symbol, &msg.title)))];
-                // if msg.expand{
-                //     content.push(Spans::from(Span::raw(format!("{}", msg.entry))));
-                // }
-
                 let mut content = msg.text(i);
                 ListItem::new(content)
             }).collect()
-        // self.items
-        //     .items
-        //     .iter()
-        //     .enumerate()
-        //     .map(|(i, msg)|{
-        //     {
-        //         let content = msg.text(i);
-        //         ListItem::new(content);
-        //     }
-        // }).collect()
     }
 
     pub fn down(&mut self){

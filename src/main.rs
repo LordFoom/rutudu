@@ -21,9 +21,11 @@ use model::InputMode;
 
 use crate::events::{Event, Events};
 use crate::model::{Item, RutuduList};
+use rusqlite::{NO_PARAMS, Connection};
 
 mod events;
 mod model;
+mod db;
 
 const DATE_FMT: &str = "%Y%m%d";
 
@@ -75,7 +77,7 @@ fn create_default_rutudu_list() -> Result<String, Box<dyn Error>> {
     debug!("About to create rutudu list rutudu$DATE.db");
     //create sqlite connection to rutudu$DATE.db
     let list_name = format!("./rutudu{}.db", today);
-    let connection = sqlite::open(&list_name).unwrap();
+    let connection = Connection::open(&list_name).unwrap();
     connection.execute("
         CREATE TABLE rutudu_list(
             id INTEGER PRIMARY KEY ASC,
@@ -83,7 +85,7 @@ fn create_default_rutudu_list() -> Result<String, Box<dyn Error>> {
             title TEXT NOT NULL,
             entry TEXT
         );
-    ")?;
+    ", [])?;
     //return the rutudu name
     return Ok(list_name);
 }
@@ -204,7 +206,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 ].as_ref() )
                 .split(size);
 
-            let mnemonics_text = ["Add", "X-out", "Save", "Quit", ];
+            let mnemonics_text = ["Add", "X-out", "Save", "Open", "Quit", ];
             let mnemonics:Vec<Span> = mnemonics_text
                 .iter()
                 .cloned()
@@ -261,9 +263,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                     if show_quit_dialog {
                         draw_quit_dialog(f);
                     };
-                    if tudu_list.is_save_mode() {
-                        draw_save_dialog(&mut tudu_list, f);
-                    }
+                    // if tudu_list.is_save_mode() {
+                    //     draw_save_dialog(&mut tudu_list, f);
+                    // }
                 }
                 InputMode::Save => draw_save_dialog(&mut tudu_list,f)
             }
@@ -276,7 +278,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         show_quit_dialog = true;
                     }
                     Key::Char('s') => {
-                        tudu_list.enter_edit_mode()
+                        tudu_list.enter_save_mode()
                     }
 
                     Key::Char('x') => {
@@ -336,7 +338,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                     _ => {}
                 },
                 InputMode::Save => match input{
-                    Key::Char(c) => tudu_list.add_save_file_char(c),
+                    // Key::Ctrl('n') => db::save_list(&tudu_list).unwrap(),
+                    Key::Char(c) => if '\n' == c {
+                        db::save_list(&tudu_list);
+                        tudu_list.enter_edit_mode();
+                    }else{
+                        tudu_list.add_save_file_char(c);
+                    },
                     Key::Backspace => tudu_list.remove_save_file_char(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {}
@@ -380,7 +388,7 @@ fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
 
 fn draw_save_dialog(mut tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>){
     let rect = f.size();
-    let save_text = Paragraph::new(&tudu_list.file_path)
+    let save_text = Paragraph::new(tudu_list.file_path.clone())
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL).title("[S]ave?"));
     let area = little_popup(20,5, rect);
