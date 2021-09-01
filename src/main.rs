@@ -5,7 +5,7 @@ use chrono::prelude::*;
 use clap::{App, ArgMatches};
 use log::{debug, LevelFilter};
 use regex::Regex;
-use simple_logger::SimpleLogger;
+use log4rs;
 use termion::{clear, raw::IntoRawMode};
 use termion::event::Key;
 use termion::raw::RawTerminal;
@@ -22,6 +22,10 @@ use model::InputMode;
 use crate::events::{Event, Events};
 use crate::model::{Item, RutuduList};
 use rusqlite::{NO_PARAMS, Connection};
+use log4rs::append::console::ConsoleAppender;
+use log4rs::append::file::FileAppender;
+use log4rs::{Config, Handle};
+use log4rs::config::{Appender, Root};
 
 mod events;
 mod model;
@@ -39,16 +43,25 @@ fn init() -> ArgMatches {
         .get_matches()
 }
 
-fn init_logger(verbose: bool) {
+fn init_logger(verbose: bool) -> Handle {
     let log_level = if verbose {
         LevelFilter::Debug
     } else {
         LevelFilter::Warn
     };
-    SimpleLogger::new()
-        .with_level(log_level)
-        .init()
+    let stdout = ConsoleAppender::builder().build();
+    let file_logger = FileAppender::builder().build("./rutudu.log").unwrap();
+
+    let config = Config::builder()
+        .appender(Appender::builder().build("stdout", Box::new(stdout)))
+        .appender(Appender::builder().build("file_logger", Box::new(file_logger)))
+        .build(Root::builder()
+            .appender("stdout")
+            .appender("file_logger")
+            .build(log_level))
         .unwrap();
+
+    log4rs::init_config(config).unwrap()
 }
 
 ///
@@ -340,7 +353,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::Save => match input{
                     // Key::Ctrl('n') => db::save_list(&tudu_list).unwrap(),
                     Key::Char(c) => if '\n' == c {
-                        db::save_list(&tudu_list);
+                        db::save_list(&tudu_list).unwrap();
                         tudu_list.enter_edit_mode();
                     }else{
                         tudu_list.add_save_file_char(c);
