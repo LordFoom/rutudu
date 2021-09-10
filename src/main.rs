@@ -2,7 +2,7 @@ use std::error::Error;
 use std::io::Stdout;
 
 use chrono::prelude::*;
-use clap::{App, ArgMatches};
+use clap::{App, ArgMatches, Arg};
 use log::{debug, LevelFilter};
 use regex::Regex;
 use log4rs;
@@ -15,13 +15,12 @@ use tui::layout::{Constraint, Direction, Layout, Rect, Alignment};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, BorderType};
-use unicode_width::UnicodeWidthStr;
 
 use model::InputMode;
 
 use crate::events::{Event, Events};
-use crate::model::{Item, RutuduList};
-use rusqlite::{NO_PARAMS, Connection};
+use crate::model:: RutuduList;
+use rusqlite::Connection;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::{Config, Handle};
@@ -31,19 +30,24 @@ mod events;
 mod model;
 mod db;
 
-const DATE_FMT: &str = "%Y%m%d";
+const DATE_FMT: &str = "%Y%m%d%H%M%s";
 
 fn init() -> ArgMatches {
     App::new("Rutudu Todo List")
         .version("1.0")
         .author("FOOM")
         .about("Todo List, Terminal style, Rust vibes")
+        .arg(Arg::new("list_name")
+            .value_name("list_name")
+            .about("Name of list, will default to 'rutudu$DATE.rtd' if not supplied. Name of sqlite file.")
+            .index(1)
+        .required(false))
         .arg("-v, --verbose 'All that info'")
         .arg("-d, --create-default 'Create rutudu$DATE.db'")
         .get_matches()
 }
 
-fn init_logger(verbose: bool) -> Handle {
+fn init_logger(verbose: bool) {
     let log_level = if verbose {
         LevelFilter::Debug
     } else {
@@ -61,7 +65,8 @@ fn init_logger(verbose: bool) -> Handle {
             .build(log_level))
         .unwrap();
 
-    log4rs::init_config(config).unwrap()
+    log4rs::init_config(config).unwrap();
+    debug!("Debugging has been initialized");
 }
 
 ///
@@ -77,7 +82,7 @@ fn scan_directory() -> Result<Vec<String>, Box<dyn Error>> {
         let path = entry.path();
         let path_str = path.into_os_string().into_string().unwrap();
         if rx.is_match(&path_str) {
-            &lists.push(path_str);
+            lists.push(path_str);
         }
     }
     Ok(lists)
@@ -86,7 +91,7 @@ fn scan_directory() -> Result<Vec<String>, Box<dyn Error>> {
 ///Create "rutuduTODAY.db" file with rutudu_list table where today is %Y%m%d
 fn create_default_rutudu_list() -> Result<String, Box<dyn Error>> {
     //get the date
-    let today = Utc::today().format(DATE_FMT);
+    let today = Utc::now().format(DATE_FMT);
     debug!("About to create rutudu list rutudu$DATE.db");
     //create sqlite connection to rutudu$DATE.db
     let list_name = format!("./rutudu{}.db", today);
@@ -154,10 +159,24 @@ fn little_popup(min_horizontal:u16, min_vertical:u16, r:Rect) -> Rect {
 }
 
 // fun make_vec_for_lest(items: )
+fn get_default_list_name()->Result<String, Box<dyn Error>>{
+
+    debug!("No name arg passed...");
+    let today = Utc::now().format(DATE_FMT);
+    let list_name = format!("./rutudu{}.rtb", today);
+    debug!("Default name: {}", &list_name);
+    Ok(list_name)
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = init();
     init_logger(args.is_present("verbose"));
+    let default_name = match get_default_list_name(){
+        Ok(name) =>  name,
+        Err(why) => panic!("Unable to get default name! {} ", why),
+    };
+    // let list_name = args.value_of("list_name").unwrap_or(&default_name);
+    let list_name = args.value_of("list_name").unwrap_or(&default_name);
     //#######
     //LET'S FIRST GET SOME SIMPLE STRINGS WORKING
     //get todolists
@@ -194,6 +213,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     //like in vim, 2 modes, edit and insert
     // let mut edit_mode = true;
     let mut tudu_list = RutuduList::default();
+    tudu_list.file_path = list_name.to_string();
+
     // let mut items = [ListItem::new("Item 1"),
     //     ListItem::new("Item 2"), ListItem::new("Item 3")];
     let mut show_quit_dialog = false;
@@ -404,7 +425,7 @@ fn draw_save_dialog(mut tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<
     let save_text = Paragraph::new(tudu_list.file_path.clone())
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL).title("[S]ave?"));
-    let area = little_popup(20,5, rect);
+    let area = little_popup(40,5, rect);
 
     f.render_widget(Clear,area);
     f.render_widget(save_text, area);
