@@ -30,7 +30,8 @@ mod events;
 mod model;
 mod db;
 
-const DATE_FMT: &str = "%Y%m%d%H%M%s";
+// const DATE_FMT: &str = "%Y%m%d%H%M%s";
+const DATE_FMT: &str = "%Y%m%d";
 
 fn init() -> ArgMatches {
     App::new("Rutudu Todo List")
@@ -159,22 +160,16 @@ fn little_popup(min_horizontal:u16, min_vertical:u16, r:Rect) -> Rect {
 }
 
 // fun make_vec_for_lest(items: )
-fn get_default_list_name()->Result<String, Box<dyn Error>>{
-
+fn get_default_list_name()->String{
     debug!("No name arg passed...");
     let today = Utc::now().format(DATE_FMT);
-    let list_name = format!("./rutudu{}.rtb", today);
-    debug!("Default name: {}", &list_name);
-    Ok(list_name)
+    format!("./rutudu{}.rtb", today)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = init();
     init_logger(args.is_present("verbose"));
-    let default_name = match get_default_list_name(){
-        Ok(name) =>  name,
-        Err(why) => panic!("Unable to get default name! {} ", why),
-    };
+    let default_name = get_default_list_name();
     // let list_name = args.value_of("list_name").unwrap_or(&default_name);
     let list_name = args.value_of("list_name").unwrap_or(&default_name);
     //#######
@@ -221,9 +216,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         terminal.draw(|f| {
             let mut lst_state = tudu_list.items.state.clone();
+            let title = tudu_list.list_name().clone();
             let mut items: Vec<ListItem> = tudu_list.items_as_vec();
             let tui_items = List::new(items)
-                .block(Block::default().title("Rutudu").borders(Borders::ALL))
+                .block(Block::default().title(title).borders(Borders::ALL))
                 .style(Style::default().fg(Color::White))
                 .highlight_style(Style::default().add_modifier(Modifier::BOLD).fg(Color::Cyan))
                 .highlight_symbol(">");
@@ -255,18 +251,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }).collect();
 
             let menu = Spans::from(mnemonics);
-            // let menu_titles = ["Home", "Pets", "Add", "Delete", "Quit"];
-            // let menu:Vec<Spans> = menu_titles
-            //     .iter()
-            //     .cloned()
-            //     .map(|t| {
-            //         let (first, rest) = t.split_at(1);
-            //         Spans::from(vec![
-            //             Span::styled( first, Style::default() .fg(Color::Yellow) .add_modifier(Modifier::UNDERLINED) ),
-            //             Span::styled(rest, Style::default().fg(Color::White)),
-            //         ])
-            //     })
-            //     .collect();
             let top_text = Paragraph::new(Spans::from(Span::styled("R U T U D U",
                                                                    Style::default()
                                                                        .fg(Color::LightCyan)

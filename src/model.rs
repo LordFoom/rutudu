@@ -270,4 +270,13 @@ impl RutuduList {
         self.file_path.pop();
         self.cursor_position[0] = self.cursor_position[0]-1;
     }
+
+    pub fn list_name(&mut self)->String{
+        //trim off the first path of the filepath`
+        let fp = self.file_path.clone();
+        match fp.rfind("/"){
+           None => fp,
+           Some(i) => fp.split_at(i+1).1.to_string(),//get the last part, eg foom.rtd from /home/foom/foom.rtd
+        }
+    }
 }
