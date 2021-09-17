@@ -3,7 +3,7 @@ use std::io::Stdout;
 
 use chrono::prelude::*;
 use clap::{App, ArgMatches, Arg};
-use log::{debug, LevelFilter};
+use log::{debug, error, LevelFilter};
 use regex::Regex;
 use log4rs;
 use termion::{clear, raw::IntoRawMode};
@@ -19,16 +19,18 @@ use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, 
 use model::InputMode;
 
 use crate::events::{Event, Events};
-use crate::model:: RutuduList;
+use crate::model::{RutuduList, StatefulList};
 use rusqlite::Connection;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::{Config, Handle};
 use log4rs::config::{Appender, Root};
+use std::path::Path;
 
 mod events;
 mod model;
 mod db;
+use num_traits::cast::ToPrimitive;
 
 // const DATE_FMT: &str = "%Y%m%d%H%M%s";
 const DATE_FMT: &str = "%Y%m%d";
@@ -70,44 +72,26 @@ fn init_logger(verbose: bool) {
     debug!("Debugging has been initialized");
 }
 
-///
-/// This wil read all the 'rutudu*db' file names and return them in result
-///
-fn scan_directory() -> Result<Vec<String>, Box<dyn Error>> {
-    let mut lists = Vec::new();
-    let rx = Regex::new(r"rutudu.*\.db")?;
-    //get the current directory,
-    let current_dir = std::env::current_dir()?;
-    for entry in std::fs::read_dir(current_dir)? {
-        let entry = entry?;
-        let path = entry.path();
-        let path_str = path.into_os_string().into_string().unwrap();
-        if rx.is_match(&path_str) {
-            lists.push(path_str);
-        }
-    }
-    Ok(lists)
-}
 
 ///Create "rutuduTODAY.db" file with rutudu_list table where today is %Y%m%d
-fn create_default_rutudu_list() -> Result<String, Box<dyn Error>> {
-    //get the date
-    let today = Utc::now().format(DATE_FMT);
-    debug!("About to create rutudu list rutudu$DATE.db");
-    //create sqlite connection to rutudu$DATE.db
-    let list_name = format!("./rutudu{}.db", today);
-    let connection = Connection::open(&list_name).unwrap();
-    connection.execute("
-        CREATE TABLE rutudu_list(
-            id INTEGER PRIMARY KEY ASC,
-            parent_id INTEGER,
-            title TEXT NOT NULL,
-            entry TEXT
-        );
-    ", [])?;
-    //return the rutudu name
-    return Ok(list_name);
-}
+// fn create_default_rutudu_list() -> Result<String, Box<dyn Error>> {
+//     //get the date
+//     let today = Utc::now().format(DATE_FMT);
+//     debug!("About to create rutudu list rutudu$DATE.db");
+//     //create sqlite connection to rutudu$DATE.db
+//     let list_name = format!("./rutudu{}.db", today);
+//     let connection = Connection::open(&list_name).unwrap();
+//     connection.execute("
+//         CREATE TABLE rutudu_list(
+//             id INTEGER PRIMARY KEY ASC,
+//             parent_id INTEGER,
+//             title TEXT NOT NULL,
+//             entry TEXT
+//         );
+//     ", [])?;
+//     //return the rutudu name
+//     return Ok(list_name);
+// }
 
 /// helper function to create a centered rect using up
 /// certain percentage of the available rect `r`
@@ -163,7 +147,7 @@ fn little_popup(min_horizontal:u16, min_vertical:u16, r:Rect) -> Rect {
 fn get_default_list_name()->String{
     debug!("No name arg passed...");
     let today = Utc::now().format(DATE_FMT);
-    format!("./rutudu{}.rtb", today)
+    format!("./rutudu{}.rtd", today)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -221,7 +205,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             let tui_items = List::new(items)
                 .block(Block::default().title(title).borders(Borders::ALL))
                 .style(Style::default().fg(Color::White))
-                .highlight_style(Style::default().add_modifier(Modifier::BOLD).fg(Color::Cyan))
+                .highlight_style(Style::default()
+                    .add_modifier(Modifier::BOLD)
+                    .fg(Color::Cyan))
                 .highlight_symbol(">");
 
 
@@ -274,9 +260,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             match tudu_list.input_mode {
                 InputMode::Insert => {
                     show_new_item_input(&mut tudu_list, f);
-
                     // f.set_cursor(&area.x +tudu_list.current_item.width()  as u16+ tudu_list.cursor_position[0], area.y  as u16+ tudu_list.cursor_position[1])
-                }
+                },
                 InputMode::Edit => {
                     if show_quit_dialog {
                         draw_quit_dialog(f);
@@ -284,8 +269,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                     // if tudu_list.is_save_mode() {
                     //     draw_save_dialog(&mut tudu_list, f);
                     // }
-                }
-                InputMode::Save => draw_save_dialog(&mut tudu_list,f)
+                },
+                InputMode::Save => draw_save_dialog(&mut tudu_list,f),
+                InputMode::Open => {
+                    draw_open_dialog(&mut tudu_list,f);
+                },
             }
         }).unwrap();
 
@@ -299,6 +287,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         tudu_list.enter_save_mode()
                     }
 
+                    Key::Char('o') => tudu_list.enter_open_mode(),
                     Key::Char('x') => {
                         tudu_list.toggle_selected_status();//println!("{}", clear::All);
                         // break;
@@ -313,7 +302,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         tudu_list.up();
                     }
                     Key::Char('l') | Key::Right => {
-                        tudu_list.open_selected();
+                        tudu_list.expand_selected();
                         // println!("{}", clear::All);
                         // break;
                     }
@@ -328,6 +317,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('n') => if show_quit_dialog {
                         show_quit_dialog = false;
                     }
+
 
                     _ => {}
                 },
@@ -366,6 +356,32 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Backspace => tudu_list.remove_save_file_char(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {}
+                },
+                InputMode::Open => match input{//allow moving up and down to select
+                    //
+                    Key::Backspace => {}
+                    Key::Left => {}
+                    Key::Right => {}
+                    Key::Up => {}
+                    Key::Down => {}
+                    Key::Home => {}
+                    Key::End => {}
+                    Key::PageUp => {}
+                    Key::PageDown => {}
+                    Key::BackTab => {}
+                    Key::Delete => {}
+                    Key::Insert => {}
+                    Key::F(_) => {}
+                    // Key::Char('h') | Key::Left => {}
+                    Key::Char('j') | Key::Down => tudu_list.open_file_up(),
+                    Key::Char('k') | Key::Up => tudu_list.open_file_down(),
+                    Key::Char('l') | Key::Right => tudu_list.open_selected_file(),
+                    Key::Char(_) => {}
+                    Key::Alt(_) => {}
+                    Key::Ctrl(_) => {}
+                    Key::Null => {}
+                    Key::Esc => tudu_list.enter_edit_mode(),
+                    Key::__IsNotComplete => {}
                 }
             }
         };
@@ -413,4 +429,40 @@ fn draw_save_dialog(mut tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<
 
     f.render_widget(Clear,area);
     f.render_widget(save_text, area);
+}
+
+fn draw_open_dialog(mut tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+    tudu_list.scan_files_once();
+
+    // debug!("Trying to draw open dialog");
+    // let lst_tudu_files = StatefulList::with_items(tudu_files);
+    //get the files
+    // tudu_list.scan_files_once();
+    let tudu_files = tudu_list.open_file_dialog_files.items.clone();
+    // debug!("We have these many files: {}", tudu_files.len());
+
+    let mut tudu_file_state = tudu_list.open_file_dialog_files.state.clone();
+    let uheight = tudu_files.len();
+    let uh = uheight.to_u16().unwrap_or(10)*10;
+    let rect = little_popup(40,uh,f.size());
+
+    let tudu_spans:Vec<ListItem> = tudu_files.iter()
+                                             .map(|f|{
+                                                 let file_name = Spans::from(Span::raw(f));
+                                                 ListItem::new(file_name)
+                                             }).collect();
+    let file_items = List::new(tudu_spans)
+        .block(Block::default()
+            .title("Open list...")
+            .borders(Borders::ALL)
+            .border_type(BorderType::Double)
+            .style(Style::default().fg(Color::Cyan)))
+        .style(Style::default()
+            .fg(Color::LightCyan))
+        .highlight_style(Style::default()
+            .add_modifier(Modifier::BOLD).fg(Color::LightBlue))
+        .highlight_symbol("o")
+        ;
+    f.render_stateful_widget(file_items, rect,&mut tudu_file_state);
+
 }

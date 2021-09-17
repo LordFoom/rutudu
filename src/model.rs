@@ -1,9 +1,11 @@
 use tui::text::{Span, Spans};
-use tui::widgets::{ListItem, ListState};
-use tui::style::{Style, Modifier};
+use tui::widgets::{ListItem, ListState, Block, Borders, BorderType, List};
+use tui::style::{Style, Modifier, Color};
 use std::fs::File;
 use std::path::Path;
 use std::error::Error;
+use regex::Regex;
+use log::debug;
 
 pub enum ItemStatus{
     Undone,
@@ -63,6 +65,7 @@ impl Item {
     }
 }
 
+#[derive(Clone)]
 pub struct StatefulList<T> {
     pub state: ListState,
     pub items: Vec<T>,
@@ -73,7 +76,7 @@ impl<T> StatefulList<T> {
         StatefulList {
             state: ListState::default(),
             items: Vec::new(),
-        }
+}
     }
 
     pub fn with_items(items: Vec<T>) -> StatefulList<T> {
@@ -121,15 +124,19 @@ pub enum InputMode {
     Insert,
     Edit,
     Save,
+    Open,
 }
 
 pub struct RutuduList {
     ///what mode are we in?
     pub input_mode: InputMode,
     pub items: StatefulList<Item>,
+    pub open_file_dialog_files: StatefulList<String>,
 
     ///if the list has been saved, this is where
     pub file_path:String,
+    ///When opening files, we only want to scan the one time
+    pub has_scanned:bool,
 
     pub current_item: String,
     /// This is the x,y of the cursor
@@ -143,9 +150,11 @@ impl Default for RutuduList {
         RutuduList {
             input_mode: InputMode::Edit,
             items: StatefulList::new(),
+            open_file_dialog_files: StatefulList::new(),
             current_item: "".to_string(),
             cursor_position: [ 1,1 ],
-            file_path: String::new()
+            file_path: String::new(),
+            has_scanned: false,
         }
     }
 }
@@ -168,12 +177,16 @@ impl RutuduList {
         self.input_mode = InputMode::Insert;
     }
 
+    pub fn enter_open_mode(&mut self){
+        self.input_mode = InputMode::Open;
+    }
+
     pub fn close_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
         self.items.items[i].expand = false;
     }
 
-    pub fn open_selected(&mut self){
+    pub fn expand_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
         self.items.items[i].expand = true;
     }
@@ -181,6 +194,18 @@ impl RutuduList {
     pub fn toggle_selected_status(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
         self.items.items[i].complete = !self.items.items[i].complete;
+    }
+
+    pub fn open_file_up(&mut self){
+        self.open_file_dialog_files.previous();
+    }
+
+    pub fn open_file_down(&mut self){
+        self.open_file_dialog_files.next();
+    }
+
+    pub fn open_selected_file(&mut self){
+
     }
 
     pub fn items_as_vec(&self)->Vec<ListItem>{
@@ -278,5 +303,60 @@ impl RutuduList {
            None => fp,
            Some(i) => fp.split_at(i+1).1.to_string(),//get the last part, eg foom.rtd from /home/foom/foom.rtd
         }
+    }
+
+    pub fn clear_file_list(&mut self){
+
+    }
+
+    ///
+    /// This wil read all the '*rtd' file names and return them in result
+    ///
+    pub fn scan_directory(&mut self, dir_path:&str, extension:&str) -> Result<Vec<String>, Box<dyn Error>> {
+        let mut lists = Vec::new();
+        let search_str = format!(r"^.*\.{}$", extension);
+        // debug!("Going to scan for {} on path {}", search_str, dir_path);
+        // let rx = Regex::new(r".*rtd$")?;
+        let rx = Regex::new(&search_str)?;
+        //get the current directory,
+        // let current_dir = std::env::current_dir()?;
+        let dir = Path::new(&dir_path);
+        for entry_result in std::fs::read_dir(dir)? {
+            let entry = entry_result?;
+            let path = entry.path();
+            let path_str = path.into_os_string().into_string().unwrap();
+            // debug!("Reading dir, found: {}",&path_str);
+            if rx.is_match(&path_str) {
+                // debug!("Matches!");
+                lists.push(path_str);
+            }
+        }
+        Ok(lists)
+    }
+
+    ///Will scan the current directory once, to prevent loop jamming
+    pub fn scan_files_once(&mut self){
+        if self.has_scanned{
+           return;
+        }
+        // debug!("Scanning files...");
+        //go through the directory
+        let tudu_files = match self.scan_directory("./", "rtd"){
+            Err(e) => panic!("Unable to open file dialog: {}", e),
+            Ok(entries) => entries,
+        };
+        // debug!("We found {} files!",  &tudu_files.len());
+        // tudu_files.i
+         tudu_files.iter()
+             .for_each(|s|{
+             // debug!("Pushing {}", s);
+           self.open_file_dialog_files.items.push(String::from(s));
+        });
+        self.has_scanned = true;
+    }
+
+    ///reset the scan variable
+    pub fn reset_scan_guard(&mut self){
+        self.has_scanned=false;
     }
 }
