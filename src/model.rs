@@ -6,6 +6,7 @@ use std::path::Path;
 use std::error::Error;
 use regex::Regex;
 use log::debug;
+use chrono::{DateTime, Utc};
 
 pub enum ItemStatus{
     Undone,
@@ -13,10 +14,11 @@ pub enum ItemStatus{
 }
 ///Represent items on the todo list
 pub struct Item {
+    pub id: u32,
     pub title: String,
     pub entry: String,
     ///if None, this is on the root level
-    pub parent: Box<Option<Item>>,
+    pub parent_id: u32,
     pub expand: bool,
     pub complete: bool,
 }
@@ -27,14 +29,31 @@ impl Item {
     //     Item{title, entry, status: ItemStatus::Undone, parent: Box::new(None)}
     // }
 
-    ///root constructor, no parent
-    pub fn new(title: String, entry: String) -> Item {
+    ///constructor, no parent
+    pub fn new(title: &str, entry: &str) -> Item {
         // Item { title, entry, parent: Box::new(None) }
-        Item{title, entry, parent: Box::new(None), expand:false, complete:false, }
+        Item{ id:0,
+            title: title.to_string(),
+            entry: entry.to_string(),
+            parent_id: 0,
+            expand:false,
+            complete:false,
+        }
+    }
+    ///constructor, parent
+    pub fn new_with_parent(title: String, entry: String, parent_id:u32) -> Item {
+        // Item { title, entry, parent: Box::new(None) }
+        Item{id:0,
+            title,
+            entry,
+            parent_id,
+            expand:false,
+            complete:false,
+        }
     }
     ///yep, has a parent but may not be leaf
     pub fn new_child(title: String, entry: String, parent: Item) -> Item {
-        Item { title, entry, parent: Box::new(Some(parent)), expand:false, complete:false, }
+        Item {id:0, title, entry, parent_id: parent.id.clone(), expand:false, complete:false, }
     }
 
     ///Symbol to indicate if item is expanded or collapsed
@@ -204,10 +223,6 @@ impl RutuduList {
         self.open_file_dialog_files.next();
     }
 
-    pub fn open_selected_file(&mut self){
-
-    }
-
     pub fn items_as_vec(&self)->Vec<ListItem>{
         let item_ref = &self.items;
             item_ref
@@ -244,9 +259,9 @@ impl RutuduList {
         let mut entry:String = self.current_item.drain(..).collect();
         //split by newlines
         let first_new_line = entry.find("\n").unwrap_or(entry.len());
-        let title = entry.drain(..first_new_line).collect();
+        let title:String = entry.drain(..first_new_line).collect();
         // content
-        Item{title, entry, expand: false, parent: Box::new(None), complete: false}
+        Item::new(&title, &entry)
     }
 
     ///Add character to current input

@@ -361,9 +361,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                     //
                     Key::Backspace => {}
                     Key::Left => {}
-                    Key::Right => {}
-                    Key::Up => {}
-                    Key::Down => {}
                     Key::Home => {}
                     Key::End => {}
                     Key::PageUp => {}
@@ -373,9 +370,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Insert => {}
                     Key::F(_) => {}
                     // Key::Char('h') | Key::Left => {}
-                    Key::Char('j') | Key::Down => tudu_list.open_file_up(),
-                    Key::Char('k') | Key::Up => tudu_list.open_file_down(),
-                    Key::Char('l') | Key::Right => tudu_list.open_selected_file(),
+                    Key::Char('j') | Key::Down => tudu_list.open_file_down(),
+                    Key::Char('k') | Key::Up => tudu_list.open_file_up(),
+                    Key::Char('l') | Key::Right | Key::Char('\n') =>{
+                        let s = &tudu_list.open_file_dialog_files.state.clone();
+                        let filename = tudu_list.open_file_dialog_files.items[s.selected().unwrap_or(0)].clone();
+                        db::load_list(&mut tudu_list, &filename);
+                    }
                     Key::Char(_) => {}
                     Key::Alt(_) => {}
                     Key::Ctrl(_) => {}
