@@ -7,11 +7,30 @@ use std::error::Error;
 use regex::Regex;
 use log::debug;
 use chrono::{DateTime, Utc};
+use num_traits::{ FromPrimitive, ToPrimitive };
+use num_derive::{ FromPrimitive, ToPrimitive };
+use num;
+use rusqlite::ToSql;
 
-pub enum ItemStatus{
-    Undone,
-    Done,
+#[derive(FromPrimitive, ToPrimitive)]
+pub enum CompleteStatus {
+    Incomplete = 1,
+    Complete = 2,
 }
+
+#[derive(FromPrimitive, ToPrimitive)]
+pub enum ExpandStatus{
+    Closed = 1,
+    Open = 2,
+}
+
+
+// impl FromPrimitive for ExpandStatus{
+//     fn from_u8(n: u8) -> Option<Self> {
+//         match  { }
+//     }
+// }
+
 ///Represent items on the todo list
 pub struct Item {
     pub id: u32,
@@ -19,8 +38,8 @@ pub struct Item {
     pub entry: String,
     ///if None, this is on the root level
     pub parent_id: u32,
-    pub expand: bool,
-    pub complete: bool,
+    pub expand: ExpandStatus,
+    pub complete: CompleteStatus,
 }
 
 impl Item {
@@ -36,8 +55,8 @@ impl Item {
             title: title.to_string(),
             entry: entry.to_string(),
             parent_id: 0,
-            expand:false,
-            complete:false,
+            expand:ExpandStatus::Closed,
+            complete: CompleteStatus::Incomplete,
         }
     }
     ///constructor, parent
@@ -47,38 +66,38 @@ impl Item {
             title,
             entry,
             parent_id,
-            expand:false,
-            complete:false,
+            expand:ExpandStatus::Closed,
+            complete: CompleteStatus::Incomplete,
         }
     }
     ///yep, has a parent but may not be leaf
     pub fn new_child(title: String, entry: String, parent: Item) -> Item {
-        Item {id:0, title, entry, parent_id: parent.id.clone(), expand:false, complete:false, }
+        Item {id:0, title, entry, parent_id: parent.id.clone(), expand:ExpandStatus::Closed, complete: CompleteStatus::Incomplete, }
     }
 
     ///Symbol to indicate if item is expanded or collapsed
     pub fn expansion_state_symbol(&self)->String{
-        if self.expand{
-            String::from("[-]")
-        }else{
-            String::from("[+]")
+        return match self.expand{
+            ExpandStatus::Open => String::from("[-]"),
+            ExpandStatus::Closed => String::from("[+]"),
         }
+
     }
 
     ///Return the item as text, either just the title,
     /// or the title and the entry, depending on expand status
     pub fn text(&self, item_no:usize) -> Vec<Spans> {
-        let mut modifier = Modifier::empty();
-        if self.complete {
-            modifier = Modifier::CROSSED_OUT;
-        }
+        let mut modifier = match self.complete  {
+                CompleteStatus::Complete => Modifier::CROSSED_OUT,
+                CompleteStatus::Incomplete => Modifier::empty(),
+            };
         let mut content = vec![Spans::from(
             Span::styled(format!("{}: {} {}",
                               &item_no, &self.expansion_state_symbol(), self.title),
             Style::default().add_modifier(modifier)))];
         //show our expanded content if need be
-        if self.expand {
-           content.push(Spans::from(Span::raw(format!("    {}", self.entry))));
+        if let ExpandStatus::Open = self.expand{
+            content.push(Spans::from(Span::raw(format!("    {}", self.entry))));
         }
         content
     }
@@ -202,17 +221,21 @@ impl RutuduList {
 
     pub fn close_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
-        self.items.items[i].expand = false;
+        self.items.items[i].expand = ExpandStatus::Closed;
     }
 
     pub fn expand_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
-        self.items.items[i].expand = true;
+        self.items.items[i].expand = ExpandStatus::Open;
     }
 
     pub fn toggle_selected_status(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
-        self.items.items[i].complete = !self.items.items[i].complete;
+
+        self.items.items[i].complete = match self.items.items[i].complete{
+            CompleteStatus::Incomplete => CompleteStatus::Complete,
+            CompleteStatus::Complete => CompleteStatus::Incomplete,
+        }
     }
 
     pub fn open_file_up(&mut self){
@@ -245,13 +268,13 @@ impl RutuduList {
 
     pub fn right(&mut self){
         if let Some(i) = self.items.state.selected(){
-            self.items.items[i].expand = true;
+            self.items.items[i].expand = ExpandStatus::Open;
         }
     }
 
     pub fn left(&mut self){
         if let Some(i) = self.items.state.selected(){
-            self.items.items[i].expand = false;
+            self.items.items[i].expand = ExpandStatus::Closed;
         }
     }
 

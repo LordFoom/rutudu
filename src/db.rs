@@ -1,8 +1,10 @@
 use std::error::Error;
 use log::{debug, error};
+use num_traits::{ToPrimitive, FromPrimitive};
 
 
-use crate::model::{RutuduList, Item};
+
+use crate::model::{RutuduList, Item, CompleteStatus, ExpandStatus};
 use rusqlite::{Connection, params};
 use std::path::Path;
 
@@ -17,7 +19,7 @@ pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
     create_table_if_needed(&conn);
     for item in &list.items.items{
         match conn.execute("INSERT INTO rutudu_list(parent_id, title, entry, create_date, completeStatus, expandStatus )
-                                    VALUES(?1,?2,?3,strftime('%Y-%m-%d %H-%M-%S','now'), ?4, ?5 )", params![0, &item.title, &item.entry, &item.complete, &item.expand]){
+                                    VALUES(?1,?2,?3,strftime('%Y-%m-%d %H-%M-%S','now'), ?4, ?5 )", params![0, &item.title, &item.entry, &item.complete.to_u8(), &item.expand.to_u8()]){
             Ok(updated) => debug!("Number of rows inserted: {}", updated),
             Err(why) => error!("Failed to insert row: {}", why),
         }
@@ -67,8 +69,8 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
             title: row.get("title")?,
             entry: row.get("entry")?,
             parent_id: row.get("parent_id")?,
-            complete: row.get("completeStatus")?,
-            expand: row.get("expandStatus")?,
+            complete: FromPrimitive::from_u8(row.get("completeStatus")?).unwrap_or(CompleteStatus::Incomplete),
+            expand: FromPrimitive::from_u8(row.get("expandStatus")?).unwrap_or(ExpandStatus::Closed),
             })
         })?;
 
