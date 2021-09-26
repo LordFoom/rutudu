@@ -372,11 +372,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     // Key::Char('h') | Key::Left => {}
                     Key::Char('j') | Key::Down => tudu_list.open_file_down(),
                     Key::Char('k') | Key::Up => tudu_list.open_file_up(),
-                    Key::Char('l') | Key::Right | Key::Char('\n') =>{
-                        let s = &tudu_list.open_file_dialog_files.state.clone();
-                        let filename = tudu_list.open_file_dialog_files.items[s.selected().unwrap_or(0)].clone();
-                        db::load_list(&mut tudu_list, &filename);
-                    }
+                    Key::Char('l') | Key::Right | Key::Char('\n') =>tudu_list.load_list_from_file_dialog(),
                     Key::Char(_) => {}
                     Key::Alt(_) => {}
                     Key::Ctrl(_) => {}

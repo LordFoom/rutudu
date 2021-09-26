@@ -11,6 +11,7 @@ use num_traits::{ FromPrimitive, ToPrimitive };
 use num_derive::{ FromPrimitive, ToPrimitive };
 use num;
 use rusqlite::ToSql;
+use crate::db;
 
 #[derive(FromPrimitive, ToPrimitive)]
 pub enum CompleteStatus {
@@ -236,6 +237,16 @@ impl RutuduList {
             CompleteStatus::Incomplete => CompleteStatus::Complete,
             CompleteStatus::Complete => CompleteStatus::Incomplete,
         }
+    }
+
+    pub fn load_list_from_file_dialog(&mut self){
+        let s = self.open_file_dialog_files.state.clone();
+        let filename = self.open_file_dialog_files.items[s.selected().unwrap_or(0)].clone();
+        match db::load_list( self, &filename){
+            Ok(_) => {}
+            Err(why) => panic!("Failed to load list {}", why),
+        }
+        self.enter_edit_mode();
     }
 
     pub fn open_file_up(&mut self){
