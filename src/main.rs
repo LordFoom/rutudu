@@ -258,22 +258,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             f.render_widget(bottom_text, chunks[2]);
 
             match tudu_list.input_mode {
-                InputMode::Insert => {
-                    show_new_item_input(&mut tudu_list, f);
-                    // f.set_cursor(&area.x +tudu_list.current_item.width()  as u16+ tudu_list.cursor_position[0], area.y  as u16+ tudu_list.cursor_position[1])
-                },
+                InputMode::Insert =>  show_new_item_input(&mut tudu_list, f),
                 InputMode::Edit => {
                     if show_quit_dialog {
                         draw_quit_dialog(f);
                     };
-                    // if tudu_list.is_save_mode() {
-                    //     draw_save_dialog(&mut tudu_list, f);
-                    // }
                 },
                 InputMode::Save => draw_save_dialog(&mut tudu_list,f),
-                InputMode::Open => {
-                    draw_open_dialog(&mut tudu_list,f);
-                },
+                InputMode::Open =>  draw_open_dialog(&mut tudu_list,f),
             }
         }).unwrap();
 
