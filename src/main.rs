@@ -258,7 +258,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             f.render_widget(bottom_text, chunks[2]);
 
             match tudu_list.input_mode {
-                InputMode::Insert =>  show_new_item_input(&mut tudu_list, f),
+                InputMode::Insert | InputMode::InsertChild=>  show_new_item_input(&mut tudu_list, f),
                 InputMode::Edit => {
                     if show_quit_dialog {
                         draw_quit_dialog(f);
@@ -297,20 +297,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                     _ => {}
                 },
-                InputMode::Insert => match input {
+                InputMode::Insert | InputMode::InsertChild => match input {
                     //what's a better key combo? ctrl+[ does weird things...
                     //terminal doesn't support ctrl+\n
-                    Key::Ctrl('n') => {
-                        //     Key::Ctrl('[') => {//this did not work, does escape, like vim
-                        //TODO split this into title and entry
-                        // let title = tudu_list.current_item.drain(..).collect();
-                        // //this should be everything from 2nd line onward
-                        // let entry =  String::new();
-                        // let item = Item::new(title, entry);
-                        let item = tudu_list.get_current_input_as_item();
-                        tudu_list.items.items.push(item);
-                        tudu_list.enter_edit_mode();
-                    }
+                    Key::Ctrl('n') =>  tudu_list.add_item_to_list(),
                     Key::Backspace => tudu_list.remove_character(),
                     Key::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
                     Key::Esc => {

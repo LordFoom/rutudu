@@ -161,6 +161,7 @@ impl<T> StatefulList<T> {
 #[derive(Eq, PartialEq)]
 pub enum InputMode {
     Insert,
+    InsertChild,
     Edit,
     Save,
     Open,
@@ -212,6 +213,13 @@ impl RutuduList {
     pub fn is_save_mode(&self)->bool{
         return self.input_mode == InputMode::Save;
     }
+
+    //Create an item as a sub item of the currently selected item
+    pub fn enter_insert_mode_with_parent(&mut self){
+
+    }
+
+    //Create an item at the current level
     pub fn enter_insert_mode(&mut self) {
         self.input_mode = InputMode::Insert;
     }
@@ -289,6 +297,11 @@ impl RutuduList {
         }
     }
 
+    pub fn add_item_to_list(&mut self){
+        let item = self.get_current_input_as_item();
+        self.items.items.push(item);
+        self.enter_edit_mode();
+    }
     pub fn get_current_input_as_item(&mut self) ->Item{
         let mut entry:String = self.current_item.drain(..).collect();
         //split by newlines
