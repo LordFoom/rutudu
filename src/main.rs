@@ -283,32 +283,16 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('q') => {
                         show_quit_dialog = true;
                     }
-                    Key::Char('s') => {
-                        tudu_list.enter_save_mode()
-                    }
-
+                    Key::Char('s') => tudu_list.enter_save_mode(),
                     Key::Char('o') => tudu_list.enter_open_mode(),
-                    Key::Char('x') => {
-                        tudu_list.toggle_selected_status();//println!("{}", clear::All);
+                    Key::Char('x') => tudu_list.toggle_selected_status(),//println!("{}", clear::All);
                         // break;
-                    }
-                    Key::Char('h') | Key::Left => {
-                        tudu_list.close_selected();
-                    }
-                    Key::Char('j') | Key::Down => {
-                        tudu_list.down();
-                    }
-                    Key::Char('k') | Key::Up => {
-                        tudu_list.up();
-                    }
-                    Key::Char('l') | Key::Right => {
-                        tudu_list.expand_selected();
-                        // println!("{}", clear::All);
-                        // break;
-                    }
-                    Key::Char('a') => {
-                        tudu_list.enter_insert_mode();
-                    }
+
+                    Key::Char('h') | Key::Left => tudu_list.close_selected(),
+                    Key::Char('j') | Key::Down => tudu_list.down(),
+                    Key::Char('k') | Key::Up =>  tudu_list.up(),
+                    Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
+                    Key::Char('a') =>  tudu_list.enter_insert_mode(),
                     Key::Char('y') => if show_quit_dialog {
                         println!("{}", clear::All);
                         break;
