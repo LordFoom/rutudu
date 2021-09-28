@@ -358,27 +358,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                     _ => {}
                 },
                 InputMode::Open => match input{//allow moving up and down to select
-                    //
-                    Key::Backspace => {}
-                    Key::Left => {}
-                    Key::Home => {}
-                    Key::End => {}
-                    Key::PageUp => {}
-                    Key::PageDown => {}
-                    Key::BackTab => {}
-                    Key::Delete => {}
-                    Key::Insert => {}
-                    Key::F(_) => {}
-                    // Key::Char('h') | Key::Left => {}
                     Key::Char('j') | Key::Down => tudu_list.open_file_down(),
                     Key::Char('k') | Key::Up => tudu_list.open_file_up(),
                     Key::Char('l') | Key::Right | Key::Char('\n') =>tudu_list.load_list_from_file_dialog(),
-                    Key::Char(_) => {}
-                    Key::Alt(_) => {}
-                    Key::Ctrl(_) => {}
-                    Key::Null => {}
                     Key::Esc => tudu_list.enter_edit_mode(),
-                    Key::__IsNotComplete => {}
+                    _ => {}
                 }
             }
         };
