@@ -272,9 +272,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         if let Event::Input(input) = events.next()? {
             match tudu_list.input_mode {
                 InputMode::Edit => match input {
-                    Key::Char('q') => {
-                        show_quit_dialog = true;
-                    }
+                    Key::Char('q') => show_quit_dialog = true,
                     Key::Char('s') => tudu_list.enter_save_mode(),
                     Key::Char('o') => tudu_list.enter_open_mode(),
                     Key::Char('x') => tudu_list.toggle_selected_status(),//println!("{}", clear::All);
@@ -284,7 +282,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('j') | Key::Down => tudu_list.down(),
                     Key::Char('k') | Key::Up =>  tudu_list.up(),
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
-                    Key::Char('a') =>  tudu_list.enter_insert_mode(),
+                    Key::Char('a') => tudu_list.enter_insert_mode(),
+                    Key::Ctrl('a') => tudu_list.enter_child_insert_mode(),
                     Key::Char('y') => if show_quit_dialog {
                         println!("{}", clear::All);
                         break;

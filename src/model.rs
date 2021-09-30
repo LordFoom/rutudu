@@ -184,6 +184,7 @@ pub struct RutuduList {
 
 }
 
+
 ///New todolist out of nuffink
 impl Default for RutuduList {
     fn default() -> Self {
@@ -215,10 +216,10 @@ impl RutuduList {
     }
 
     //Create an item as a sub item of the currently selected item
-    pub fn enter_insert_mode_with_parent(&mut self){
-
+    pub fn enter_child_insert_mode(&mut self) {
+        // let i = self.items.state.selected().unwrap_or(0);
+        self.input_mode = InputMode::InsertChild;
     }
-
     //Create an item at the current level
     pub fn enter_insert_mode(&mut self) {
         self.input_mode = InputMode::Insert;
