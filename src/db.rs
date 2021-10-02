@@ -63,12 +63,14 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
     let mut stmt = conn
         .prepare("select id, title, entry, parent_id, completeStatus, expandStatus from rutudu_list")?;
 
+    //need to do child ids someho        Item { id: 0, title, entry, parent_id: parent.id.clone(), child_ids: Vec::new(), expand: ExpandStatus::Closed, complete: CompleteStatus::Incomplete }w
     let item_iter = stmt.query_map([],|row|{
         Ok(Item{
             id: row.get("id")?,
             title: row.get("title")?,
             entry: row.get("entry")?,
             parent_id: row.get("parent_id")?,
+            child_ids: Vec::new(),
             complete: FromPrimitive::from_u8(row.get("completeStatus")?).unwrap_or(CompleteStatus::Incomplete),
             expand: FromPrimitive::from_u8(row.get("expandStatus")?).unwrap_or(ExpandStatus::Closed),
             })

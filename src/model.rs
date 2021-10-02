@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use tui::text::{Span, Spans};
 use tui::widgets::{ListItem, ListState, Block, Borders, BorderType, List};
 use tui::style::{Style, Modifier, Color};
@@ -26,19 +27,14 @@ pub enum ExpandStatus{
 }
 
 
-// impl FromPrimitive for ExpandStatus{
-//     fn from_u8(n: u8) -> Option<Self> {
-//         match  { }
-//     }
-// }
-
-///Represent items on the todo list
+///Represent items on the rutudu list
 pub struct Item {
     pub id: u32,
     pub title: String,
     pub entry: String,
     ///if None, this is on the root level
     pub parent_id: u32,
+    pub child_ids: Vec<u32>,
     pub expand: ExpandStatus,
     pub complete: CompleteStatus,
 }
@@ -56,6 +52,7 @@ impl Item {
             title: title.to_string(),
             entry: entry.to_string(),
             parent_id: 0,
+            child_ids: Vec::new(),
             expand:ExpandStatus::Closed,
             complete: CompleteStatus::Incomplete,
         }
@@ -67,13 +64,21 @@ impl Item {
             title,
             entry,
             parent_id,
+            child_ids:Vec::new(),
             expand:ExpandStatus::Closed,
             complete: CompleteStatus::Incomplete,
         }
+        //update parent's child ids?? fuck
     }
     ///yep, has a parent but may not be leaf
-    pub fn new_child(title: String, entry: String, parent: Item) -> Item {
-        Item {id:0, title, entry, parent_id: parent.id.clone(), expand:ExpandStatus::Closed, complete: CompleteStatus::Incomplete, }
+    pub fn new_child(id: u32, title: String, entry: String, parent: Item) -> Item {
+        Item { id,
+            title,
+            entry,
+            parent_id: parent.id.clone(),
+            child_ids: Vec::new(),
+            expand: ExpandStatus::Closed,
+            complete: CompleteStatus::Incomplete }
     }
 
     ///Symbol to indicate if item is expanded or collapsed
@@ -102,6 +107,11 @@ impl Item {
         }
         content
     }
+}
+
+///This will be a hierarchy of items, associated by parent id, until we get to the last one
+pub struct StatefulMap<T>{
+    pub items: HashMap<u32,StatefulList<T>>,
 }
 
 #[derive(Clone)]
