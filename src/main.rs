@@ -196,7 +196,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // let mut items = [ListItem::new("Item 1"),
     //     ListItem::new("Item 2"), ListItem::new("Item 3")];
-    let mut show_quit_dialog = false;
     loop {
         terminal.draw(|f| {
             let mut lst_state = tudu_list.items.state.clone();
@@ -259,20 +258,17 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             match tudu_list.input_mode {
                 InputMode::Insert | InputMode::InsertChild=>  show_new_item_input(&mut tudu_list, f),
-                InputMode::Edit => {
-                    if show_quit_dialog {
-                        draw_quit_dialog(f);
-                    };
-                },
+                InputMode::Quit => draw_quit_dialog(f),
                 InputMode::Save => draw_save_dialog(&mut tudu_list,f),
                 InputMode::Open =>  draw_open_dialog(&mut tudu_list,f),
+                InputMode::Edit =>  {},
             }
         }).unwrap();
 
         if let Event::Input(input) = events.next()? {
             match tudu_list.input_mode {
                 InputMode::Edit => match input {
-                    Key::Char('q') => show_quit_dialog = true,
+                    Key::Char('q') => tudu_list.enter_quit_mode(),
                     Key::Char('s') => tudu_list.enter_save_mode(),
                     Key::Char('o') => tudu_list.enter_open_mode(),
                     Key::Char('x') => tudu_list.toggle_selected_status(),//println!("{}", clear::All);
@@ -284,14 +280,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
                     Key::Char('a') => tudu_list.enter_insert_mode(),
                     Key::Ctrl('a') => tudu_list.enter_child_insert_mode(),
-                    Key::Char('y') => if show_quit_dialog {
-                        println!("{}", clear::All);
-                        break;
-                    }
+                    // Key::Char('y') => if show_quit_dialog {
+                    //     println!("{}", clear::All);
+                    //     break;
+                    // }
 
-                    Key::Char('n') => if show_quit_dialog {
-                        show_quit_dialog = false;
-                    }
+                    // Key::Char('n') => if show_quit_dialog {
+                    //     show_quit_dialog = false;
+                    // }
 
 
                     _ => {}
@@ -327,6 +323,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('k') | Key::Up => tudu_list.open_file_up(),
                     Key::Char('l') | Key::Right | Key::Char('\n') =>tudu_list.load_list_from_file_dialog(),
                     Key::Esc => tudu_list.enter_edit_mode(),
+                    _ => {}
+                },
+                InputMode::Quit => match input {
+                    Key::Char('y') => {
+                        println!("{}", clear::All);
+                        break;
+                    },
+                    Key::Char('n') => tudu_list.enter_edit_mode(),
                     _ => {}
                 }
             }

@@ -175,6 +175,7 @@ pub enum InputMode {
     Edit,
     Save,
     Open,
+    Quit,
 }
 
 pub struct RutuduList {
@@ -193,7 +194,6 @@ pub struct RutuduList {
     pub cursor_position: [u16;2],
 
 }
-
 
 ///New todolist out of nuffink
 impl Default for RutuduList {
@@ -225,6 +225,9 @@ impl RutuduList {
         return self.input_mode == InputMode::Save;
     }
 
+    pub fn enter_quit_mode(&mut self) {
+        self.input_mode = InputMode::Quit;
+    }
     //Create an item as a sub item of the currently selected item
     pub fn enter_child_insert_mode(&mut self) {
         // let i = self.items.state.selected().unwrap_or(0);
