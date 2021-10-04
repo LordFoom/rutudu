@@ -18,8 +18,8 @@ pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
     let conn = Connection::open(fp_suffixed)?;
     create_table_if_needed(&conn);
     for item in &list.items.items{
-        match conn.execute("INSERT INTO rutudu_list(parent_id, title, entry, create_date, completeStatus, expandStatus )
-                                    VALUES(?1,?2,?3,strftime('%Y-%m-%d %H-%M-%S','now'), ?4, ?5 )", params![0, &item.title, &item.entry, &item.complete.to_u8(), &item.expand.to_u8()]){
+        match conn.execute("INSERT INTO rutudu_list(id, parent_id, title, entry, completeStatus, expandStatus , create_date)
+                                    VALUES(?1, ?2, ?3, ?4, ?5, ?6 strftime('%Y-%m-%d %H-%M-%S','now') )", params![&item.id, &item.parent_id, &item.title, &item.entry, &item.complete.to_u8(), &item.expand.to_u8()]){
             Ok(updated) => debug!("Number of rows inserted: {}", updated),
             Err(why) => error!("Failed to insert row: {}", why),
         }
@@ -63,7 +63,7 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
     let mut stmt = conn
         .prepare("select id, title, entry, parent_id, completeStatus, expandStatus from rutudu_list")?;
 
-    //need to do child ids someho        Item { id: 0, title, entry, parent_id: parent.id.clone(), child_ids: Vec::new(), expand: ExpandStatus::Closed, complete: CompleteStatus::Incomplete }w
+    //need to do child ids someho        Item { id: 0, title, entry, parent_id: parent.id.clone(), child_ids: Vec::new(), expand: ExpandStatus::Closed, complete: CompleteStatus::Incomplete }
     let item_iter = stmt.query_map([],|row|{
         Ok(Item{
             id: row.get("id")?,
