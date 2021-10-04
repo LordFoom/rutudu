@@ -46,9 +46,9 @@ impl Item {
     // }
 
     ///constructor, no parent
-    pub fn new(title: &str, entry: &str) -> Item {
+    pub fn new(id: u32, title: &str, entry: &str) -> Item {
         // Item { title, entry, parent: Box::new(None) }
-        Item{ id:0,
+        Item{id,
             title: title.to_string(),
             entry: entry.to_string(),
             parent_id: 0,
@@ -312,6 +312,8 @@ impl RutuduList {
     }
 
     pub fn add_item_to_list(&mut self){
+        //todo here we will insert child if in the insertchild mode
+        //it will use the currently selected node
         let item = self.get_current_input_as_item();
         self.items.items.push(item);
         self.enter_edit_mode();
@@ -321,8 +323,8 @@ impl RutuduList {
         //split by newlines
         let first_new_line = entry.find("\n").unwrap_or(entry.len());
         let title:String = entry.drain(..first_new_line).collect();
-        // content
-        Item::new(&title, &entry)
+        // content - we set the id to the maximum
+        Item::new(self.items.items.len().clone() as u32,&title, &entry)
     }
 
     ///Add character to current input
