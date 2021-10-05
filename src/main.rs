@@ -298,7 +298,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Ctrl('n') =>  tudu_list.add_item_to_list(),
                     Key::Backspace => tudu_list.remove_character(),
                     Key::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
-                    Key::Esc => tudu_list.enter_edit_mode();
+                    Key::Esc => tudu_list.enter_edit_mode(),
                     // Key::Char(c) => {println!("{}", c)}
                     Key::Ctrl(c) => { println!("{}", c) }
                     _ => {}

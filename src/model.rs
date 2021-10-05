@@ -313,8 +313,15 @@ impl RutuduList {
 
     pub fn add_item_to_list(&mut self){
         //todo here we will insert child if in the insertchild mode
-        //it will use the currently selected node
-        let item = self.get_current_input_as_item();
+        //it will use the currently selected node if exists or 0 otherwise
+        //here we get the parent id if it exists
+        let mut item = self.get_current_input_as_item();
+        item.parent_id = if self.input_mode==InputMode::InsertChild {
+            if let Some(i) = self.items.state.selected(){
+                self.items.items[i].id.clone()
+            }else{ 0 }
+        }else{ 0 };
+
         self.items.items.push(item);
         self.enter_edit_mode();
     }
