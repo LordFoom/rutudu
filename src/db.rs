@@ -19,7 +19,8 @@ pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
     create_table_if_needed(&conn);
     for item in &list.items.items{
         match conn.execute("INSERT INTO rutudu_list(id, parent_id, title, entry, completeStatus, expandStatus , create_date)
-                                    VALUES(?1, ?2, ?3, ?4, ?5, ?6 strftime('%Y-%m-%d %H-%M-%S','now') )", params![&item.id, &item.parent_id, &item.title, &item.entry, &item.complete.to_u8(), &item.expand.to_u8()]){
+                                    VALUES(?1, ?2, ?3, ?4, ?5, ?6, strftime('%Y-%m-%d %H-%M-%S','now') )",
+                           params![&item.id, &item.parent_id, &item.title, &item.entry, &item.complete.to_u8(), &item.expand.to_u8()]){
             Ok(updated) => debug!("Number of rows inserted: {}", updated),
             Err(why) => error!("Failed to insert row: {}", why),
         }
