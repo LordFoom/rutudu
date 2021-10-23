@@ -198,9 +198,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     //     ListItem::new("Item 2"), ListItem::new("Item 3")];
     loop {
         terminal.draw(|f| {
-            let mut lst_state = tudu_list.items.state.clone();
+            //get the map and then build a new list and display it
+            let map_items = tudu_list.items.clone();
+
+
+
             let title = tudu_list.list_name().clone();
+            // let mut items: Vec<ListItem> = tudu_list.items_as_vec();
             let mut items: Vec<ListItem> = tudu_list.items_as_vec();
+            let mut lst_state = tudu_list.items.state.clone();
             let tui_items = List::new(items)
                 .block(Block::default().title(title).borders(Borders::ALL))
                 .style(Style::default().fg(Color::White))
