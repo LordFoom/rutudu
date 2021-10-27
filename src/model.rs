@@ -122,13 +122,17 @@ impl Item {
         content
     }
 
-    pub fn depth(&self)->u8{
-        if self.parent_id == 0{
-            return 0;
-        }
-        // return 1 + get_parent().depth();
-        1
+    pub fn expand(&mut self){
+        self.expand = ExpandStatus::Open;
     }
+
+    // pub fn depth(&self)->u8{
+    //     if self.parent_id == 0{
+    //         return 0;
+    //     }
+    //     // return 1 + get_parent().depth();
+    //     1
+    // }
 
     pub fn is_expanded(&self)->bool{
        self.expand == ExpandStatus::Open
@@ -332,6 +336,15 @@ impl RutuduList {
 
     pub fn expand_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
+        //get the parent id and then get the item and set its expansion status
+        let parent_id = self.items.items[i].parent_id;
+        let item_id = self.items.items[i].id;
+        if let Some(children) = self.item_tree.get_mut(&parent_id) {
+            children.iter_mut().for_each(|item|{
+           if item.id == item_id {
+               item.expand();
+           }
+        })};
         self.items.items[i].expand = ExpandStatus::Open;
         self.dirty_list = true;
     }
@@ -401,6 +414,7 @@ impl RutuduList {
     //     item_list
     // }
 
+    ///If the list is dirty, we create a new one from the hashmap
     pub fn rebuild_list_if_dirty(&mut self){
         debug!("If list is dirty will rebuild...");
         if self.dirty_list{

@@ -202,7 +202,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let title = tudu_list.list_name().clone();
             // let mut items: Vec<ListItem> = tudu_list.items_as_vec();
             // tudu_list.clear_list();
-            tudu_list.rebuild_list();
+            tudu_list.rebuild_list_if_dirty();
             let mut item_list = tudu_list.items_as_vec();
             let mut items = item_list.clone();
             let mut lst_state = tudu_list.items.state.clone();
@@ -285,15 +285,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
                     Key::Char('a') => tudu_list.enter_insert_mode(),
                     Key::Ctrl('a') => tudu_list.enter_child_insert_mode(),
-                    // Key::Char('y') => if show_quit_dialog {
-                    //     println!("{}", clear::All);
-                    //     break;
-                    // }
-
-                    // Key::Char('n') => if show_quit_dialog {
-                    //     show_quit_dialog = false;
-                    // }
-
 
                     _ => {}
                 },
@@ -365,7 +356,6 @@ fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
         .block(Block::default().borders(Borders::ALL).title("Really Quit?"));
     // let area = centered_rect(10, 16, size);
     let area = little_popup(20, 3, rect);
-
 
     f.render_widget(Clear, area);
     // f.render_widget(quit_text, quit_chunks[0]);
