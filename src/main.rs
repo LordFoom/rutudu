@@ -199,13 +199,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         terminal.draw(|f| {
             //get the map and then build a new list and display it
-            let map_items = tudu_list.items.clone();
-
-
-
             let title = tudu_list.list_name().clone();
             // let mut items: Vec<ListItem> = tudu_list.items_as_vec();
-            let mut items: Vec<ListItem> = tudu_list.items_as_vec();
+            // tudu_list.clear_list();
+            tudu_list.rebuild_list();
+            let mut item_list = tudu_list.items_as_vec();
+            let mut items = item_list.clone();
             let mut lst_state = tudu_list.items.state.clone();
             let tui_items = List::new(items)
                 .block(Block::default().title(title).borders(Borders::ALL))

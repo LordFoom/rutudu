@@ -5,6 +5,7 @@ use tui::style::{Style, Modifier, Color};
 use std::fs::File;
 use std::path::Path;
 use std::error::Error;
+use std::mem;
 use std::os::unix::process::parent_id;
 use regex::Regex;
 use log::debug;
@@ -39,6 +40,7 @@ pub struct Item {
     pub child_ids: Vec<u32>,
     pub expand: ExpandStatus,
     pub complete: CompleteStatus,
+    pub depth: usize,
 }
 
 impl Item {
@@ -58,6 +60,7 @@ impl Item {
             child_ids: Vec::new(),
             expand:ExpandStatus::Closed,
             complete: CompleteStatus::Incomplete,
+            depth: 0,
         }
     }
     ///constructor, parent
@@ -71,6 +74,7 @@ impl Item {
             child_ids:Vec::new(),
             expand:ExpandStatus::Closed,
             complete: CompleteStatus::Incomplete,
+            depth: 0,//probably need to do something like that
         }
         //update parent's child ids?? fuck
     }
@@ -83,7 +87,10 @@ impl Item {
             parent_id: parent.id.clone(),
             child_ids: Vec::new(),
             expand: ExpandStatus::Closed,
-            complete: CompleteStatus::Incomplete }
+            complete: CompleteStatus::Incomplete ,
+            depth: parent.depth+1,
+
+        }
     }
 
     ///Symbol to indicate if item is expanded or collapsed
@@ -98,15 +105,15 @@ impl Item {
     ///todo Is THIS where we decide if and how to display children
     ///Return the item as text, either just the title,
     /// or the title and the entry, depending on expand status
-    pub fn text(&self, item_no:usize, depth:usize) -> Vec<Spans> {
+    pub fn text(&self, item_no:usize) -> Vec<Spans> {
         let mut modifier = match self.complete  {
                 CompleteStatus::Complete => Modifier::CROSSED_OUT,
                 CompleteStatus::Incomplete => Modifier::empty(),
             };
-        let depth_string = "--".to_string().repeat(depth);
+        let depth_string = "--".to_string().repeat(self.depth);
         let mut content = vec![Spans::from(
             Span::styled(format!("{}{}.{}: {} {}", depth_string,
-                              &item_no, &depth, &self.expansion_state_symbol(), self.title),
+                              &item_no, &self.depth, &self.expansion_state_symbol(), self.title),
             Style::default().add_modifier(modifier)))];
         //show our expanded content if need be
         if let ExpandStatus::Open = self.expand{
@@ -253,7 +260,7 @@ pub struct RutuduList {
     ///Here we keep our tree
     /// those without a parent, root, in 0
     /// those WITH
-    pub item_tree: HashMap<u32, StatefulList<Item>>,
+    pub item_tree: HashMap<u32, Vec<Item>>,
     pub open_file_dialog_files: StatefulList<String>,
 
     ///if the list has been saved, this is where
@@ -264,13 +271,15 @@ pub struct RutuduList {
     pub current_item: String,
     /// This is the x,y of the cursor
     pub cursor_position: [u16;2],
+    /// This tells us if we need to rebuild the list
+    pub dirty_list: bool,
 
 }
 
 ///New todolist out of nuffink
 impl Default for RutuduList {
     fn default() -> Self {
-RutuduList {
+        RutuduList {
             input_mode: InputMode::Edit,
             items: StatefulList::new(),
             item_tree: HashMap::new(),
@@ -279,6 +288,7 @@ RutuduList {
             cursor_position: [ 1,1 ],
             file_path: String::new(),
             has_scanned: false,
+            dirty_list: false,
         }
     }
 }
@@ -323,6 +333,7 @@ impl RutuduList {
     pub fn expand_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
         self.items.items[i].expand = ExpandStatus::Open;
+        self.dirty_list = true;
     }
 
     pub fn toggle_selected_status(&mut self){
@@ -332,6 +343,10 @@ impl RutuduList {
             CompleteStatus::Incomplete => CompleteStatus::Complete,
             CompleteStatus::Complete => CompleteStatus::Incomplete,
         }
+    }
+
+    pub fn clear_list(&mut self){
+        self.items.items.clear();
     }
 
     pub fn load_list_from_file_dialog(&mut self){
@@ -351,67 +366,120 @@ impl RutuduList {
     pub fn open_file_down(&mut self){
         self.open_file_dialog_files.next();
     }
-
     pub fn items_as_vec(&self)->Vec<ListItem>{
-        // debug!("Items as vec");
-        //we go over the root nodes
-        if let Some(root_list) = self.item_tree.get(&0){
-            debug!("Found the rootlist");
-            root_list.items
-                            .iter()
-                            .enumerate()
-                            .map(|(i, msg)| {
-                                let mut content = self.build_subtree(msg, i,0);
-                                ListItem::new(content)
-                            }).collect()
-        }else{
-            Vec::new()
-        }
-        // let x = StatefulList::new();
-        // self.rutudu_list.item_tree.get(&self.id).unwrap_or(&x)
-        //     .items
-        //     .iter()
-        //     .enumerate()
-        //     .for_each(|(i, item)|{
-        //         let sub_number=format!("{}.{}", item_no, i.to_string());
-        //         content.append(&mut item.text(&sub_number.clone(), depth+1).clone());
-        //     });
-
-
+        let item_ref = &self.items;
+        item_ref
+            .items
+            .iter()
+            .enumerate()
+            .map(|(i, msg)| {
+                let mut content = msg.text(i);
+                ListItem::new(content)
+            }).collect()
     }
 
-    pub fn build_subtree<'a>(&'a self, item:&'a Item, item_no:usize, depth:usize) -> Vec<Spans<'a>> {
-        debug!("We're building the subtree for item {} ", item.id);
-        //we need to in here do the item itself, man!
-        let mut item_text_as_vec:Vec<Spans<'a>> = item.text(item_no.clone(), depth);
-        if item.is_collapsed(){
-            return item_text_as_vec
+    // pub fn items_as_vec(&self)->StatefulList<ListItem>{
+    //     // debug!("Items as vec");
+    //     //we go over the root nodes
+    //     let mut item_list = StatefulList::new();
+    //     let mut calced_state= self.items.state.clone();
+    //     let item_vec = if let Some(root_list) = self.item_tree.get(&0){
+    //         // self.clear_list();
+    //         root_list
+    //             .iter()
+    //             .enumerate()
+    //             .flat_map(|(i, msg)| {
+    //                 // self.build_subtree(msg, i,0, &calced_state )
+    //                  ListItem::new(msg)
+    //             }).collect()
+    //     }else{
+    //         Vec::new()
+    //     };
+    //
+    //     item_list.items = item_vec;
+    //     item_list.state = calced_state;
+    //     item_list
+    // }
+
+    pub fn rebuild_list_if_dirty(&mut self){
+        debug!("If list is dirty will rebuild...");
+        if self.dirty_list{
+            self.rebuild_list();
         }
-        // debug!("Build subtree for item: {}", item.id.to_string());
-        if let Some(children) = self.item_tree.get(&item.id) {
-            //now we get the children
-            for child in &children.items {
-                let sub_vec = &self.build_subtree(child, item_no.clone(),depth.clone() + 1);
-                for span in sub_vec {
-                    item_text_as_vec.push(span.clone());
+    }
+    pub fn rebuild_list(&mut self){
+       debug!("Building the stateful list");
+        self.dirty_list = false;
+        //get the map and the list of the root - our forest!
+        if self.item_tree.is_empty(){//if there is no root list, nothing to do
+            return;
+        }
+
+        let items_vec = self.get_subtree_vec(0, 0);
+        self.items.items.clear();
+        let list_items:StatefulList<ListItem> = StatefulList::new();
+        items_vec.iter().enumerate().for_each(|(i, item)|{
+            let new_item = ListItem::new(item.text(i));
+            self.items.items.push(item.clone());
+        });
+        //now build a stateful list
+        // mem::replace(self.items, list);
+        //for each item, build a subtree
+    }
+
+    pub fn get_subtree_vec(&self, parent_id:u32, depth:usize) ->Vec<Item>{
+        let mut ret_list = Vec::new();
+        if self.item_tree.contains_key(&parent_id) {
+            let item_subtree_vec:Vec<Item> = self.item_tree[&parent_id].clone();
+            for mut item in item_subtree_vec {
+                item.depth = depth;
+                ret_list.push(item.clone());
+                if item.is_expanded() {
+                    let sub_sub_tree_vec = self.get_subtree_vec(item.id.clone(), depth + 1);
+                    sub_sub_tree_vec.iter().for_each(|i| { ret_list.push(i.clone())})
                 }
-            };
-            item_text_as_vec
-        }else{
-            Vec::new()
+            }
         }
+        return ret_list;
     }
 
-    // pub fn build_item_spans_as_vec<'a>(&'a self, item_id:u32, item_no:&'a String, depth:usize) -> Vec<Spans<'a>> {
+    // ///Help build the spans of our subtree - will also make sure the list has all the right items in it
+    // pub fn build_subtree<'a>(&'a self, item:&'a Item, item_no:usize, depth:usize, calced_state:&ListState) -> Vec<ListItem<'a>> {
+    //     debug!("We're building the subtree for item {} ", item.id);
+    //     //we need to in here do the item itself, man!
+    //     let mut item_text_as_vec:Vec<Spans<'a>> = item.text(item_no.clone(), self.depth);
+    //     let mut vec_list:Vec<ListItem<'a>> = Vec::new();
+    //     let li = ListItem::new(item_text_as_vec);
+    //     vec_list.push(li);
+    //     if item.is_collapsed(){
+    //         vec_list
+    //     }else{
+    //         Vec::new()
+    //     }
+    //     // debug!("Build subtree for item: {}", item.id.to_string());
+    //     // if let Some(children) = self.item_tree.get(&item.id) {
+    //     //     //now we get the children
+    //     //     for child in children {
+    //     //         &self.build_subtree(child, item_no.clone(),depth.clone() + 1, calced_state)
+    //     //         // for span in sub_vec {
+    //     //         //     item_text_as_vec.push(span.clone());
+    //     //         // }
+    //     //     };
+    //     //     item_text_as_vec
+    //     // }else{
+    //     //     Vec::new()
+    //     // }
+    // }
+
     pub fn build_item_spans_as_vec(&self, item_no:usize, item_id:u32, depth:usize) -> Vec<Spans> {
         // let item = self.items.items.get(item_id as usize).unwrap();
         let item = self.items.items.get(item_id as usize).unwrap();
         // let mut item_text_as_vec= item.text(item_no, depth);
-        let mut item_text_as_vec= item.text(item_no.clone(), depth);
+        let mut item_text_as_vec= item.text(item_no.clone());
         //now we get the children
          if let Some(children) = self.item_tree.get(&item_id){
              let i = 0;
-             for child in &children.items {
+             for child in children {
                  // let sub_number = format!("{}.{}", item_no, i);
                  let sub_vec = &self.build_item_spans_as_vec(item_no.clone(), child.id.clone(), depth.clone() + 1);
                  for span in sub_vec {
@@ -485,7 +553,7 @@ impl RutuduList {
         //it will use the currently selected node if exists or 0 otherwise
         //here we get the parent id if it exists
         let mut item = self.get_current_input_as_item();
-        //this is so wrong
+        //get the parents id if it is in insertchild mode
         item.parent_id = if self.input_mode == InputMode::InsertChild {
             if let Some(i) = self.items.state.selected() {
                 self.items.items[i].id.clone()
@@ -495,15 +563,17 @@ impl RutuduList {
         //now we place the item in the right list in the hashmap
         if self.item_tree.contains_key(&item.parent_id) {//could be zero, right
             if let Some(sf_list) = self.item_tree.get_mut(&item.parent_id) {
-                sf_list.items.push(item);
+                sf_list.push(item);
             }
         }else {
             debug!("Inserting a new list");
-            let mut il = StatefulList::new();
+            let mut il = Vec::new();//StatefulList::new();
             let p_id = item.parent_id.clone();
-            il.items.push(item);
+            il.push(item);
             self.item_tree.insert(p_id, il);
         }
+        //now we mark the list as dirty and tell it to rebuild
+        self.dirty_list = true;
 
         //and we also keep a list of all the items
 
