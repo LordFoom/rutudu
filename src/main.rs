@@ -199,7 +199,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         terminal.draw(|f| {
             //get the map and then build a new list and display it
-            let title = tudu_list.list_name().clone();
+            let title = tudu_list.list_name();
             // let mut items: Vec<ListItem> = tudu_list.items_as_vec();
             // tudu_list.clear_list();
             tudu_list.rebuild_list_if_dirty();
@@ -279,7 +279,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('x') => tudu_list.toggle_selected_status(),//println!("{}", clear::All);
                         // break;
 
-                    Key::Char('h') | Key::Left => tudu_list.close_selected(),
+                    Key::Char('h') | Key::Left => tudu_list.collapse_selected(),
                     Key::Char('j') | Key::Down => tudu_list.down(),
                     Key::Char('k') | Key::Up =>  tudu_list.up(),
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),

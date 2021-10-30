@@ -22,10 +22,11 @@ pub enum CompleteStatus {
     Complete = 2,
 }
 
-#[derive(FromPrimitive, ToPrimitive, Clone, PartialEq)]
+#[derive(FromPrimitive, ToPrimitive, Clone, PartialEq, PartialOrd, Debug)]
 pub enum ExpandStatus{
     Closed = 1,
-    Open = 2,
+    ShowChildren = 2,
+    Open = 3,
 }
 
 
@@ -98,6 +99,7 @@ impl Item {
         return match self.expand{
             ExpandStatus::Open => String::from("[-]"),
             ExpandStatus::Closed => String::from("[+]"),
+            ExpandStatus::ShowChildren => String::from("[|]"),
         }
 
     }
@@ -122,8 +124,29 @@ impl Item {
         content
     }
 
+    //Increase expansion status from closed to show children to open
     pub fn expand(&mut self){
-        self.expand = ExpandStatus::Open;
+        debug!("Hello");
+        match self.expand {
+            ExpandStatus::Closed => self.expand = ExpandStatus::ShowChildren,
+            ExpandStatus::ShowChildren => self.expand = ExpandStatus::Open,
+            ExpandStatus::Open => {},//do nothing
+        };
+        debug!("Expand status: {:?}",self.expand);
+    }
+
+    ///Decrease expansion status from open to show children to closed
+    pub fn collapse(&mut self){
+        match self.expand {
+            ExpandStatus::Closed => {}//do nothing
+            ExpandStatus::ShowChildren => self.expand = ExpandStatus::Closed,
+            ExpandStatus::Open => self.expand = ExpandStatus::ShowChildren,
+        };
+    }
+
+    #[test]
+    pub fn test_collapse(){
+
     }
 
     // pub fn depth(&self)->u8{
@@ -134,8 +157,8 @@ impl Item {
     //     1
     // }
 
-    pub fn is_expanded(&self)->bool{
-       self.expand == ExpandStatus::Open
+    pub fn should_show_children(&self) ->bool{
+       self.expand >= ExpandStatus::ShowChildren
     }
 
     pub fn is_collapsed(&self)->bool{
@@ -143,7 +166,7 @@ impl Item {
     }
 
     pub fn is_open(&self)->bool{
-        self.is_expanded()
+        self.expand == ExpandStatus::Open
     }
 
     pub fn is_closed(&self)->bool{
@@ -317,6 +340,7 @@ impl RutuduList {
     }
     //Create an item as a sub item of the currently selected item
     pub fn enter_child_insert_mode(&mut self) {
+        debug!("Insert child mode");
         // let i = self.items.state.selected().unwrap_or(0);
         self.input_mode = InputMode::InsertChild;
     }
@@ -329,25 +353,72 @@ impl RutuduList {
         self.input_mode = InputMode::Open;
     }
 
-    pub fn close_selected(&mut self){
+    pub fn collapse_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
-        self.items.items[i].expand = ExpandStatus::Closed;
-    }
-
-    pub fn expand_selected(&mut self){
-        let i = self.items.state.selected().unwrap_or(0);
+        //expand the parent
+        self.items.items[i].collapse();
         //get the parent id and then get the item and set its expansion status
         let parent_id = self.items.items[i].parent_id;
         let item_id = self.items.items[i].id;
-        if let Some(children) = self.item_tree.get_mut(&parent_id) {
-            children.iter_mut().for_each(|item|{
-           if item.id == item_id {
-               item.expand();
-           }
-        })};
-        self.items.items[i].expand = ExpandStatus::Open;
+        if parent_id > 0 {
+            if let Some(children) =  self.item_tree.get_mut(&parent_id) {
+                children.iter_mut().for_each(|item|{
+                    if item.id == item_id {
+                        item.collapse();
+                    }
+                })}};
         self.dirty_list = true;
     }
+
+    ///Moves expansion status up the scale
+    // pub fn expand_selected(&mut self){
+    //     debug!("Expanding selected");
+    //     let i = self.items.state.selected().unwrap_or(0);
+    //     //expand the parent
+    //     debug!("Expanding parent");
+    //     self.items.items[i].expand();
+    //     //get the parent id and then get the item and set its expansion status
+    //     let parent_id = self.items.items[i].parent_id;
+    //     let item_id = self.items.items[i].id;
+    //     debug!("Expanding children");
+    //     if parent_id > 0 {
+    //         if let Some(children) =  self.item_tree.get_mut(&parent_id) {
+    //             children.iter_mut().for_each(|item|{
+    //                 item.expand();
+    //                 // if item.id == item_id {
+    //                 //     item.expand();
+    //                 // }
+    //             })}};
+    //     self.dirty_list = true;
+    // }
+
+    ///Moves expansion status up the scale
+    pub fn expand_selected(&mut self){
+        let i = self.items.state.selected().unwrap_or(0);
+        //expand the parent
+        // self.items.items[i].expand(); // this doesn't matter because we are rebuilding the list from the map
+        //get the parent id and then get the item and set its expansion status
+        let parent_id = self.items.items[i].parent_id;
+        let item_id = self.items.items[i].id;
+        if let Some(root_elements) = self.item_tree.get_mut(&parent_id) {
+            root_elements.iter_mut().for_each(|root|{
+                if root.id == item_id {
+                    root.expand();
+                }
+            })};
+        self.dirty_list = true;
+    }
+
+    // pub fn expand_subtree(&mut self, parent_id:&u32){
+    //     //get the vec i belong to
+    //     if let Some(elems) = self.item_tree.get_mut(parent_id) {
+    //         for item in elems {
+    //             item.expand();
+    //             self.expand_subtree(&item.id);
+    //         }
+    //     }
+    // }
+
 
     pub fn toggle_selected_status(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
@@ -416,23 +487,22 @@ impl RutuduList {
 
     ///If the list is dirty, we create a new one from the hashmap
     pub fn rebuild_list_if_dirty(&mut self){
-        debug!("If list is dirty will rebuild...");
         if self.dirty_list{
             self.rebuild_list();
         }
     }
     pub fn rebuild_list(&mut self){
-       debug!("Building the stateful list");
+       // debug!("Building the stateful list");
         self.dirty_list = false;
         //get the map and the list of the root - our forest!
         if self.item_tree.is_empty(){//if there is no root list, nothing to do
             return;
         }
 
-        let items_vec = self.get_subtree_vec(0, 0);
+        let root_items_vec = self.get_subtree_vec(0, 0);
         self.items.items.clear();
         let list_items:StatefulList<ListItem> = StatefulList::new();
-        items_vec.iter().enumerate().for_each(|(i, item)|{
+        root_items_vec.iter().enumerate().for_each(|(i, item)|{
             let new_item = ListItem::new(item.text(i));
             self.items.items.push(item.clone());
         });
@@ -448,7 +518,7 @@ impl RutuduList {
             for mut item in item_subtree_vec {
                 item.depth = depth;
                 ret_list.push(item.clone());
-                if item.is_expanded() {
+                if item.should_show_children() {
                     let sub_sub_tree_vec = self.get_subtree_vec(item.id.clone(), depth + 1);
                     sub_sub_tree_vec.iter().for_each(|i| { ret_list.push(i.clone())})
                 }
@@ -546,23 +616,19 @@ impl RutuduList {
 
     pub fn right(&mut self){
         if let Some(i) = self.items.state.selected(){
-            self.items.items[i].expand = ExpandStatus::Open;
+            self.items.items[i].expand();
         }
     }
 
     pub fn left(&mut self){
         if let Some(i) = self.items.state.selected(){
-            self.items.items[i].expand = ExpandStatus::Closed;
+            self.items.items[i].collapse();
         }
     }
 
-    ///Clear out the statuful list and then populates it from the map items
-    pub fn populate_stateful_list(&mut self){
-
-    }
 
     pub fn add_item_to_list(&mut self) {
-        debug!("Adding item to list");
+        // debug!("Adding item to list");
         //todo here we will insert child if in the insertchild mode
         //it will use the currently selected node if exists or 0 otherwise
         //here we get the parent id if it exists
