@@ -356,17 +356,16 @@ impl RutuduList {
     pub fn collapse_selected(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
         //expand the parent
-        self.items.items[i].collapse();
         //get the parent id and then get the item and set its expansion status
         let parent_id = self.items.items[i].parent_id;
+        debug!("Parent id:{}", parent_id);
         let item_id = self.items.items[i].id;
-        if parent_id > 0 {
-            if let Some(children) =  self.item_tree.get_mut(&parent_id) {
-                children.iter_mut().for_each(|item|{
+            if let Some(root) =  self.item_tree.get_mut(&parent_id) {//get the list we belong to, could be zero
+                root.iter_mut().for_each(|item|{
                     if item.id == item_id {
                         item.collapse();
                     }
-                })}};
+                })};
         self.dirty_list = true;
     }
 
