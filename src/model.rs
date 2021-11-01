@@ -8,7 +8,7 @@ use std::error::Error;
 use std::mem;
 use std::os::unix::process::parent_id;
 use regex::Regex;
-use log::debug;
+use log::{debug,warn};
 use chrono::{DateTime, Utc};
 use num_traits::{ FromPrimitive, ToPrimitive };
 use num_derive::{ FromPrimitive, ToPrimitive };
@@ -142,6 +142,13 @@ impl Item {
             ExpandStatus::ShowChildren => self.expand = ExpandStatus::Closed,
             ExpandStatus::Open => self.expand = ExpandStatus::ShowChildren,
         };
+    }
+
+    pub fn toggle_complete_status(&mut self){
+        self.complete = match self.complete {
+            CompleteStatus::Incomplete => CompleteStatus::Complete,
+            CompleteStatus::Complete => CompleteStatus::Incomplete,
+        }
     }
 
     #[test]
@@ -421,11 +428,18 @@ impl RutuduList {
 
     pub fn toggle_selected_status(&mut self){
         let i = self.items.state.selected().unwrap_or(0);
-
-        self.items.items[i].complete = match self.items.items[i].complete{
-            CompleteStatus::Incomplete => CompleteStatus::Complete,
-            CompleteStatus::Complete => CompleteStatus::Incomplete,
-        }
+        //mark it on the list
+        if let Some(item) = self.items.items.get_mut(i){
+            item.toggle_complete_status();
+            //mark it on the tree
+            if let Some(container_vec_) =  self.item_tree.get_mut(&item.parent_id) {
+                container_vec_.iter_mut()
+                              .filter(|i| &i.id==&item.id)
+                              .for_each(|i| i.toggle_complete_status());
+            }
+        }else{
+            warn!("Tried to toggle complete status with nothing selected")
+        };
     }
 
     pub fn clear_list(&mut self){
