@@ -19,4 +19,4 @@ but allows navigation,collapsing, etc. Couldn't find one so here we are.
 <img src="./example_pic.png" alt="Looks like this" >
 <img src="./open_file.png" alt="Opening files" >
 <img src="./rutud_1.gif" alt="The cursor works...in the forward direction" width="1046" height="555">
-<img src="./hierarchies.png" />
+<img src="./hierarchies.png" title=""sublists"/>
