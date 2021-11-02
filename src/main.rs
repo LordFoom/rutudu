@@ -63,7 +63,7 @@ fn init_logger(verbose: bool) {
         .appender(Appender::builder().build("stdout", Box::new(stdout)))
         .appender(Appender::builder().build("file_logger", Box::new(file_logger)))
         .build(Root::builder()
-            .appender("stdout")
+            // .appender("stdout")
             .appender("file_logger")
             .build(log_level))
         .unwrap();

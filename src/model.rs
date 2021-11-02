@@ -128,7 +128,10 @@ impl Item {
     pub fn expand(&mut self){
         debug!("Hello");
         match self.expand {
-            ExpandStatus::Closed => self.expand = ExpandStatus::ShowChildren,
+            ExpandStatus::Closed => {
+                self.expand = ExpandStatus::ShowChildren
+            }
+            ,
             ExpandStatus::ShowChildren => self.expand = ExpandStatus::Open,
             ExpandStatus::Open => {},//do nothing
         };
@@ -642,7 +645,6 @@ impl RutuduList {
 
     pub fn add_item_to_list(&mut self) {
         // debug!("Adding item to list");
-        //todo here we will insert child if in the insertchild mode
         //it will use the currently selected node if exists or 0 otherwise
         //here we get the parent id if it exists
         let mut item = self.get_current_input_as_item();

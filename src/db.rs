@@ -9,22 +9,35 @@ use rusqlite::{Connection, params};
 use std::path::Path;
 
 pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
-    debug!("About to save list, number of items: {}", list.items.items.len().to_string());
     let mut fp = &list.file_path.clone();
-    let mut fp_suffixed = String::new();
-    if !fp.to_ascii_lowercase().ends_with(".rtd") {
-        fp_suffixed= format!("{}.rtd", fp);
-    }
+    debug!("About to save list '{}', number of items: {}", fp, list.items.items.len().to_string());
+    let mut fp_suffixed= if !fp.to_ascii_lowercase().ends_with(".rtd") {
+        format!("{}.rtd", fp)
+    }else{
+        fp.to_string()
+    };
+    debug!("Connection will be file: {}", fp_suffixed);
     let conn = Connection::open(fp_suffixed)?;
     create_table_if_needed(&conn);
-    for item in &list.items.items{
-        match conn.execute("INSERT INTO rutudu_list(id, parent_id, title, entry, completeStatus, expandStatus , create_date)
+    list.item_tree.iter()
+        .for_each(|(i, sub_list )|{
+           sub_list.iter().for_each(|item|{
+               match conn.execute("INSERT INTO rutudu_list(id, parent_id, title, entry, completeStatus, expandStatus , create_date)
                                     VALUES(?1, ?2, ?3, ?4, ?5, ?6, strftime('%Y-%m-%d %H-%M-%S','now') )",
-                           params![&item.id, &item.parent_id, &item.title, &item.entry, &item.complete.to_u8(), &item.expand.to_u8()]){
-            Ok(updated) => debug!("Number of rows inserted: {}", updated),
-            Err(why) => error!("Failed to insert row: {}", why),
-        }
-    }
+                                  params![&item.id, &item.parent_id, &item.title, &item.entry, &item.complete.to_u8(), &item.expand.to_u8()]){
+                   Ok(updated) => debug!("Number of rows inserted: {}", updated),
+                   Err(why) => error!("Failed to insert row: {}", why),
+
+           }})
+        });
+    // for item in &list.items.items{
+    //     match conn.execute("INSERT INTO rutudu_list(id, parent_id, title, entry, completeStatus, expandStatus , create_date)
+    //                                 VALUES(?1, ?2, ?3, ?4, ?5, ?6, strftime('%Y-%m-%d %H-%M-%S','now') )",
+    //                        params![&item.id, &item.parent_id, &item.title, &item.entry, &item.complete.to_u8(), &item.expand.to_u8()]){
+    //         Ok(updated) => debug!("Number of rows inserted: {}", updated),
+    //         Err(why) => error!("Failed to insert row: {}", why),
+    //     }
+    // }
     // list.items
     //     .items
     //     .iter()
