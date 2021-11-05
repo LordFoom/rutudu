@@ -257,7 +257,9 @@ impl<T> StatefulList<T> {
             }
             None => 0,
         };
-        self.state.select(Some(i));
+        if !self.items.is_empty(){
+            self.state.select(Some(i));
+        }
     }
 
     pub fn previous(&mut self) {
@@ -271,7 +273,9 @@ impl<T> StatefulList<T> {
             }
             None => 0,
         };
-        self.state.select(Some(i));
+        if !self.items.is_empty() {
+            self.state.select(Some(i));
+        }
     }
 
     pub fn unselect(&mut self) {
