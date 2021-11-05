@@ -409,12 +409,41 @@ impl RutuduList {
         //get the parent id and then get the item and set its expansion status
         let parent_id = self.items.items[i].parent_id;
         let item_id = self.items.items[i].id;
-        if let Some(root_elements) = self.item_tree.get_mut(&parent_id) {
-            root_elements.iter_mut().for_each(|root|{
-                if root.id == item_id {
-                    root.expand();
-                }
-            })};
+
+        self.item_tree
+            .entry(parent_id)
+            .or_insert_with(Vec::new)
+            .iter_mut()
+            .filter(|i| i.id == item_id)
+            .for_each(|i| i.expand());
+            // .for_each(|item| {
+            // if item.id == item_id {//should only happen once
+            //     item.expand();
+            // }
+            //
+            // });
+        // if let Some(item_list) = self.item_tree.get_mut(&parent_id) {
+        //     item_list.iter_mut().for_each(|item|{
+        //         if item.id == item_id {//should only happen once
+        //             item.expand();
+        //             //if it has no children, immediately expand again, don't need to display kids
+        //             //     let expand_twice = if let Some(kids) = self.item_tree.get(&item.id){
+        //             //         if kids.len() == 0 {
+        //             //             true
+        //             //         }
+        //             //         else {
+        //             //             false
+        //             //         }
+        //             //     } else {
+        //             //         true
+        //             //     };
+        //             //
+        //             //     if expand_twice {
+        //             //         item.expand();
+        //             //     }
+        //             // }
+        //             // mem::replace(self.item_tree.)
+        //         }})}
         self.dirty_list = true;
     }
 
@@ -649,30 +678,38 @@ impl RutuduList {
         //here we get the parent id if it exists
         let mut item = self.get_current_input_as_item();
         //get the parents id if it is in insertchild mode
-        item.parent_id = if self.input_mode == InputMode::InsertChild {
-            if let Some(i) = self.items.state.selected() {
-                self.items.items[i].id.clone()
-            } else { 0 } } else { 0 };
-        debug!("Parent id: {}", item.parent_id.clone());
-
-        //now we place the item in the right list in the hashmap
-        if self.item_tree.contains_key(&item.parent_id) {//could be zero, right
-            if let Some(sf_list) = self.item_tree.get_mut(&item.parent_id) {
-                sf_list.push(item);
-            }
-        }else {
-            debug!("Inserting a new list");
-            let mut il = Vec::new();//StatefulList::new();
-            let p_id = item.parent_id.clone();
-            il.push(item);
-            self.item_tree.insert(p_id, il);
-        }
-        //now we mark the list as dirty and tell it to rebuild
-        self.dirty_list = true;
+        self.add_item(&mut item);
 
         //and we also keep a list of all the items
 
         self.enter_edit_mode();
+    }
+
+    pub fn add_item(&mut self, mut item: &mut Item) {
+        item.parent_id = if self.input_mode == InputMode::InsertChild {
+            if let Some(i) = self.items.state.selected() {
+                self.items.items[i].id.clone()
+            } else { 0 }
+        } else { 0 };
+        debug!("Parent id: {}", item.parent_id.clone());
+
+        //now we place the item in the right list in the hashmap
+        self.item_tree.entry(item.parent_id.clone())
+            .or_insert_with(Vec::new)
+            .push(item.clone());
+        // if self.item_tree.contains_key(&item.parent_id) {//could be zero, right
+        //     if let Some(sf_list) = self.item_tree.get_mut(&item.parent_id) {
+        //         sf_list.push(item.clone());
+        //     }
+        // } else {
+        //     debug!("Inserting a new list");
+        //     let mut il = Vec::new();//StatefulList::new();
+        //     let p_id = item.parent_id.clone();
+        //     il.push(item.clone());
+        //     self.item_tree.insert(p_id, il);
+        // }
+        //now we mark the list as dirty and tell it to rebuild
+        self.dirty_list = true;
     }
 
     // pub fn build_hierarchical_list_from_tree(&mut self)->StatefulList<Item>{

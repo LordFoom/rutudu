@@ -78,7 +78,7 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
         .prepare("select id, title, entry, parent_id, completeStatus, expandStatus from rutudu_list")?;
 
     //need to do child ids someho        Item { id: 0, title, entry, parent_id: parent.id.clone(), child_ids: Vec::new(), expand: ExpandStatus::Closed, complete: CompleteStatus::Incomplete }
-    let item_iter = stmt.query_map([],|row|{
+    let mut items:Vec<Item> = stmt.query_map([],|row|{
         Ok(Item{
             id: row.get("id")?,
             title: row.get("title")?,
@@ -89,12 +89,21 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
             expand: FromPrimitive::from_u8(row.get("expandStatus")?).unwrap_or(ExpandStatus::Closed),
             depth:0
             })
-        })?;
+        })?
+        .map(|i| i.unwrap()).collect();
 
+    tudu_list.item_tree.clear();
     tudu_list.items.items.clear();
-    for item in item_iter {
-        tudu_list.items.items.push(item.unwrap());
-    }
+
+    items.iter_mut()
+        .for_each(|i|{
+            tudu_list.add_item(i);
+            tudu_list.dirty_list = true;
+        });
+    // for item in items {
+    //     tudu_list.add_item(&mut item)
+    //     tudu_list.items.items.push(item.unwrap());
+    // }
 
     Ok(())
 }
