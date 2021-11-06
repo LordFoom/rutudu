@@ -371,7 +371,8 @@ fn draw_save_dialog(mut tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<
 
     f.render_widget(Clear,area);
     f.render_widget(save_text, area);
-    f.set_cursor(area.x as u16 + tudu_list.file_path.len() as u16 +1, area.y as u16 + tudu_list.cursor_position[0] );
+    // tudu_list.cursor_position[0] =
+    f.set_cursor(area.x as u16 + tudu_list.file_path.len() as u16 +1, area.y as u16 + tudu_list.cursor_position[1] );
 }
 
 fn draw_open_dialog(mut tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {

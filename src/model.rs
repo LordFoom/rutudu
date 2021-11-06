@@ -749,7 +749,6 @@ impl RutuduList {
             self.cursor_position[0] = 1;
             self.cursor_position[1] = self.cursor_position[1]+1;
         }else{
-            // print!("Goodbye");
             self.cursor_position[0]= self.cursor_position[0]+1;
         }
     }
@@ -784,8 +783,15 @@ impl RutuduList {
     }
 
     pub fn remove_save_file_char(&mut self){
+        if self.file_path.len()==0{
+            return;
+        }
+        debug!("remove_save_file_char, where x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
+
         self.file_path.pop();
-        self.cursor_position[0] = self.cursor_position[0]-1;
+        // self.cursor_position[0] = self.cursor_position[0]-1;
+        // self.cursor_position[0] = self.file_path.len() as u16;
+        debug!("x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
     }
 
     pub fn list_name(&mut self)->String{
