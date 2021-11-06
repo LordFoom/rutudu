@@ -12,8 +12,8 @@ but allows navigation,collapsing, etc. Couldn't find one so here we are.
 * A to add an item
 * Ctrl+A to add a sub item
 * X to cross out
-* S to save (broken)
-* L to load (so broken)
+* S to save as sqlite file 
+* L to load (up/down to select, press right to open - need to still add enter to open)
 
 
 <img src="./example_pic.png" alt="Looks like this" >
