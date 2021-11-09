@@ -833,6 +833,24 @@ impl RutuduList {
         Ok(lists)
     }
 
+    ///If list exists, will open it
+    pub fn open_list(&mut self, list_name:&str){
+        let abs_list_name = if (!list_name.starts_with("./")){
+            format!("./{}", list_name)
+        }else{
+            String::from(list_name)
+        };
+
+
+        debug!("Going to open list if it's found: {}", abs_list_name);
+       //can we find the list? open it
+       if Path::new(&abs_list_name).exists() {
+           if let Ok(()) = db::load_list(self, &abs_list_name){
+               self.file_path = String::from(list_name)
+           }
+       }
+    }
+
     ///Will scan the current directory once, to prevent loop jamming
     pub fn scan_files_once(&mut self) {
         if self.has_scanned {

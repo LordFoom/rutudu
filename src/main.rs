@@ -156,26 +156,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let default_name = get_default_list_name();
     // let list_name = args.value_of("list_name").unwrap_or(&default_name);
     let list_name = args.value_of("list_name").unwrap_or(&default_name);
-    //#######
-    //LET'S FIRST GET SOME SIMPLE STRINGS WORKING
-    //get todolists
-    // let mut lists = match scan_directory() {
-    //     Ok(paths) => paths,
-    //     Err(e) => panic!("Unable to scan current directory for paths because {}", e),
-    // };
-    // if lists.is_empty() {
-    //     debug!("No existing rutudu lists found");
-    //     if args.is_present("create-default") {
-    //         match create_default_rutudu_list() {
-    //             Ok(name) => lists.push(name),
-    //             Err(e) => error!("Failed to create default list{}", e),
-    //         }
-    //     }
-    // }
-    // for path in lists {
-    //     debug!("This is the path {}", path);
-    // }
-    //#######
     //setup the gui display
     let stdout = match std::io::stdout().into_raw_mode() {
         Ok(outstream) => outstream,
@@ -193,6 +173,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // let mut edit_mode = true;
     let mut tudu_list = RutuduList::default();
     tudu_list.file_path = list_name.to_string();
+    tudu_list.open_list(list_name);
 
     // let mut items = [ListItem::new("Item 1"),
     //     ListItem::new("Item 2"), ListItem::new("Item 3")];

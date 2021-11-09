@@ -49,8 +49,8 @@ pub fn create_table_if_needed(conn: &Connection) {
 
 ///Load new list into our current list - gooodbye old list!
 pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<dyn Error>>{
-    //save old one
-    save_list(tudu_list)?;
+    //save old one -- no, there may not be one
+    // save_list(tudu_list)?;
     debug!("About to load new list");
     //import the new items into our list
     tudu_list.file_path = String::from(file_name);
