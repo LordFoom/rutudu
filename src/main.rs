@@ -262,7 +262,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             f.render_widget(bottom_text, chunks[2]);
 
             match tudu_list.input_mode {
-                InputMode::Insert | InputMode::InsertChild=>  show_new_item_input(&mut tudu_list, f),
+                InputMode::Insert | InputMode::InsertChild| InputMode::InsertParent =>  show_new_item_input(&mut tudu_list, f),
                 InputMode::Quit => draw_quit_dialog(f),
                 InputMode::Save => draw_save_dialog(&mut tudu_list,f),
                 InputMode::Open =>  draw_open_dialog(&mut tudu_list,f),
@@ -285,10 +285,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
                     Key::Char('a') => tudu_list.enter_insert_mode(),
                     Key::Ctrl('a') => tudu_list.enter_child_insert_mode(),
+                    Key::Alt('a') => tudu_list.enter_parent_insert_mode(),
 
                     _ => {}
                 },
-                InputMode::Insert | InputMode::InsertChild => match input {
+                InputMode::Insert | InputMode::InsertChild | InputMode::InsertParent => match input {
                     //what's a better key combo? ctrl+[ does weird things...
                     //terminal doesn't support ctrl+\n
                     Key::Ctrl('n') =>  tudu_list.add_item_to_list(),
