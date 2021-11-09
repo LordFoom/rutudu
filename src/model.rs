@@ -731,35 +731,8 @@ impl RutuduList {
         self.item_tree.entry(item.parent_id.clone())
             .or_insert_with(Vec::new)
             .push(item.clone());
-        // if self.item_tree.contains_key(&item.parent_id) {//could be zero, right
-        //     if let Some(sf_list) = self.item_tree.get_mut(&item.parent_id) {
-        //         sf_list.push(item.clone());
-        //     }
-        // } else {
-        //     debug!("Inserting a new list");
-        //     let mut il = Vec::new();//StatefulList::new();
-        //     let p_id = item.parent_id.clone();
-        //     il.push(item.clone());
-        //     self.item_tree.insert(p_id, il);
-        // }
-        //now we mark the list as dirty and tell it to rebuild
         self.dirty_list = true;
     }
-
-    // pub fn build_hierarchical_list_from_tree(&mut self)->StatefulList<Item>{
-    //    //we go through the hashmap and we make a vector
-    //         //go through all the root nodes
-    //     let root_list
-    //         //for each one that is expanded, get its children
-    //     self.item_tree.iter()
-    //         .map(|key, list| {
-    //
-    //         } ).collect();
-    //     //get the old state
-    //     //create a new list with vector items and the list state
-    //
-    // }
-
 
     pub fn get_current_input_as_item(&mut self) -> Item {
         let mut entry: String = self.current_item.drain(..).collect();
