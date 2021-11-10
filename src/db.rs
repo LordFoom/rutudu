@@ -19,6 +19,7 @@ pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
     debug!("Connection will be file: {}", fp_suffixed);
     let conn = Connection::open(fp_suffixed)?;
     create_table_if_needed(&conn);
+    empty_table(&conn);
     list.item_tree.iter()
         .for_each(|(i, sub_list )|{
            sub_list.iter().for_each(|item|{
@@ -31,6 +32,12 @@ pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
            }})
         });
     Ok(())
+}
+
+pub  fn empty_table(conn: &Connection){
+    conn.execute_batch(r" DELETE FROM rutudu_list;
+                             VACUUM;").unwrap();
+
 }
 
 pub fn create_table_if_needed(conn: &Connection) {
