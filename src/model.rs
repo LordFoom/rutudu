@@ -715,15 +715,26 @@ impl RutuduList {
         // }
         debug!("Adding item, id: {} ", item.id);
         if item.parent_id == 0 {
-            item.parent_id = if self.input_mode == InputMode::InsertChild {
-                if let Some(i) = self.items.state.selected() {
-                    //we want to update the children ids as well as parent ids
-                    let parent_id = self.items.items[i].id.clone();
-                    //TODO put in a method here that will add the child ids?
-                    //need to get it from the tree - add the method to the list
-                    parent_id
-                } else { 0 }
-            } else { 0 };
+            item.parent_id = match self.input_mode {
+                InputMode::InsertChild =>{
+                    if let Some(i) = self.items.state.selected() {
+                        debug!("Found selected index: {}", i);
+                        //we want to update the children ids as well as parent ids
+                        let parent_id = self.items.items[i].id.clone();
+                        debug!("Discovered parent id: {}", parent_id);
+                        //TODO put in a method here that will add the child ids?
+                        //need to get it from the tree - add the method to the list
+                        parent_id
+                    }else { 0 }
+                }
+                InputMode::InsertParent => {
+                    if let Some(i) = self.items.state.selected(){
+                        //now we need to switch around the parent ids
+                        0
+                    }else { 0 }
+                }
+                _ =>  {0}
+            }
         }//this will leave parent ids intact, which is good for when we open up lists
         debug!("Parent id: {}", item.parent_id.clone());
 
@@ -740,8 +751,14 @@ impl RutuduList {
         let first_new_line = entry.find("\n").unwrap_or(entry.len());
         let title: String = entry.drain(..first_new_line).collect();
         // content - we set the id to the maximum
-        let i = self.items.items.len().clone() as u32;
-        Item::new(i + 1, &title, &entry)
+        //we set the content to the number of TOTAL items
+        let total_length:usize = self.item_tree.iter()
+            .map(|(k, v)|  v.len() )
+            .sum();
+        debug!("Next item id: {}", total_length+1);
+        // let i = self.items.items.len().clone() as u32;
+        //we want to start this at ONE so we reserve the zero index for the root nodes of the forest
+        Item::new((total_length as u32)+1, &title, &entry)
     }
 
     ///Add character to current input
