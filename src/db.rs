@@ -19,10 +19,14 @@ pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
     debug!("Connection will be file: {}", fp_suffixed);
     let conn = Connection::open(fp_suffixed)?;
     create_table_if_needed(&conn);
-    empty_table(&conn);
+    match empty_table(&conn){
+       Ok(_) => debug!("Emptied table successfully"),
+        Err(e) => error!("Could not empty table? {}", e),
+    }
     list.item_tree.iter()
         .for_each(|(i, sub_list )|{
            sub_list.iter().for_each(|item|{
+               debug!("Trying to insert '{}' item with '{}' id", item.title, item.id);
                match conn.execute("INSERT INTO rutudu_list(id, parent_id, title, entry, completeStatus, expandStatus , create_date)
                                     VALUES(?1, ?2, ?3, ?4, ?5, ?6, strftime('%Y-%m-%d %H-%M-%S','now') )",
                                   params![&item.id, &item.parent_id, &item.title, &item.entry, &item.complete.to_u8(), &item.expand.to_u8()]){
@@ -34,10 +38,10 @@ pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub  fn empty_table(conn: &Connection){
+pub  fn empty_table(conn: &Connection)->Result<(), Box<dyn Error>>{
     conn.execute_batch(r" DELETE FROM rutudu_list;
-                             VACUUM;").unwrap();
-
+                             VACUUM;")?;
+    Ok(())
 }
 
 pub fn create_table_if_needed(conn: &Connection) {
