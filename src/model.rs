@@ -696,23 +696,6 @@ impl RutuduList {
 
 
     pub fn add_item(&mut self, mut item: &mut Item) {
-        // match self.input_mode{
-        //     InputMode::InsertChild => {
-        //         if let Some(i) = self.items.state.selected() {
-        //             //we want to update the children ids as well as parent ids
-        //             let parent_id = self.items.items[i].id.clone();
-        //             //TODO put in a method here that will add the child ids?
-        //             //need to get it from the tree - add the method to the list
-        //             parent_id
-        //         } else { 0 }
-        //     },
-        //     InputMode::Insert => {},
-        //     InputMode::InsertParent => {
-        //         //get the parent id of the selected node
-        //         //set the selected item's parent id to the passed in item
-        //         //set the item's parent to saved parent id
-        //     },
-        // }
         debug!("Adding item, id: {} ", item.id);
         if item.parent_id == 0 {
             item.parent_id = match self.input_mode {
