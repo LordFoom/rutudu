@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
@@ -6,7 +7,7 @@ use std::os::unix::process::parent_id;
 use std::path::Path;
 
 use chrono::{DateTime, Utc};
-use log::{debug, warn};
+use log::{debug, warn, error};
 use num;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
@@ -695,7 +696,7 @@ impl RutuduList {
     ///Add item as parent to currently selected item, or, if noe, just add it
 
 
-    pub fn add_item(&mut self, mut item: &mut Item) {
+    pub fn add_item(&mut self, item: &mut Item) {
         debug!("Adding item, id: {} ", item.id);
         if item.parent_id == 0 {
             item.parent_id = match self.input_mode {
@@ -705,16 +706,14 @@ impl RutuduList {
                         //we want to update the children ids as well as parent ids
                         let parent_id = self.items.items[i].id.clone();
                         debug!("Discovered parent id: {}", parent_id);
-                        //TODO put in a method here that will add the child ids?
-                        //need to get it from the tree - add the method to the list
+                        //children lists are by implication - mapped by item.id in the hashmap
                         parent_id
                     }else { 0 }
                 }
-                InputMode::InsertParent => {
-                    if let Some(i) = self.items.state.selected(){
-                        //now we need to switch around the parent ids
-                        0
-                    }else { 0 }
+                InputMode::InsertParent =>{
+                    //we make it it's own parent, after insertion we're going to swap it
+                    //with the selected item
+                    item.id
                 }
                 _ =>  {0}
             }
@@ -722,11 +721,68 @@ impl RutuduList {
         debug!("Parent id: {}", item.parent_id.clone());
 
         //now we place the item in the right bucket
-        self.item_tree.entry(item.parent_id.clone())
+        let mut new_item = item.clone();
+         self.item_tree
+            .entry(item.parent_id.clone())
             .or_insert_with(Vec::new)
-            .push(item.clone());
+            .push(new_item);
+
+        //get
+
+        //if we add as new parent, we now SWAP the two around in the tree :D
+        if self.input_mode == InputMode::InsertParent {
+            let opt_parent =  match self.items.state.selected() {
+                Some(i) => self.items.items.get_mut(i),
+                None => None,
+            };
+
+            if let Some(parent) = opt_parent{
+                let old_parent_id = parent.parent_id.clone();
+                let old_id = parent.id.clone();
+                let new_item_id = item.id.clone();
+
+                let mut old_item = None;
+                let mut new_item = None;
+                for (parent_id, mut children) in self.item_tree.iter_mut(){
+                     if parent_id == &old_parent_id{
+                         for child in children.iter_mut(){
+                             if child.id == old_id {
+                                 child.parent_id = new_item_id;
+                                 old_item = Some(child);
+                             }
+                         }
+                        // old_item = children.iter_mut()
+                        //                 .find(|i| { i.id == old_id })
+                        //
+                    }else if parent_id == &new_item_id {
+                        for child in children.iter_mut(){
+                            if child.id == new_item_id {
+                                child.parent_id = old_parent_id;
+                                child.expand = ExpandStatus::ShowChildren;
+                                new_item = Some(child);
+                            }
+                        }
+                    }
+
+                }
+
+                match old_item{
+                    Some(item_one) => {
+                        match new_item{
+                            Some(item_two) => {
+                                mem::swap(item_one, item_two);//we should have place the item in its own subtree, ie it was its own parent but not in 0 until now
+                            }
+                            None => error!("Failed to find new item when adding new parent")
+                        }
+                    }
+                    None => error!("Failed to find old item when adding parent!")
+                }
+            }
+        }
+
         self.dirty_list = true;
     }
+
 
     pub fn get_current_input_as_item(&mut self) -> Item {
         let mut entry: String = self.current_item.drain(..).collect();
@@ -876,4 +932,7 @@ impl RutuduList {
     pub fn reset_scan_guard(&mut self) {
         self.has_scanned = false;
     }
+    // fn get_item_tree(&mut self) -> HashMap<u32, Vec<Item>> {
+    //     self.item_tree
+    // }
 }
