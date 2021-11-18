@@ -140,6 +140,12 @@ impl Item {
         debug!("Expand status: {:?}",self.expand);
     }
 
+    pub fn show_children(&mut self){
+        if self.expand==ExpandStatus::Closed {
+            self.expand = ExpandStatus::ShowChildren;
+        }
+    }
+
     ///Decrease expansion status from open to show children to closed
     pub fn collapse(&mut self) {
         match self.expand {
@@ -727,60 +733,79 @@ impl RutuduList {
             .or_insert_with(Vec::new)
             .push(new_item);
 
-        //get
-
-        //if we add as new parent, we now SWAP the two around in the tree :D
+        //now we do postprocessing
         if self.input_mode == InputMode::InsertParent {
-            let opt_parent =  match self.items.state.selected() {
+            self.add_item_as_parent(item)
+        } else if self.input_mode == InputMode::InsertChild {
+            let opt_parent = match self.items.state.selected() {
                 Some(i) => self.items.items.get_mut(i),
                 None => None,
             };
+            if let Some(list_item) = opt_parent{
+                self.item_tree.entry(list_item.parent_id.clone())
+                    .or_insert_with(Vec::new)
+                    .iter_mut()
+                    .filter(|i| { i.id == list_item.id })
+                    .for_each(|i| { i.show_children()})
 
-            if let Some(parent) = opt_parent{
-                let old_parent_id = parent.parent_id.clone();
-                let old_id = parent.id.clone();
-                let new_item_id = item.id.clone();
-
-                let mut old_item = None;
-                let mut new_item = None;
-                for (parent_id, mut children) in self.item_tree.iter_mut(){
-                     if parent_id == &old_parent_id{
-                         for child in children.iter_mut(){
-                             if child.id == old_id {
-                                 child.parent_id = new_item_id;
-                                 old_item = Some(child);
-                             }
-                         }
-                        // old_item = children.iter_mut()
-                        //                 .find(|i| { i.id == old_id })
-                        //
-                    }else if parent_id == &new_item_id {
-                        for child in children.iter_mut(){
-                            if child.id == new_item_id {
-                                child.parent_id = old_parent_id;
-                                child.expand = ExpandStatus::ShowChildren;
-                                new_item = Some(child);
-                            }
-                        }
-                    }
-
-                }
-
-                match old_item{
-                    Some(item_one) => {
-                        match new_item{
-                            Some(item_two) => {
-                                mem::swap(item_one, item_two);//we should have place the item in its own subtree, ie it was its own parent but not in 0 until now
-                            }
-                            None => error!("Failed to find new item when adding new parent")
-                        }
-                    }
-                    None => error!("Failed to find old item when adding parent!")
-                }
             }
         }
 
         self.dirty_list = true;
+    }
+
+    ///Will add item as the parent of the currently selected item, if it is selected
+    fn add_item_as_parent(&mut self, item: &mut Item) {
+        let opt_parent = self.selected_item();
+
+        //if we add as new parent, we now SWAP the two around in the tree :D
+        if let Some(parent) = opt_parent {
+            let old_parent_id = parent.parent_id.clone();
+            let old_id = parent.id.clone();
+            let new_item_id = item.id.clone();
+
+            let mut old_item = None;
+            let mut new_item = None;
+            for (parent_id, mut children) in self.item_tree.iter_mut() {
+                if parent_id == &old_parent_id {
+                    for child in children.iter_mut() {
+                        if child.id == old_id {
+                            child.parent_id = new_item_id;
+                            old_item = Some(child);
+                        }
+                    }
+                } else if parent_id == &new_item_id {
+                    for child in children.iter_mut() {
+                        if child.id == new_item_id {
+                            child.parent_id = old_parent_id;
+                            //we want to see the old parent under the new parent
+                            child.expand = ExpandStatus::ShowChildren;
+                            new_item = Some(child);
+                        }
+                    }
+                }
+            }
+
+            match old_item {
+                Some(item_one) => {
+                    match new_item {
+                        Some(item_two) => {
+                            mem::swap(item_one, item_two);//we should have place the item in its own subtree, ie it was its own parent but not in 0 until now
+                        }
+                        None => error!("Failed to find new item when adding new parent")
+                    }
+                }
+                None => error!("Failed to find old item when adding parent!")
+            }
+        }
+    }
+
+    fn selected_item(&mut self) -> Option<&mut Item> {
+        let opt_parent = match self.items.state.selected() {
+            Some(i) => self.items.items.get_mut(i),
+            None => None,
+        };
+        opt_parent
     }
 
 
