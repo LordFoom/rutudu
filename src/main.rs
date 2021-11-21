@@ -285,7 +285,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     // Key::Ctrl('n') => db::save_list(&tudu_list).unwrap(),
                     Key::Char(c) => if '\n' == c {
                         db::save_list(&tudu_list).unwrap();
-                        tudu_list.enter_edit_mode();
+                        tudu_list.mark_saved();
                     }else{
                         tudu_list.add_save_file_char(c);
                     },

@@ -318,6 +318,8 @@ pub struct RutuduList {
     pub cursor_position: [u16; 2],
     /// This tells us if we need to rebuild the list
     pub dirty_list: bool,
+    /// This tells us if a list has unsaved changes
+    pub unsaved: bool,
 
 }
 
@@ -334,6 +336,7 @@ impl Default for RutuduList {
             file_path: String::new(),
             has_scanned: false,
             dirty_list: false,
+            unsaved: false,
         }
     }
 }
@@ -347,6 +350,11 @@ impl RutuduList {
     pub fn enter_save_mode(&mut self) {
         self.cursor_position = [1, 1];
         self.input_mode = InputMode::Save;
+    }
+
+    pub fn mark_saved(&mut self){
+        self.unsaved = false;
+        self.enter_edit_mode();
     }
 
     pub fn is_save_mode(&self) -> bool {
@@ -752,9 +760,10 @@ impl RutuduList {
         }
 
         self.dirty_list = true;
+        self.unsaved = true;
     }
 
-    ///Will add item as the parent of the currently selected item, if it is selected
+    ///Will add item as the parent of the currently selected item, if one is selected
     fn add_item_as_parent(&mut self, item: &mut Item) {
         let opt_parent = self.selected_item();
 
@@ -879,8 +888,10 @@ impl RutuduList {
     }
 
     pub fn list_name(&mut self) -> String {
+        //we add an asterisk if it is unsaved
+        let save_needed = if self.unsaved { "*"} else{ ""};
+        let fp = format!("{}{}", self.file_path.clone(), save_needed);
         //trim off the first path of the filepath`
-        let fp = self.file_path.clone();
         match fp.rfind("/") {
             None => fp,
             Some(i) => fp.split_at(i + 1).1.to_string(),//get the last part, eg foom.rtd from /home/foom/foom.rtd
