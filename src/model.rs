@@ -348,7 +348,7 @@ impl RutuduList {
     }
 
     pub fn enter_save_mode(&mut self) {
-        self.cursor_position = [1, 1];
+        self.cursor_position = [(self.file_path.len()+1) as u16, 1];
         self.input_mode = InputMode::Save;
     }
 
@@ -846,6 +846,18 @@ impl RutuduList {
         }
     }
 
+    pub fn cursor_left(&mut  self){
+        if self.cursor_position[0] > 0 {
+            self.cursor_position[0] = self.cursor_position[0] - 1;
+        }
+    }
+
+    pub fn cursor_right(&mut self){
+        if self.cursor_position[0] < self.current_item.len() as u16 {
+            self.cursor_position[0] = self.cursor_position[0] - 1;
+        }
+    }
+
     pub fn remove_character(&mut self) {
         //do nothing if current_item is zero length
         if self.current_item.len() == 0 {
@@ -870,7 +882,24 @@ impl RutuduList {
         }
     }
 
-    pub fn add_save_file_char(&mut self, c: char) {
+    pub fn left_save_cursor(&mut self){
+        debug!("Move save cursor left, cursor[0] = {} ", self.cursor_position[0]);
+        if self.cursor_position[0] > 0 {
+            self.cursor_position[0] = self.cursor_position[0] - 1;
+        }else{
+            debug!("Not moving?");
+        }
+    }
+
+    pub fn right_save_cursor(&mut self){
+        debug!("Move save cursor right, cursor[0] = {} ", self.cursor_position[0]);
+        if self.cursor_position[0] < self.file_path.len() as u16 {
+            self.cursor_position[0] = self.cursor_position[0] + 1;
+        }
+
+    }
+
+    pub fn add_save_input_char(&mut self, c: char) {
         self.file_path.push(c);//no need to check
         self.cursor_position[0] = self.cursor_position[0] + 1;
     }
@@ -897,8 +926,6 @@ impl RutuduList {
             Some(i) => fp.split_at(i + 1).1.to_string(),//get the last part, eg foom.rtd from /home/foom/foom.rtd
         }
     }
-
-    pub fn clear_file_list(&mut self) {}
 
     ///
     /// This wil read all the '*rtd' file names and return them in result

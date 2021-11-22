@@ -275,6 +275,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     //terminal doesn't support ctrl+\n
                     Key::Ctrl('n') =>  tudu_list.add_item_to_list(),
                     Key::Backspace => tudu_list.remove_character(),
+                    Key::Left => tudu_list.cursor_left(),
+                    Key::Right => tudu_list.cursor_right(),
                     Key::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     // Key::Char(c) => {println!("{}", c)}
@@ -287,8 +289,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                         db::save_list(&tudu_list).unwrap();
                         tudu_list.mark_saved();
                     }else{
-                        tudu_list.add_save_file_char(c);
+                        tudu_list.add_save_input_char(c);
                     },
+                    Key::Left => tudu_list.left_save_cursor(),
+                    Key::Right => tudu_list.right_save_cursor(),
                     Key::Backspace => tudu_list.remove_save_file_char(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {}
@@ -354,7 +358,8 @@ fn draw_save_dialog(mut tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<
     f.render_widget(Clear,area);
     f.render_widget(save_text, area);
     // tudu_list.cursor_position[0] =
-    f.set_cursor(area.x as u16 + tudu_list.file_path.len() as u16 +1, area.y as u16 + tudu_list.cursor_position[1] );
+    // f.set_cursor(area.x as u16 + tudu_list.file_path.len() as u16 +1, area.y as u16 + tudu_list.cursor_position[1] );
+    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16 +1, area.y as u16 + tudu_list.cursor_position[1] );
 }
 
 fn draw_open_dialog(mut tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
