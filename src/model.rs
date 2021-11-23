@@ -320,6 +320,8 @@ pub struct RutuduList {
     pub dirty_list: bool,
     /// This tells us if a list has unsaved changes
     pub unsaved: bool,
+    //how far in from the end of the line are we
+    cursor_offset: u16,
 
 }
 
@@ -337,6 +339,7 @@ impl Default for RutuduList {
             has_scanned: false,
             dirty_list: false,
             unsaved: false,
+            cursor_offset: 0,
         }
     }
 }
@@ -348,7 +351,8 @@ impl RutuduList {
     }
 
     pub fn enter_save_mode(&mut self) {
-        self.cursor_position = [(self.file_path.len()+1) as u16, 1];
+        self.cursor_position = [self.file_path.len() as u16, 1];
+        self.cursor_offset = 0;
         self.input_mode = InputMode::Save;
     }
 
@@ -402,28 +406,6 @@ impl RutuduList {
     }
 
     ///Moves expansion status up the scale
-    // pub fn expand_selected(&mut self){
-    //     debug!("Expanding selected");
-    //     let i = self.items.state.selected().unwrap_or(0);
-    //     //expand the parent
-    //     debug!("Expanding parent");
-    //     self.items.items[i].expand();
-    //     //get the parent id and then get the item and set its expansion status
-    //     let parent_id = self.items.items[i].parent_id;
-    //     let item_id = self.items.items[i].id;
-    //     debug!("Expanding children");
-    //     if parent_id > 0 {
-    //         if let Some(children) =  self.item_tree.get_mut(&parent_id) {
-    //             children.iter_mut().for_each(|item|{
-    //                 item.expand();
-    //                 // if item.id == item_id {
-    //                 //     item.expand();
-    //                 // }
-    //             })}};
-    //     self.dirty_list = true;
-    // }
-
-    ///Moves expansion status up the scale
     pub fn expand_selected(&mut self) {
         let i = self.items.state.selected().unwrap_or(0);
         //expand the parent
@@ -468,16 +450,6 @@ impl RutuduList {
         //         }})}
         self.dirty_list = true;
     }
-
-    // pub fn expand_subtree(&mut self, parent_id:&u32){
-    //     //get the vec i belong to
-    //     if let Some(elems) = self.item_tree.get_mut(parent_id) {
-    //         for item in elems {
-    //             item.expand();
-    //             self.expand_subtree(&item.id);
-    //         }
-    //     }
-    // }
 
 
     pub fn toggle_selected_status(&mut self) {
@@ -529,29 +501,6 @@ impl RutuduList {
             }).collect()
     }
 
-    // pub fn items_as_vec(&self)->StatefulList<ListItem>{
-    //     // debug!("Items as vec");
-    //     //we go over the root nodes
-    //     let mut item_list = StatefulList::new();
-    //     let mut calced_state= self.items.state.clone();
-    //     let item_vec = if let Some(root_list) = self.item_tree.get(&0){
-    //         // self.clear_list();
-    //         root_list
-    //             .iter()
-    //             .enumerate()
-    //             .flat_map(|(i, msg)| {
-    //                 // self.build_subtree(msg, i,0, &calced_state )
-    //                  ListItem::new(msg)
-    //             }).collect()
-    //     }else{
-    //         Vec::new()
-    //     };
-    //
-    //     item_list.items = item_vec;
-    //     item_list.state = calced_state;
-    //     item_list
-    // }
-
     ///If the list is dirty, we create a new one from the hashmap
     pub fn rebuild_list_if_dirty(&mut self) {
         if self.dirty_list {
@@ -568,14 +517,12 @@ impl RutuduList {
 
         let root_items_vec = self.get_subtree_vec(0, 0);
         self.items.items.clear();
-        let list_items: StatefulList<ListItem> = StatefulList::new();
+        // let list_items: StatefulList<ListItem> = StatefulList::new();
         root_items_vec.iter().enumerate().for_each(|(i, item)| {
-            let new_item = ListItem::new(item.text(i));
+            // let new_item = ListItem::new(item.text(i));
             self.items.items.push(item.clone());
         });
-        //now build a stateful list
-        // mem::replace(self.items, list);
-        //for each item, build a subtree
+
     }
 
     pub fn get_subtree_vec(&self, parent_id: u32, depth: usize) -> Vec<Item> {
@@ -594,34 +541,6 @@ impl RutuduList {
         return ret_list;
     }
 
-    // ///Help build the spans of our subtree - will also make sure the list has all the right items in it
-    // pub fn build_subtree<'a>(&'a self, item:&'a Item, item_no:usize, depth:usize, calced_state:&ListState) -> Vec<ListItem<'a>> {
-    //     debug!("We're building the subtree for item {} ", item.id);
-    //     //we need to in here do the item itself, man!
-    //     let mut item_text_as_vec:Vec<Spans<'a>> = item.text(item_no.clone(), self.depth);
-    //     let mut vec_list:Vec<ListItem<'a>> = Vec::new();
-    //     let li = ListItem::new(item_text_as_vec);
-    //     vec_list.push(li);
-    //     if item.is_collapsed(){
-    //         vec_list
-    //     }else{
-    //         Vec::new()
-    //     }
-    //     // debug!("Build subtree for item: {}", item.id.to_string());
-    //     // if let Some(children) = self.item_tree.get(&item.id) {
-    //     //     //now we get the children
-    //     //     for child in children {
-    //     //         &self.build_subtree(child, item_no.clone(),depth.clone() + 1, calced_state)
-    //     //         // for span in sub_vec {
-    //     //         //     item_text_as_vec.push(span.clone());
-    //     //         // }
-    //     //     };
-    //     //     item_text_as_vec
-    //     // }else{
-    //     //     Vec::new()
-    //     // }
-    // }
-
     pub fn build_item_spans_as_vec(&self, item_no: usize, item_id: u32, depth: usize) -> Vec<Spans> {
         // let item = self.items.items.get(item_id as usize).unwrap();
         let item = self.items.items.get(item_id as usize).unwrap();
@@ -636,42 +555,11 @@ impl RutuduList {
                 for span in sub_vec {
                     item_text_as_vec.push(span.clone());
                 }
-                // item_text_as_vec.append(&mut sub_vec);
             }
-            // children.items.iter()
-            //         .cloned()
-            //         .enumerate()
-            //         .for_each(|(i, child)|{
-            //             let sub_number = format!("{}.{}", item_no, i);
-            //             let mut vec:Vec<Spans<'a>> = self.build_item_spans_as_vec(child.id.clone(), &sub_number.clone(), depth.clone() + 1);
-            //             item_text_as_vec.append(&mut vec);
-            //         });
+
         };
-        // debug!("About to return {}", item_text_as_vec);
         item_text_as_vec
     }
-
-    // pub fn get_item_and_child_text<'a>(&'a mut self, item:&'a Item, item_no:&'a str, depth:usize)->Vec<Spans<'a>>{
-    //    let mut content = item.text(item_no, depth);
-    //     if let Some(children) = self.item_tree.get(&item.id){
-    //        let child_content = children.items
-    //            .iter()
-    //            .enumerate()
-    //            .flat_map(|( i,child )|{
-    //                let sub_number = format!("{}.{}", item_no, i);
-    //                let child_spans = self.get_item_and_child_text(&child.clone(), &sub_number, depth + 1);
-    //                // child_spans.iter().for_each(|cs|  { content.push(cs.clone()) });
-    //                child_spans
-    //            }).collect::<Vec<Spans>>();
-    //            // .for_each(|(i, child)|{
-    //            //     let sub_number = format!("{}.{}", item_no, i);
-    //            //     let child_spans = self.get_item_and_child_text(child, &sub_number, depth + 1);
-    //            //     child_spans.iter().for_each(|cs|  { content.push(cs.clone()) });
-    //            //     // content.append(&child_spans);
-    //            // });
-    //     }
-    //     content
-    // }
 
     pub fn down(&mut self) {
         self.items.next();
@@ -886,6 +774,7 @@ impl RutuduList {
         debug!("Move save cursor left, cursor[0] = {} ", self.cursor_position[0]);
         if self.cursor_position[0] > 0 {
             self.cursor_position[0] = self.cursor_position[0] - 1;
+            self.cursor_offset += 1;
         }else{
             debug!("Not moving?");
         }
@@ -895,12 +784,16 @@ impl RutuduList {
         debug!("Move save cursor right, cursor[0] = {} ", self.cursor_position[0]);
         if self.cursor_position[0] < self.file_path.len() as u16 {
             self.cursor_position[0] = self.cursor_position[0] + 1;
+            self.cursor_offset -= 1;
         }
 
     }
 
     pub fn add_save_input_char(&mut self, c: char) {
-        self.file_path.push(c);//no need to check
+        //we insert at the cursor position
+        let insert_index = self.file_path.len() as u16 - self.cursor_offset;
+        self.file_path.insert(insert_index as usize, c);
+        // self.file_path.push(c);
         self.cursor_position[0] = self.cursor_position[0] + 1;
     }
 
@@ -910,10 +803,14 @@ impl RutuduList {
         }
         debug!("remove_save_file_char, where x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
 
-        self.file_path.pop();
-        // self.cursor_position[0] = self.cursor_position[0]-1;
+        // self.file_path.pop();
+
+        //-1 because we want to delete BEHIND the cursor
+        let delete_pos = self.file_path.len() -1 - self.cursor_offset as usize;
+        self.file_path.remove(delete_pos);
+        self.cursor_position[0] = self.cursor_position[0]-1;
         // self.cursor_position[0] = self.file_path.len() as u16;
-        debug!("x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
+        // debug!("x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
     }
 
     pub fn list_name(&mut self) -> String {
