@@ -67,35 +67,6 @@ impl Item {
             depth: 0,
         }
     }
-    ///constructor, parent
-    pub fn new_with_parent(rutudu_list: RutuduList, title: String, entry: String, parent_id: u32) -> Item {
-        // Item { title, entry, parent: Box::new(None) }
-        Item {
-            id: 0,
-            title,
-            entry,
-            parent_id,
-            child_ids: Vec::new(),
-            expand: ExpandStatus::Closed,
-            complete: CompleteStatus::Incomplete,
-            depth: 0,//probably need to do something like that
-        }
-        //update parent's child ids?? fuck
-    }
-    ///yep, has a parent but may not be leaf
-    pub fn new_child(rutudu_list: RutuduList, id: u32, title: String, entry: String, parent: Item) -> Item {
-        Item {
-            id,
-            title,
-            entry,
-            parent_id: parent.id.clone(),
-            child_ids: Vec::new(),
-            expand: ExpandStatus::Closed,
-            complete: CompleteStatus::Incomplete,
-            depth: parent.depth + 1,
-
-        }
-    }
 
     ///Symbol to indicate if item is expanded or collapsed
     pub fn expansion_state_symbol(&self) -> String {
@@ -131,13 +102,10 @@ impl Item {
     pub fn expand(&mut self) {
         debug!("Hello");
         match self.expand {
-            ExpandStatus::Closed => {
-                self.expand = ExpandStatus::ShowChildren
-            }
+            ExpandStatus::Closed =>  self.expand = ExpandStatus::ShowChildren,
             ExpandStatus::ShowChildren => self.expand = ExpandStatus::Open,
             ExpandStatus::Open => {}//do nothing
         };
-        debug!("Expand status: {:?}",self.expand);
     }
 
     pub fn show_children(&mut self){
