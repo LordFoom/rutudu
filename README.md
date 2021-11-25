@@ -9,7 +9,12 @@ Work in progress but you can:
 Wanted a TUI based todo list with hierarchies that doesn't just cat to the console,
 but allows navigation,collapsing, etc. Couldn't find one so here we are.
 
-You cannot edit and you cannot delete. I may never support this, just to give it that typewriter feel.
+You cannot edit and you cannot delete. 
+
+I may never support this, to give it more of a typewriter resistance to change, 
+maybe it'll help me think before I speak?
+
+Or maybe I will end up supporting it.
 
 You can cross-out and and uncross-out.
 
@@ -23,9 +28,14 @@ open/create passed in list name.
 * s to save as sqlite file 
 * o to load (up/down to select, press right/enter to open)
 
+
+
 I like having lots of short lists and they're stored for posterity in sqlite.
 
-Will integrate with my clockrust, my new timetracking project.
+Will integrate with my clockrust, my nascent timetracking project.
+### ROADMAP
+
+* Move items up 
 
 <img src="./example_pic.png" alt="Looks like this" >
 <img src="./open_file.png" alt="Opening files" >

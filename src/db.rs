@@ -79,7 +79,8 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
             child_ids: Vec::new(),
             complete: FromPrimitive::from_u8(row.get("completeStatus")?).unwrap_or(CompleteStatus::Incomplete),
             expand: FromPrimitive::from_u8(row.get("expandStatus")?).unwrap_or(ExpandStatus::Closed),
-            depth:0
+            depth:0,
+            order:0,
             })
         })?
         .map(|i| i.unwrap()).collect();

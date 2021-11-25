@@ -264,6 +264,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('j') | Key::Down => tudu_list.down(),
                     Key::Char('k') | Key::Up =>  tudu_list.up(),
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
+
+                    Key::Ctrl('h') => tudu_list.move_selected_up(),
+                    Key::Ctrl('j') => tudu_list.move_selected_down(),
+
                     Key::Char('a') => tudu_list.enter_insert_mode(),
                     Key::Ctrl('a') => tudu_list.enter_child_insert_mode(),
                     Key::Alt('a') => tudu_list.enter_parent_insert_mode(),
@@ -272,7 +276,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 },
                 InputMode::Insert | InputMode::InsertChild | InputMode::InsertParent => match input {
                     //what's a better key combo? ctrl+[ does weird things...
-                    //terminal doesn't support ctrl+\n
+                    //terminal doesn't support ctrl+\n, ctrl/shift don't modify the key being pressed dammit
                     Key::Ctrl('n') =>  tudu_list.add_item_to_list(),
                     Key::Backspace => tudu_list.remove_character(),
                     Key::Left => tudu_list.cursor_left(),
@@ -291,6 +295,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }else{
                         tudu_list.add_save_input_char(c);
                     },
+                    Key::Ctrl(n) => {//how can I combine with the above?
+                        db::save_list(&tudu_list).unwrap();
+                        tudu_list.mark_saved();
+
+                    }
                     Key::Left => tudu_list.left_save_cursor(),
                     Key::Right => tudu_list.right_save_cursor(),
                     Key::Backspace => tudu_list.remove_save_file_char(),

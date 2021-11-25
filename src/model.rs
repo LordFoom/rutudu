@@ -45,6 +45,8 @@ pub struct Item {
     pub expand: ExpandStatus,
     pub complete: CompleteStatus,
     pub depth: usize,
+    ///Order among its siblings
+    pub order: u16,
 }
 
 impl Item {
@@ -65,6 +67,7 @@ impl Item {
             expand: ExpandStatus::Closed,
             complete: CompleteStatus::Incomplete,
             depth: 0,
+            order: 0,
         }
     }
 
@@ -373,6 +376,16 @@ impl RutuduList {
         self.dirty_list = true;
     }
 
+    ///Move selected item up its siblings
+    pub fn move_selected_up(&mut self){
+        let i = self.items.state.selected().unwrap_or(0);
+    }
+
+    //Move selected item down its siblings
+    pub fn move_selected_down(&mut self){
+        let i = self.items.state.selected().unwrap_or(0);
+    }
+
     ///Moves expansion status up the scale
     pub fn expand_selected(&mut self) {
         let i = self.items.state.selected().unwrap_or(0);
@@ -387,7 +400,9 @@ impl RutuduList {
             .or_insert_with(Vec::new)
             .iter_mut()
             .filter(|i| i.id == item_id)
-            .for_each(|i| i.expand());
+            .for_each(|i|{
+                i.expand();
+            });
         // .for_each(|item| {
         // if item.id == item_id {//should only happen once
         //     item.expand();
@@ -572,10 +587,8 @@ impl RutuduList {
             item.parent_id = match self.input_mode {
                 InputMode::InsertChild =>{
                     if let Some(i) = self.items.state.selected() {
-                        debug!("Found selected index: {}", i);
                         //we want to update the children ids as well as parent ids
                         let parent_id = self.items.items[i].id.clone();
-                        debug!("Discovered parent id: {}", parent_id);
                         //children lists are by implication - mapped by item.id in the hashmap
                         parent_id
                     }else { 0 }
@@ -592,10 +605,11 @@ impl RutuduList {
 
         //now we place the item in the right bucket
         let mut new_item = item.clone();
-         self.item_tree
-            .entry(item.parent_id.clone())
-            .or_insert_with(Vec::new)
-            .push(new_item);
+        let bucket = self.item_tree
+                    .entry(item.parent_id.clone())
+                    .or_insert_with(Vec::new);
+        new_item.order = bucket.len() as u16;
+            bucket.push(new_item);
 
         //now we do postprocessing
         if self.input_mode == InputMode::InsertParent {
