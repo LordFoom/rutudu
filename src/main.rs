@@ -277,6 +277,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::Insert | InputMode::InsertChild | InputMode::InsertParent => match input {
                     //what's a better key combo? ctrl+[ does weird things...
                     //terminal doesn't support ctrl+\n, ctrl/shift don't modify the key being pressed dammit
+                    //alt+\n just does not seem to work?
+                    Key::Alt(c) => if c as u32 == 13 {
+                        debug!("Alt was pressed with enter!!");
+                        tudu_list.add_item_to_list();
+                    }
+                    else{
+                        debug!("We pressed alt+{}", c);
+                        debug!("Ascii val == {}", c as u32);
+                    }
                     Key::Ctrl('n') =>  tudu_list.add_item_to_list(),
                     Key::Backspace => tudu_list.remove_character(),
                     Key::Left => tudu_list.cursor_left(),
@@ -288,7 +297,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     _ => {}
                 },
                 InputMode::Save => match input{
-                    // Key::Ctrl('n') => db::save_list(&tudu_list).unwrap(),
+                    Key::Ctrl('n') => {
+                        db::save_list(&tudu_list).unwrap();
+                        tudu_list.mark_saved();
+                    }
                     Key::Char(c) => if '\n' == c {
                         db::save_list(&tudu_list).unwrap();
                         tudu_list.mark_saved();
