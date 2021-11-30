@@ -44,7 +44,8 @@ Will integrate with my clockrust, my nascent timetracking project. In time. In t
 
 ### ROADMAP
 
-* Move items up 
+* Move items up/down
+* edit? delete? AND GIVE IN TO THE EPHEMERAL??
 
 <img src="./example_pic.png" alt="Looks like this" >
 <img src="./grey_crossed_out.png" alt="Now with soothing crossed out items" >
