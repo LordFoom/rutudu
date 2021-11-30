@@ -21,7 +21,7 @@ You can cross-out and and uncross-out.
 Will auto open a new list with today's date, creating if necessary, if started with no arguments. Otherwise will
 open/create passed in list name.
 
-###You can add items!
+### You can add items!
 
 * a to add an item
 * Ctrl+a to add a sub item
@@ -30,7 +30,7 @@ open/create passed in list name.
 * That's because enter works for newlines for descriptions
 * Seriously, if somebody can teach me how to capture ctrl+enter, I'd be so grateful
 
-###Can do things with the list
+### Can do things with the list
 * x to (un)cross out item
 * s to save as sqlite file 
 * o to load (up/down to select, press right/enter/ctrl+n to open)
