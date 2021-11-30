@@ -85,15 +85,19 @@ impl Item {
     ///Return the item as text, either just the title,
     /// or the title and the entry, depending on expand status
     pub fn text(&self, item_no: usize) -> Vec<Spans> {
-        let mut modifier = match self.complete {
-            CompleteStatus::Complete => Modifier::CROSSED_OUT,
+        let modifier = match self.complete {
+            CompleteStatus::Complete => Modifier::CROSSED_OUT | Modifier::ITALIC,
             CompleteStatus::Incomplete => Modifier::empty(),
+        };
+        let color = match self.complete {
+            CompleteStatus::Complete => Color::DarkGray,
+            CompleteStatus::Incomplete => Color::White,
         };
         let depth_string = "--".to_string().repeat(self.depth);
         let mut content = vec![Spans::from(
             Span::styled(format!("{}{}.{}: {} {}", depth_string,
                                  &item_no, &self.depth, &self.expansion_state_symbol(), self.title),
-                         Style::default().add_modifier(modifier)))];
+                         Style::default().add_modifier(modifier).fg(color)))];
         //show our expanded content if need be
         if let ExpandStatus::Open = self.expand {
             content.push(Spans::from(Span::raw(format!("    {}", self.entry))));

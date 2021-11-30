@@ -189,7 +189,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut lst_state = tudu_list.items.state.clone();
             let tui_items = List::new(items)
                 .block(Block::default().title(title).borders(Borders::ALL))
-                .style(Style::default().fg(Color::White))
+                // .style(Style::default().fg(Color::White))
                 .highlight_style(Style::default()
                     .add_modifier(Modifier::BOLD)
                     .fg(Color::Cyan))
