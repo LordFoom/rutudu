@@ -51,4 +51,4 @@ Will integrate with my clockrust, my nascent timetracking project. In time. In t
 <img src="./grey_crossed_out.png" title="Now with soothing crossed out items" >
 <img src="./open_file.png" title="Opening files" >
 <img src="./rutud_1.gif" title="The cursor works...in the forward direction" width="1046" height="555">
-<img src="./hierarchies.png" title=""sublists"/>
+<img src="./hierarchies.png" title="sub-lists"/>
