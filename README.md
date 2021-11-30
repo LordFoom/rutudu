@@ -21,23 +21,33 @@ You can cross-out and and uncross-out.
 Will auto open a new list with today's date, creating if necessary, if started with no arguments. Otherwise will
 open/create passed in list name.
 
+###You can add items!
+
 * a to add an item
 * Ctrl+a to add a sub item
 * Alt+a to add new parent
-* x to cross out
+* _It is CTRL+N  to e(N)ter from this screen_
+* That's because enter works for newlines for descriptions
+* Seriously, if somebody can teach me how to capture ctrl+enter, I'd be so grateful
+
+###Can do things with the list
+* x to (un)cross out item
 * s to save as sqlite file 
-* o to load (up/down to select, press right/enter to open)
+* o to load (up/down to select, press right/enter/ctrl+n to open)
 
 
 
-I like having lots of short lists and they're stored for posterity in sqlite.
+I like having lots of short lists and they're stored for posterity in sqlite. Maybe in future, some kind of tool
+to aggregate lists? W
 
-Will integrate with my clockrust, my nascent timetracking project.
+Will integrate with my clockrust, my nascent timetracking project. In time. In time.
+
 ### ROADMAP
 
 * Move items up 
 
 <img src="./example_pic.png" alt="Looks like this" >
+<img src="./grey_crossed_out.png" alt="Now with soothing crossed out items" >
 <img src="./open_file.png" alt="Opening files" >
 <img src="./rutud_1.gif" alt="The cursor works...in the forward direction" width="1046" height="555">
 <img src="./hierarchies.png" title=""sublists"/>
