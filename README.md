@@ -47,8 +47,8 @@ Will integrate with my clockrust, my nascent timetracking project. In time. In t
 * Move items up/down
 * edit? delete? AND GIVE IN TO THE EPHEMERAL??
 
-<img src="./example_pic.png" alt="Looks like this" >
-<img src="./grey_crossed_out.png" alt="Now with soothing crossed out items" >
-<img src="./open_file.png" alt="Opening files" >
-<img src="./rutud_1.gif" alt="The cursor works...in the forward direction" width="1046" height="555">
+<img src="./example_pic.png" title="Looks like this" >
+<img src="./grey_crossed_out.png" title="Now with soothing crossed out items" >
+<img src="./open_file.png" title="Opening files" >
+<img src="./rutud_1.gif" title="The cursor works...in the forward direction" width="1046" height="555">
 <img src="./hierarchies.png" title=""sublists"/>
