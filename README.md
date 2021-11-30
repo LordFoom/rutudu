@@ -27,9 +27,11 @@ open/create passed in list name.
 * Ctrl+a to add a sub item
 * Alt+a to add new parent
 * __It is CTRL+N  to e(N)ter on the add item screen__
-  * That's because enter is for newlines when creating items.
+    * That's because enter is for newlines when creating items.
+  * __As of recently, also Alt+Enter!! :D__
 * Seriously, if somebody can teach me how to capture CTRL+enter, I'd be so grateful
   * Can't seem to modify enter on the terminal?
+  * HOORAH! Managed to get Alt+Enter working
 
 ### Can do things with the list
 * x to (un)cross out item
