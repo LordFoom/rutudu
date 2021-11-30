@@ -309,7 +309,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::Open => match input{//allow moving up and down to select
                     Key::Char('j') | Key::Down => tudu_list.open_file_down(),
                     Key::Char('k') | Key::Up => tudu_list.open_file_up(),
-                    Key::Char('l') | Key::Right | Key::Char('\n') =>tudu_list.load_list_from_file_dialog(),
+                    Key::Char('l') | Key::Right | Key::Char('\n') | Key::Ctrl('n') =>tudu_list.load_list_from_file_dialog(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {}
                 },
