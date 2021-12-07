@@ -263,9 +263,10 @@ impl<T> StatefulList<T> {
 
 #[derive(Eq, PartialEq, Clone)]
 pub enum InputMode {
-    Insert,
-    InsertChild,
+    Insert,///inserts at the root level
+    InsertChild,///inserts at the same level
     InsertParent,
+    InsertSibling,
     Edit,
     Save,
     Open,
@@ -587,22 +588,25 @@ impl RutuduList {
 
     pub fn add_item(&mut self, item: &mut Item) {
         debug!("Adding item, id: {} ", item.id);
-        if item.parent_id == 0 {
+        if item.parent_id == 0 {//do we need to set a parent?
             item.parent_id = match self.input_mode {
-                InputMode::InsertChild =>{
+                InputMode::InsertChild =>{//parent is the node we selected
                     if let Some(i) = self.items.state.selected() {
-                        //we want to update the children ids as well as parent ids
-                        let parent_id = self.items.items[i].id.clone();
                         //children lists are by implication - mapped by item.id in the hashmap
-                        parent_id
+                         self.items.items[i].id.clone()
                     }else { 0 }
                 }
-                InputMode::InsertParent =>{
+                InputMode::InsertSibling => {//parent is parent of node we selected
+                    if let Some(i) = self.items.state.selected(){
+                        self.items.items[i].parent_id.clone()
+                    }else{ 0 }
+                }
+                InputMode::InsertParent =>{//
                     //we make it it's own parent, after insertion we're going to swap it
-                    //with the selected item
+                    //with the selected item and swap their parent ids
                     item.id
                 }
-                _ =>  {0}
+                _ =>  { 0 }
             }
         }//this will leave parent ids intact, which is good for when we open up lists
         debug!("Parent id: {}", item.parent_id.clone());
@@ -732,6 +736,7 @@ impl RutuduList {
         }
     }
 
+    ///TODO remove a character where the cursor is and implement delete
     pub fn remove_character(&mut self) {
         //do nothing if current_item is zero length
         if self.current_item.len() == 0 {
