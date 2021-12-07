@@ -728,7 +728,7 @@ impl RutuduList {
 
     pub fn cursor_right(&mut self){
         if self.cursor_position[0] < self.current_item.len() as u16 {
-            self.cursor_position[0] = self.cursor_position[0] - 1;
+            self.cursor_position[0] = self.cursor_position[0] + 1;
         }
     }
 
