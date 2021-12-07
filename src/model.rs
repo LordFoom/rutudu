@@ -355,6 +355,15 @@ impl RutuduList {
         // let i = self.items.state.selected().unwrap_or(0);
         self.input_mode = InputMode::InsertParent;
     }
+
+    pub fn enter_sibling_insert_mode(&mut self) {
+        debug!("Insert sibling mode");
+        // let i = self.items.state.selected().unwrap_or(0);
+        self.input_mode = InputMode::InsertSibling;
+    }
+
+    //TODO refactor all these  insert modes into one method?
+
     //Create an item at the current level
     pub fn enter_insert_mode(&mut self) {
         self.input_mode = InputMode::Insert;

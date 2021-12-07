@@ -26,6 +26,7 @@ open/create passed in list name.
 * a to add an item
 * Ctrl+a to add a sub item
 * Alt+a to add new parent
+* Shift + A to add new sibling
 * __It is CTRL+N  to e(N)ter on the add item screen__
     * That's because enter is for newlines when creating items.
   * __As of recently, also Alt+Enter!! :D__

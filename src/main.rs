@@ -168,7 +168,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     //display first/appropriate todolist
     //display all cell and it's children (recursively)
     //display add new list
-
+        //we want the screen to be cleared
     println!("{}", clear::All);
     //like in vim, 2 modes, edit and insert
         //few more modes now, we in state machine territory
@@ -273,6 +273,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('a') => tudu_list.enter_insert_mode(),
                     Key::Ctrl('a') => tudu_list.enter_child_insert_mode(),
                     Key::Alt('a') => tudu_list.enter_parent_insert_mode(),
+                    Key::Char('A') => tudu_list.enter_sibling_insert_mode(),
 
                     _ => {}
                 },
