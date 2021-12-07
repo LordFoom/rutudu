@@ -169,7 +169,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     //display all cell and it's children (recursively)
     //display add new list
 
+    println!("{}", clear::All);
     //like in vim, 2 modes, edit and insert
+        //few more modes now, we in state machine territory
     // let mut edit_mode = true;
     let mut tudu_list = RutuduList::default();
     tudu_list.file_path = list_name.to_string();
@@ -243,7 +245,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             f.render_widget(bottom_text, chunks[2]);
 
             match tudu_list.input_mode {
-                InputMode::Insert | InputMode::InsertChild| InputMode::InsertParent =>  show_new_item_input(&mut tudu_list, f),
+                InputMode::Insert | InputMode::InsertChild| InputMode::InsertParent | InputMode::InsertSibling =>  show_new_item_input(&mut tudu_list, f),
                 InputMode::Quit => draw_quit_dialog(f),
                 InputMode::Save => draw_save_dialog(&mut tudu_list,f),
                 InputMode::Open =>  draw_open_dialog(&mut tudu_list,f),
@@ -274,7 +276,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                     _ => {}
                 },
-                InputMode::Insert | InputMode::InsertChild | InputMode::InsertParent => match input {
+                InputMode::Insert | InputMode::InsertChild | InputMode::InsertParent | InputMode::InsertSibling => match input {
+
                     //what's a better key combo? ctrl+[ does weird things...
                     //terminal doesn't support ctrl+\n, ctrl/shift don't modify the key being pressed dammit
                     //alt+\n just does not seem to work?
