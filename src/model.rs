@@ -458,6 +458,7 @@ impl RutuduList {
                               .filter(|i| &i.id == &item.id)
                               .for_each(|i| i.toggle_complete_status());
             }
+            self.unsaved = true;
         } else {
             warn!("Tried to toggle complete status with nothing selected")
         };
