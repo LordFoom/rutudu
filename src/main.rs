@@ -245,7 +245,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             f.render_widget(bottom_text, chunks[2]);
 
             match tudu_list.input_mode {
-                InputMode::Insert | InputMode::InsertChild| InputMode::InsertParent | InputMode::InsertSibling =>  show_new_item_input(&mut tudu_list, f),
+                InputMode::InsertAtRoot | InputMode::InsertChild| InputMode::InsertParent | InputMode::InsertSibling =>  show_new_item_input(&mut tudu_list, f),
                 InputMode::Quit => draw_quit_dialog(f),
                 InputMode::Save => draw_save_dialog(&mut tudu_list,f),
                 InputMode::Open =>  draw_open_dialog(&mut tudu_list,f),
@@ -270,14 +270,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Ctrl('h') => tudu_list.move_selected_up(),
                     Key::Ctrl('j') => tudu_list.move_selected_down(),
 
-                    Key::Char('a') => tudu_list.enter_insert_mode(),
-                    Key::Ctrl('a') => tudu_list.enter_child_insert_mode(),
-                    Key::Alt('a') => tudu_list.enter_parent_insert_mode(),
-                    Key::Char('A') => tudu_list.enter_sibling_insert_mode(),
+                    Key::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
+                    Key::Ctrl('a') => tudu_list.enter_insert_mode(InputMode::InsertChild),
+                    Key::Alt('a') => tudu_list.enter_insert_mode(InputMode::InsertParent),
+                    Key::Char('A') => tudu_list.enter_insert_mode(InputMode::InsertSibling),
 
                     _ => {}
                 },
-                InputMode::Insert | InputMode::InsertChild | InputMode::InsertParent | InputMode::InsertSibling => match input {
+                InputMode::InsertAtRoot | InputMode::InsertChild | InputMode::InsertParent | InputMode::InsertSibling => match input {
 
                     //what's a better key combo? ctrl+[ does weird things...
                     //terminal doesn't support ctrl+\n, ctrl/shift don't modify the key being pressed dammit

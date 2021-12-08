@@ -263,7 +263,7 @@ impl<T> StatefulList<T> {
 
 #[derive(Eq, PartialEq, Clone)]
 pub enum InputMode {
-    Insert,///inserts at the root level
+    InsertAtRoot,///inserts at the root level
     InsertChild,///inserts at the same level
     InsertParent,
     InsertSibling,
@@ -345,28 +345,26 @@ impl RutuduList {
         self.input_mode = InputMode::Quit;
     }
     //Create an item as a sub item of the currently selected item
-    pub fn enter_child_insert_mode(&mut self) {
-        debug!("Insert child mode");
-        // let i = self.items.state.selected().unwrap_or(0);
-        self.input_mode = InputMode::InsertChild;
-    }
-    pub fn enter_parent_insert_mode(&mut self) {
-        debug!("Insert parent mode");
-        // let i = self.items.state.selected().unwrap_or(0);
-        self.input_mode = InputMode::InsertParent;
-    }
-
-    pub fn enter_sibling_insert_mode(&mut self) {
-        debug!("Insert sibling mode");
-        // let i = self.items.state.selected().unwrap_or(0);
-        self.input_mode = InputMode::InsertSibling;
-    }
-
-    //TODO refactor all these  insert modes into one method?
+    // pub fn enter_child_insert_mode(&mut self) {
+    //     debug!("Insert child mode");
+    //     // let i = self.items.state.selected().unwrap_or(0);
+    //     self.input_mode = InputMode::InsertChild;
+    // }
+    // pub fn enter_parent_insert_mode(&mut self) {
+    //     debug!("Insert parent mode");
+    //     // let i = self.items.state.selected().unwrap_or(0);
+    //     self.input_mode = InputMode::InsertParent;
+    // }
+    //
+    // pub fn enter_sibling_insert_mode(&mut self) {
+    //     debug!("Insert sibling mode");
+    //     // let i = self.items.state.selected().unwrap_or(0);
+    //     self.input_mode = InputMode::InsertSibling;
+    // }
 
     //Create an item at the current level
-    pub fn enter_insert_mode(&mut self) {
-        self.input_mode = InputMode::Insert;
+    pub fn enter_insert_mode(&mut self, mode:InputMode) {
+        self.input_mode = mode;
     }
 
     pub fn enter_open_mode(&mut self) {
