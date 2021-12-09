@@ -19,7 +19,7 @@ use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, 
 use model::InputMode;
 
 use crate::events::{Event, Events};
-use crate::model::{RutuduList, StatefulList};
+use crate::model::{MoveDirection, RutuduList, StatefulList};
 use rusqlite::Connection;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
@@ -267,8 +267,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('k') | Key::Up =>  tudu_list.up(),
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
 
-                    Key::Ctrl('h') => tudu_list.move_selected_up(),
-                    Key::Ctrl('j') => tudu_list.move_selected_down(),
+                    Key::Ctrl('k') => tudu_list.move_item(MoveDirection::Up),
+                    Key::Ctrl('j') => tudu_list.move_item(MoveDirection::Down),
                     //TODO yeah gonna add delete in sigh
 
                     Key::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
@@ -420,7 +420,7 @@ fn draw_open_dialog(mut tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend
             .add_modifier(Modifier::BOLD).fg(Color::LightBlue))
         .highlight_symbol("o");
 
-    f.render_widget(Clear,area);
+    f.render_widget(Clear,rect);
     f.render_stateful_widget(file_items, rect,&mut tudu_file_state);
 
 }

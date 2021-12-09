@@ -90,7 +90,7 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
 
     items.iter_mut()
         .for_each(|i|{
-            tudu_list.add_item(i);
+            tudu_list.insert_item(i);
             tudu_list.dirty_list = true;
         });
     // for item in items {

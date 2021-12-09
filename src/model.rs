@@ -25,6 +25,11 @@ pub enum CompleteStatus {
     Complete = 2,
 }
 
+pub enum MoveDirection {
+    Up,
+    Down,
+}
+
 #[derive(FromPrimitive, ToPrimitive, Clone, PartialEq, PartialOrd, Debug)]
 pub enum ExpandStatus {
     Closed = 1,
@@ -378,8 +383,8 @@ impl RutuduList {
         let parent_id = self.items.items[i].parent_id;
         debug!("Parent id:{}", parent_id);
         let item_id = self.items.items[i].id;
-        if let Some(root) = self.item_tree.get_mut(&parent_id) {//get the list we belong to, could be zero
-            root.iter_mut().for_each(|item| {
+        if let Some(bucket) = self.item_tree.get_mut(&parent_id) {//get the list we belong to, could be zero
+            bucket.iter_mut().for_each(|item| {
                 if item.id == item_id {
                     item.collapse();
                 }
@@ -388,14 +393,33 @@ impl RutuduList {
         self.dirty_list = true;
     }
 
-    ///Move selected item up its siblings
-    pub fn move_selected_up(&mut self){
+    ///Move an up and down its siblings
+    /// TODO implement out (going up a level) and in (become a child)
+    pub fn move_item(&mut self, dir : MoveDirection){
         let i = self.items.state.selected().unwrap_or(0);
-    }
+        //if nothing selected nothing to do
+        if i ==0 {
+            return;
+        }
+        //move it in the bucket
+        let parent_id = self.items.items[i].parent_id;
+        let id = self.items.items[i].id;
 
-    //Move selected item down its siblings
-    pub fn move_selected_down(&mut self){
-        let i = self.items.state.selected().unwrap_or(0);
+        if let Some(bucket) = self.item_tree.get_mut(&parent_id){
+                if let Some(mut idx) = bucket.iter_mut()
+                    .position(|item|{ item.id == id  } ){
+                        //now we have the idx, we can decide what to do
+                    match dir{
+                        MoveDirection::Up => {
+
+                        }
+                        MoveDirection::Down => {}
+                    }
+                }else{
+                    error!("Unable to navigate through bucket to move items");
+                }
+
+        }
     }
 
     ///Moves expansion status up the scale
@@ -584,7 +608,7 @@ impl RutuduList {
         //here we get the parent id if it exists
         let mut item = self.get_current_input_as_item();
         //get the parents id if it is in insertchild mode
-        self.add_item(&mut item);
+        self.insert_item(&mut item);
 
         //and we also keep a list of all the items
 
@@ -594,7 +618,7 @@ impl RutuduList {
     ///Add item as parent to currently selected item, or, if noe, just add it
 
 
-    pub fn add_item(&mut self, item: &mut Item) {
+    pub fn insert_item(&mut self, item: &mut Item) {
         debug!("Adding item, id: {} ", item.id);
         if item.parent_id == 0 {//do we need to set a parent?
             item.parent_id = match self.input_mode {
