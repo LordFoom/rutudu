@@ -396,22 +396,31 @@ impl RutuduList {
     ///Move an up and down its siblings
     /// TODO implement out (going up a level) and in (become a child)
     pub fn move_item(&mut self, dir : MoveDirection){
-        let i = self.items.state.selected().unwrap_or(0);
-        //if nothing selected nothing to do
-        if i ==0 {
+        let i = if let Some(i) =  self.items.state.selected(){
+            i
+        }else{
+            //if nothing selected nothing to do
             return;
-        }
+        };
         //move it in the bucket
         let parent_id = self.items.items[i].parent_id;
         let id = self.items.items[i].id;
 
-        if let Some(bucket) = self.item_tree.get_mut(&parent_id){
+
+        if let Some(mut bucket) = self.item_tree.get_mut(&parent_id){
+            debug!("Found the bucket");
                 if let Some(mut idx) = bucket.iter_mut()
                     .position(|item|{ item.id == id  } ){
                         //now we have the idx, we can decide what to do
+
                     match dir{
                         MoveDirection::Up => {
-
+                            let idx_to_swap = if idx  == 0 {//first item, loop around
+                                bucket.len() -1
+                            }else{
+                                idx -1
+                            };
+                           bucket.swap(idx, idx_to_swap);
                         }
                         MoveDirection::Down => {}
                     }
@@ -419,7 +428,9 @@ impl RutuduList {
                     error!("Unable to navigate through bucket to move items");
                 }
 
+            self.dirty_list = true;
         }
+
     }
 
     ///Moves expansion status up the scale
