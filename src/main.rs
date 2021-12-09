@@ -269,6 +269,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                     Key::Ctrl('h') => tudu_list.move_selected_up(),
                     Key::Ctrl('j') => tudu_list.move_selected_down(),
+                    //TODO yeah gonna add delete in sigh
 
                     Key::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
                     Key::Ctrl('a') => tudu_list.enter_insert_mode(InputMode::InsertChild),
@@ -417,8 +418,9 @@ fn draw_open_dialog(mut tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend
             .fg(Color::LightCyan))
         .highlight_style(Style::default()
             .add_modifier(Modifier::BOLD).fg(Color::LightBlue))
-        .highlight_symbol("o")
-        ;
+        .highlight_symbol("o");
+
+    f.render_widget(Clear,area);
     f.render_stateful_widget(file_items, rect,&mut tudu_file_state);
 
 }
