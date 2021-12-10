@@ -26,9 +26,14 @@ pub enum CompleteStatus {
 }
 
 pub enum MoveDirection {
-    Up,//make it go up it
+
+    ///up sibling list
+    Up,
+    ///down sibling list
     Down,
+    ///become child of item above
     In,
+    //become sibling of parent
     Out,
 }
 
@@ -431,6 +436,12 @@ impl RutuduList {
                                 idx + 1
                             };
                             bucket.swap(idx, idx_to_swap);
+                        }
+                        MoveDirection::In => {
+
+                        }
+                        MoveDirection::Out => {
+
                         }
                     }
                 }else{
