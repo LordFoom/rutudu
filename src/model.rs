@@ -26,8 +26,10 @@ pub enum CompleteStatus {
 }
 
 pub enum MoveDirection {
-    Up,
+    Up,//make it go up it
     Down,
+    In,
+    Out,
 }
 
 #[derive(FromPrimitive, ToPrimitive, Clone, PartialEq, PartialOrd, Debug)]
@@ -422,7 +424,14 @@ impl RutuduList {
                             };
                            bucket.swap(idx, idx_to_swap);
                         }
-                        MoveDirection::Down => {}
+                        MoveDirection::Down => {
+                            let idx_to_swap = if idx == bucket.len() -1 {//last time, loop around
+                                0
+                            }else {
+                                idx + 1
+                            };
+                            bucket.swap(idx, idx_to_swap);
+                        }
                     }
                 }else{
                     error!("Unable to navigate through bucket to move items");
