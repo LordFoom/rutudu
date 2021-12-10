@@ -7,7 +7,7 @@ use std::os::unix::process::parent_id;
 use std::path::Path;
 
 use chrono::{DateTime, Utc};
-use log::{debug, warn, error};
+use log::{debug, error, warn};
 use num;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
@@ -26,7 +26,6 @@ pub enum CompleteStatus {
 }
 
 pub enum MoveDirection {
-
     ///up sibling list
     Up,
     ///down sibling list
@@ -90,7 +89,6 @@ impl Item {
             ExpandStatus::Closed => String::from("[+]"),
             ExpandStatus::ShowChildren => String::from("[|]"),
         };
-
     }
 
     ///todo Is THIS where we decide if and how to display children
@@ -121,14 +119,14 @@ impl Item {
     pub fn expand(&mut self) {
         debug!("Hello");
         match self.expand {
-            ExpandStatus::Closed =>  self.expand = ExpandStatus::ShowChildren,
+            ExpandStatus::Closed => self.expand = ExpandStatus::ShowChildren,
             ExpandStatus::ShowChildren => self.expand = ExpandStatus::Open,
             ExpandStatus::Open => {}//do nothing
         };
     }
 
-    pub fn show_children(&mut self){
-        if self.expand==ExpandStatus::Closed {
+    pub fn show_children(&mut self) {
+        if self.expand == ExpandStatus::Closed {
             self.expand = ExpandStatus::ShowChildren;
         }
     }
@@ -275,8 +273,10 @@ impl<T> StatefulList<T> {
 
 #[derive(Eq, PartialEq, Clone)]
 pub enum InputMode {
-    InsertAtRoot,///inserts at the root level
-    InsertChild,///inserts at the same level
+    InsertAtRoot,
+    ///inserts at the root level
+    InsertChild,
+    ///inserts at the same level
     InsertParent,
     InsertSibling,
     Edit,
@@ -344,7 +344,7 @@ impl RutuduList {
         self.input_mode = InputMode::Save;
     }
 
-    pub fn mark_saved(&mut self){
+    pub fn mark_saved(&mut self) {
         self.unsaved = false;
         self.enter_edit_mode();
     }
@@ -375,7 +375,7 @@ impl RutuduList {
     // }
 
     //Create an item at the current level
-    pub fn enter_insert_mode(&mut self, mode:InputMode) {
+    pub fn enter_insert_mode(&mut self, mode: InputMode) {
         self.input_mode = mode;
     }
 
@@ -390,10 +390,17 @@ impl RutuduList {
         let parent_id = self.items.items[i].parent_id;
         debug!("Parent id:{}", parent_id);
         let item_id = self.items.items[i].id;
+        let num_children = self.item_tree
+                              .entry(item_id)
+                              .or_insert_with(Vec::new)
+                              .len();
         if let Some(bucket) = self.item_tree.get_mut(&parent_id) {//get the list we belong to, could be zero
             bucket.iter_mut().for_each(|item| {
                 if item.id == item_id {
                     item.collapse();
+                    if num_children == 0{//roll up all the way
+                       item.collapse();
+                    }
                 }
             })
         };
@@ -402,10 +409,10 @@ impl RutuduList {
 
     ///Move an up and down its siblings
     /// TODO implement out (going up a level) and in (become a child)
-    pub fn move_item(&mut self, dir : MoveDirection){
-        let i = if let Some(i) =  self.items.state.selected(){
+    pub fn move_item(&mut self, dir: MoveDirection) {
+        let i = if let Some(i) = self.items.state.selected() {
             i
-        }else{
+        } else {
             //if nothing selected nothing to do
             return;
         };
@@ -414,43 +421,38 @@ impl RutuduList {
         let id = self.items.items[i].id;
 
 
-        if let Some(mut bucket) = self.item_tree.get_mut(&parent_id){
+        if let Some(mut bucket) = self.item_tree.get_mut(&parent_id) {
             debug!("Found the bucket");
-                if let Some(mut idx) = bucket.iter_mut()
-                    .position(|item|{ item.id == id  } ){
-                        //now we have the idx, we can decide what to do
+            if let Some(mut idx) = bucket.iter_mut()
+                                         .position(|item| { item.id == id }) {
+                //now we have the idx, we can decide what to do
 
-                    match dir{
-                        MoveDirection::Up => {
-                            let idx_to_swap = if idx  == 0 {//first item, loop around
-                                bucket.len() -1
-                            }else{
-                                idx -1
-                            };
-                           bucket.swap(idx, idx_to_swap);
-                        }
-                        MoveDirection::Down => {
-                            let idx_to_swap = if idx == bucket.len() -1 {//last time, loop around
-                                0
-                            }else {
-                                idx + 1
-                            };
-                            bucket.swap(idx, idx_to_swap);
-                        }
-                        MoveDirection::In => {
-
-                        }
-                        MoveDirection::Out => {
-
-                        }
+                match dir {
+                    MoveDirection::Up => {
+                        let idx_to_swap = if idx == 0 {//first item, loop around
+                            bucket.len() - 1
+                        } else {
+                            idx - 1
+                        };
+                        bucket.swap(idx, idx_to_swap);
                     }
-                }else{
-                    error!("Unable to navigate through bucket to move items");
+                    MoveDirection::Down => {
+                        let idx_to_swap = if idx == bucket.len() - 1 {//last time, loop around
+                            0
+                        } else {
+                            idx + 1
+                        };
+                        bucket.swap(idx, idx_to_swap);
+                    }
+                    MoveDirection::In => {}
+                    MoveDirection::Out => {}
                 }
+            } else {
+                error!("Unable to navigate through bucket to move items");
+            }
 
             self.dirty_list = true;
         }
-
     }
 
     ///Moves expansion status up the scale
@@ -461,14 +463,23 @@ impl RutuduList {
         //get the parent id and then get the item and set its expansion status
         let parent_id = self.items.items[i].parent_id;
         let item_id = self.items.items[i].id;
+        let num_children = self.item_tree
+                               .entry(item_id)
+                               .or_insert_with(Vec::new)
+                               .len();
+
 
         self.item_tree
             .entry(parent_id)
             .or_insert_with(Vec::new)
             .iter_mut()
             .filter(|i| i.id == item_id)
-            .for_each(|i|{
+            .for_each(|i| {
                 i.expand();
+                if num_children == 0 {//no children, expand all the way
+                    i.expand();
+                }
+
             });
         // .for_each(|item| {
         // if item.id == item_id {//should only happen once
@@ -573,7 +584,6 @@ impl RutuduList {
             // let new_item = ListItem::new(item.text(i));
             self.items.items.push(item.clone());
         });
-
     }
 
     pub fn get_subtree_vec(&self, parent_id: u32, depth: usize) -> Vec<Item> {
@@ -607,7 +617,6 @@ impl RutuduList {
                     item_text_as_vec.push(span.clone());
                 }
             }
-
         };
         item_text_as_vec
     }
@@ -653,34 +662,35 @@ impl RutuduList {
         debug!("Adding item, id: {} ", item.id);
         if item.parent_id == 0 {//do we need to set a parent?
             item.parent_id = match self.input_mode {
-                InputMode::InsertChild =>{//parent is the node we selected
+                InputMode::InsertChild => {//parent is the node we selected
                     if let Some(i) = self.items.state.selected() {
                         //children lists are by implication - mapped by item.id in the hashmap
-                         self.items.items[i].id.clone()
-                    }else { 0 }
+                        self.items.items[i].id.clone()
+                    } else { 0 }
                 }
                 InputMode::InsertSibling => {//parent is parent of node we selected
-                    if let Some(i) = self.items.state.selected(){
+                    if let Some(i) = self.items.state.selected() {
                         self.items.items[i].parent_id.clone()
-                    }else{ 0 }
+                    } else { 0 }
                 }
-                InputMode::InsertParent =>{//
+                InputMode::InsertParent => {//
                     //we make it it's own parent, after insertion we're going to swap it
                     //with the selected item and swap their parent ids
                     item.id
                 }
-                _ =>  { 0 }
+                _ => { 0 }
             }
-        }//this will leave parent ids intact, which is good for when we open up lists
+        }
+        //this will leave parent ids intact, which is good for when we open up lists
         debug!("Parent id: {}", item.parent_id.clone());
 
         //now we place the item in the right bucket
         let mut new_item = item.clone();
         let bucket = self.item_tree
-                    .entry(item.parent_id.clone())
-                    .or_insert_with(Vec::new);
+                         .entry(item.parent_id.clone())
+                         .or_insert_with(Vec::new);
         new_item.order = bucket.len() as u16;
-            bucket.push(new_item);
+        bucket.push(new_item);
 
         //now we do postprocessing
         if self.input_mode == InputMode::InsertParent {
@@ -690,13 +700,12 @@ impl RutuduList {
                 Some(i) => self.items.items.get_mut(i),
                 None => None,
             };
-            if let Some(list_item) = opt_parent{
+            if let Some(list_item) = opt_parent {
                 self.item_tree.entry(list_item.parent_id.clone())
                     .or_insert_with(Vec::new)
                     .iter_mut()
                     .filter(|i| { i.id == list_item.id })
-                    .for_each(|i| { i.show_children()})
-
+                    .for_each(|i| { i.show_children() })
             }
         }
 
@@ -766,13 +775,13 @@ impl RutuduList {
         let title: String = entry.drain(..first_new_line).collect();
         // content - we set the id to the maximum
         //we set the content to the number of TOTAL items
-        let total_length:usize = self.item_tree.iter()
-            .map(|(k, v)|  v.len() )
-            .sum();
+        let total_length: usize = self.item_tree.iter()
+                                      .map(|(k, v)| v.len())
+                                      .sum();
         debug!("Next item id: {}", total_length+1);
         // let i = self.items.items.len().clone() as u32;
         //we want to start this at ONE so we reserve the zero index for the root nodes of the forest
-        Item::new((total_length as u32)+1, &title, &entry)
+        Item::new((total_length as u32) + 1, &title, &entry)
     }
 
     ///Add character to current input
@@ -787,13 +796,13 @@ impl RutuduList {
         }
     }
 
-    pub fn cursor_left(&mut  self){
+    pub fn cursor_left(&mut self) {
         if self.cursor_position[0] > 0 {
             self.cursor_position[0] = self.cursor_position[0] - 1;
         }
     }
 
-    pub fn cursor_right(&mut self){
+    pub fn cursor_right(&mut self) {
         if self.cursor_position[0] < self.current_item.len() as u16 {
             self.cursor_position[0] = self.cursor_position[0] + 1;
         }
@@ -824,23 +833,22 @@ impl RutuduList {
         }
     }
 
-    pub fn left_save_cursor(&mut self){
+    pub fn left_save_cursor(&mut self) {
         debug!("Move save cursor left, cursor[0] = {} ", self.cursor_position[0]);
         if self.cursor_position[0] > 0 {
             self.cursor_position[0] = self.cursor_position[0] - 1;
             self.cursor_offset += 1;
-        }else{
+        } else {
             debug!("Not moving?");
         }
     }
 
-    pub fn right_save_cursor(&mut self){
+    pub fn right_save_cursor(&mut self) {
         debug!("Move save cursor right, cursor[0] = {} ", self.cursor_position[0]);
         if self.cursor_position[0] < self.file_path.len() as u16 {
             self.cursor_position[0] = self.cursor_position[0] + 1;
             self.cursor_offset -= 1;
         }
-
     }
 
     pub fn add_save_input_char(&mut self, c: char) {
@@ -860,16 +868,16 @@ impl RutuduList {
         // self.file_path.pop();
 
         //-1 because we want to delete BEHIND the cursor
-        let delete_pos = self.file_path.len() -1 - self.cursor_offset as usize;
+        let delete_pos = self.file_path.len() - 1 - self.cursor_offset as usize;
         self.file_path.remove(delete_pos);
-        self.cursor_position[0] = self.cursor_position[0]-1;
+        self.cursor_position[0] = self.cursor_position[0] - 1;
         // self.cursor_position[0] = self.file_path.len() as u16;
         // debug!("x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
     }
 
     pub fn list_name(&mut self) -> String {
         //we add an asterisk if it is unsaved
-        let save_needed = if self.unsaved { "*"} else{ ""};
+        let save_needed = if self.unsaved { "*" } else { "" };
         let fp = format!("{}{}", self.file_path.clone(), save_needed);
         //trim off the first path of the filepath`
         match fp.rfind("/") {
@@ -904,21 +912,21 @@ impl RutuduList {
     }
 
     ///If list exists, will open it
-    pub fn open_list(&mut self, list_name:&str){
-        let abs_list_name = if (!list_name.starts_with("./")){
+    pub fn open_list(&mut self, list_name: &str) {
+        let abs_list_name = if (!list_name.starts_with("./")) {
             format!("./{}", list_name)
-        }else{
+        } else {
             String::from(list_name)
         };
 
 
         debug!("Going to open list if it's found: {}", abs_list_name);
-       //can we find the list? open it
-       if Path::new(&abs_list_name).exists() {
-           if let Ok(()) = db::load_list(self, &abs_list_name){
-               self.file_path = String::from(list_name)
-           }
-       }
+        //can we find the list? open it
+        if Path::new(&abs_list_name).exists() {
+            if let Ok(()) = db::load_list(self, &abs_list_name) {
+                self.file_path = String::from(list_name)
+            }
+        }
     }
 
     ///Will scan the current directory once, to prevent loop jamming
