@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::mem;
+use std::ops::Index;
 use std::os::unix::process::parent_id;
 use std::path::Path;
 
@@ -421,12 +422,13 @@ impl RutuduList {
         let id = self.items.items[i].id;
 
 
+        //if we move up or down siblings, we need to find the bucket of siblings and swap
+
         if let Some(mut bucket) = self.item_tree.get_mut(&parent_id) {
             debug!("Found the bucket");
             if let Some(mut idx) = bucket.iter_mut()
                                          .position(|item| { item.id == id }) {
                 //now we have the idx, we can decide what to do
-
                 match dir {
                     MoveDirection::Up => {
                         let idx_to_swap = if idx == 0 {//first item, loop around
@@ -435,6 +437,7 @@ impl RutuduList {
                             idx - 1
                         };
                         bucket.swap(idx, idx_to_swap);
+                        self.items.previous();
                     }
                     MoveDirection::Down => {
                         let idx_to_swap = if idx == bucket.len() - 1 {//last time, loop around
@@ -442,17 +445,31 @@ impl RutuduList {
                         } else {
                             idx + 1
                         };
+                        debug!("Going down idx: {} idx_to_swap {}", idx, idx_to_swap);
+                        self.items.next();
                         bucket.swap(idx, idx_to_swap);
                     }
-                    MoveDirection::In => {}
-                    MoveDirection::Out => {}
+                    MoveDirection::In => {
+                        let idx_to_swap = if idx == 0 {
+                            bucket.len() - 1
+                        } else {
+                            idx - 1
+                        };
+
+                        bucket.get_mut(idx).unwrap().parent_id = bucket
+                            .get(idx_to_swap)
+                            .unwrap()
+                            .parent_id;
+                    }
+                    MoveDirection::Out => {
+
+                    }
                 }
             } else {
                 error!("Unable to navigate through bucket to move items");
             }
-
-            self.dirty_list = true;
         }
+        self.dirty_list = true;
     }
 
     ///Moves expansion status up the scale

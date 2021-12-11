@@ -269,6 +269,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                     Key::Ctrl('k') => tudu_list.move_item(MoveDirection::Up),
                     Key::Ctrl('j') => tudu_list.move_item(MoveDirection::Down),
+                    Key::Ctrl('l') => tudu_list.move_item(MoveDirection::In),
                     //TODO yeah gonna add delete in sigh
 
                     Key::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
