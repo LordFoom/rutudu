@@ -262,14 +262,16 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('x') => tudu_list.toggle_selected_status(),//println!("{}", clear::All);
                         // break;
 
+                    Key::Ctrl('y') => tudu_list.move_item(MoveDirection::Down),
+                    Key::Ctrl('u') => tudu_list.move_item(MoveDirection::Up),
+                    Key::Ctrl('i') => tudu_list.move_item(MoveDirection::In),
+                    Key::Ctrl('o') => tudu_list.move_item(MoveDirection::Out),
+
                     Key::Char('h') | Key::Left => tudu_list.collapse_selected(),
                     Key::Char('j') | Key::Down => tudu_list.down(),
                     Key::Char('k') | Key::Up =>  tudu_list.up(),
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
 
-                    Key::Ctrl('k') => tudu_list.move_item(MoveDirection::Up),
-                    Key::Ctrl('j') => tudu_list.move_item(MoveDirection::Down),
-                    Key::Ctrl('l') => tudu_list.move_item(MoveDirection::In),
                     //TODO yeah gonna add delete in sigh
 
                     Key::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
