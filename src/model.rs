@@ -1,6 +1,8 @@
+use core::fmt;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::error::Error;
+use std::fmt::Display;
 use std::fs::File;
 use std::mem;
 use std::ops::Index;
@@ -35,6 +37,18 @@ pub enum MoveDirection {
     In,
     //become sibling of parent
     Out,
+}
+
+impl Display for MoveDirection{
+    fn fmt(&self, f:&mut fmt::Formatter<'_>)->fmt::Result{
+       let mut write_str = match *self {
+            MoveDirection::Up => {"Up"}
+            MoveDirection::Down => {"Down"}
+            MoveDirection::In => {"In"}
+            MoveDirection::Out => {"Out"}
+        };
+        write!(f, "{}", write_str)
+    }
 }
 
 #[derive(FromPrimitive, ToPrimitive, Clone, PartialEq, PartialOrd, Debug)]
@@ -411,6 +425,7 @@ impl RutuduList {
     ///Move an up and down its siblings
     /// TODO implement out (going up a level) and in (become a child)
     pub fn move_item(&mut self, dir: MoveDirection) {
+        debug!("move_item, direction: {}", dir);
         let i = if let Some(i) = self.items.state.selected() {
             i
         } else {
@@ -466,8 +481,11 @@ impl RutuduList {
                     }
                 }
             } else {
+                debug!("Did not find any bucket? {} ", parent_id );
                 error!("Unable to navigate through bucket to move items");
             }
+        } else{
+            debug!("Did not find any bucket? {} ", parent_id );
         }
         self.dirty_list = true;
     }
