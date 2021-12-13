@@ -439,50 +439,62 @@ impl RutuduList {
 
         //if we move up or down siblings, we need to find the bucket of siblings and swap
 
-        if let Some(mut bucket) = self.item_tree.get_mut(&parent_id) {
+        if let Some(mut parent_child_bucket) = self.item_tree.get_mut(&parent_id) {
             debug!("Found the bucket");
-            if let Some(mut idx) = bucket.iter_mut()
-                                         .position(|item| { item.id == id }) {
+            if let Some(mut idx) = parent_child_bucket.iter_mut()
+                                                      .position(|item| { item.id == id }) {
                 //now we have the idx, we can decide what to do
                 match dir {
                     MoveDirection::Up => {
                         let idx_to_swap = if idx == 0 {//first item, loop around
-                            bucket.len() - 1
+                            parent_child_bucket.len() - 1
                         } else {
                             idx - 1
                         };
-                        bucket.swap(idx, idx_to_swap);
+                        parent_child_bucket.swap(idx, idx_to_swap);
                         self.items.previous();
                     }
                     MoveDirection::Down => {
-                        let idx_to_swap = if idx == bucket.len() - 1 {//last time, loop around
+                        let idx_to_swap = if idx == parent_child_bucket.len() - 1 {//last time, loop around
                             0
                         } else {
                             idx + 1
                         };
-                        debug!("Going down idx: {} idx_to_swap {}", idx, idx_to_swap);
+                        // debug!("Going down idx: {} idx_to_swap {}", idx, idx_to_swap);
                         self.items.next();
-                        bucket.swap(idx, idx_to_swap);
+                        parent_child_bucket.swap(idx, idx_to_swap);
                     }
                     MoveDirection::In => {
-                        if bucket.len() == 1{
+                        if parent_child_bucket.len() == 1{
                             return;
                         }
 
                         //we want to get the id from the sibling immediately above
                         let idx_to_swap = if idx == 0 {
-                            bucket.len() - 1
+                            parent_child_bucket.len() - 1
                         } else {
                             idx - 1
                         };
 
                         //get your sibling's id and then set it as your own parent id
-                        bucket.get_mut(idx).unwrap().parent_id = bucket
+                        let new_parent_id = parent_child_bucket
                             .get(idx_to_swap)
                             .unwrap()
                             .id;
+
+                        //remove from the  original child bucket
+                        let mut oi = parent_child_bucket.remove(idx);
+                        oi.parent_id = new_parent_id.clone();
+
+                        //put it into the sibling's bucket at the beginning
+                        self.item_tree.entry(new_parent_id)
+                            .or_insert_with(Vec::new)
+                            .insert(0, oi);
+
+
+                        self.dirty_list = true;
                     }
-                    MoveDirection::Out => {
+                    MoveDirection::Out => {//make your grandparent your parent id and put yourself in the right bucket
 
                     }
                 }
