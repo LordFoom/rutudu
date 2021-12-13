@@ -262,10 +262,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('x') => tudu_list.toggle_selected_status(),//println!("{}", clear::All);
                         // break;
 
-                    Key::Ctrl('d') => tudu_list.move_item(MoveDirection::Down),
-                    Key::Ctrl('u') => tudu_list.move_item(MoveDirection::Up),
-                    Key::Ctrl('>') => tudu_list.move_item(MoveDirection::In),
-                    Key::Ctrl('<') => tudu_list.move_item(MoveDirection::Out),
+                    Key::Char('d') => tudu_list.move_item(MoveDirection::Down),
+                    Key::Char('u') => tudu_list.move_item(MoveDirection::Up),
+                    Key::Char('>') => tudu_list.move_item(MoveDirection::In),
+                    Key::Char('<') => tudu_list.move_item(MoveDirection::Out),
 
                     Key::Char('h') | Key::Left => tudu_list.collapse_selected(),
                     Key::Char('j') | Key::Down => tudu_list.down(),
