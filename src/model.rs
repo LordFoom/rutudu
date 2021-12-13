@@ -465,16 +465,22 @@ impl RutuduList {
                         bucket.swap(idx, idx_to_swap);
                     }
                     MoveDirection::In => {
+                        if bucket.len() == 1{
+                            return;
+                        }
+
+                        //we want to get the id from the sibling immediately above
                         let idx_to_swap = if idx == 0 {
                             bucket.len() - 1
                         } else {
                             idx - 1
                         };
 
+                        //get your sibling's id and then set it as your own parent id
                         bucket.get_mut(idx).unwrap().parent_id = bucket
                             .get(idx_to_swap)
                             .unwrap()
-                            .parent_id;
+                            .id;
                     }
                     MoveDirection::Out => {
 
