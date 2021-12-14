@@ -435,13 +435,23 @@ impl RutuduList {
         //move it in the bucket
         let parent_id = self.items.items[i].parent_id;
         let id = self.items.items[i].id;
-
+        let mut grand_parent_id = 0;
+        let mut grand_parent_bucket = 0;
+        self.item_tree.iter()
+            .for_each(|( k, v )|{
+                v.iter().for_each(|i|{
+                    if i.id == parent_id{
+                        grand_parent_id = i.parent_id;
+                    }
+                });
+            } );
 
         //if we move up or down siblings, we need to find the bucket of siblings and swap
 
         if let Some(mut parent_child_bucket) = self.item_tree.get_mut(&parent_id) {
             debug!("Found the bucket");
-            if let Some(mut idx) = parent_child_bucket.iter_mut()
+            if let Some(mut idx) = parent_child_bucket
+                                                      .iter_mut()
                                                       .position(|item| { item.id == id }) {
                 //now we have the idx, we can decide what to do
                 match dir {
@@ -495,6 +505,38 @@ impl RutuduList {
                         self.dirty_list = true;
                     }
                     MoveDirection::Out => {//make your grandparent your parent id and put yourself in the right bucket
+                            //how to find one's parent....
+                        let parent = self.items.items.iter()
+                            .find(|i| i.id ==  parent_id)
+                            .unwrap();
+
+                        //take out of the old vector
+                        let mut oi = parent_child_bucket.remove(idx);
+                        oi.parent_id = grand_parent_id;
+
+                        //what is the  new sibling's id, we want to go after it
+                        let parent_idx = self.item_tree.get(&grand_parent_id)
+                            .unwrap()
+                            .iter()
+                            .position(|i| i.id == parent_id)
+                            .unwrap_or(0);
+
+
+                        let mut offset = if self.item_tree.get(&grand_parent_id)
+                            .unwrap()
+                            .len() > 0{
+                            1
+                        }else{
+                           0
+                        };
+
+                        let fin_idx = parent_idx.clone() + offset;
+                        self.item_tree.entry(grand_parent_id)
+                            .or_insert_with(Vec::new)
+                            .insert(fin_idx, oi);
+
+
+                        self.dirty_list = true;
 
                     }
                 }
