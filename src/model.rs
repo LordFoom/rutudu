@@ -674,7 +674,6 @@ impl RutuduList {
 
         let root_items_vec = self.get_subtree_vec(0, 0);
         self.items.items.clear();
-        // let list_items: StatefulList<ListItem> = StatefulList::new();
         root_items_vec.iter().enumerate().for_each(|(i, item)| {
             // let new_item = ListItem::new(item.text(i));
             self.items.items.push(item.clone());
