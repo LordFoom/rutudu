@@ -504,6 +504,9 @@ impl RutuduList {
                         self.dirty_list = true;
                     }
                     MoveDirection::Out => {//make your grandparent your parent id and put yourself in the right bucket
+                        if parent_id == 0{//if it's at the root level, we are as far out (man) as we can go
+                            return;
+                        }
                             //how to find one's parent....
                         let parent = self.items.items.iter()
                             .find(|i| i.id ==  parent_id)
