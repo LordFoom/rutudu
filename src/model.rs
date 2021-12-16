@@ -447,7 +447,6 @@ impl RutuduList {
             } );
 
         //if we move up or down siblings, we need to find the bucket of siblings and swap
-
         if let Some(mut parent_child_bucket) = self.item_tree.get_mut(&parent_id) {
             debug!("Found the bucket");
             if let Some(mut idx) = parent_child_bucket
@@ -474,7 +473,7 @@ impl RutuduList {
                         self.items.next();
                         parent_child_bucket.swap(idx, idx_to_swap);
                     }
-                    MoveDirection::In => {
+                    MoveDirection::In => {//become the child of sibling immediately above on list
                         if parent_child_bucket.len() == 1{
                             return;
                         }

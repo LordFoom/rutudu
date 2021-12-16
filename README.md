@@ -9,14 +9,9 @@ Work in progress but you can:
 Wanted a TUI based todo list with hierarchies that doesn't just cat to the console,
 but allows navigation,collapsing, etc. Couldn't find one so here we are.
 
-You cannot edit and you cannot delete. 
+You cannot edit and you cannot delete, just yet.
 
-I may never support this, to give it more of a typewriter resistance to change, 
-maybe it'll help me think before I speak?
-
-Or maybe I will end up supporting it.
-
-You can cross-out and and uncross-out.
+You can cross-out and and uncross-out. Move items up and down - sibling-list and hierarchy.
 
 Will auto open a new list with today's date, creating if necessary, if started with no arguments. Otherwise will
 open/create passed in list name.
@@ -33,12 +28,19 @@ open/create passed in list name.
 * Seriously, if somebody can teach me how to capture CTRL+enter, I'd be so grateful
   * Can't seem to modify enter on the terminal?
   * HOORAH! Managed to get Alt+Enter working
+  * CTRL+Enter would be nice, though
 
-### Can do things with the list
+### Manipulate items in the list
 * x to (un)cross out item
+* u move item *u*p (increase its rank among its siblings)
+* d move item *d*own (decrease its rank among its siblings)
+* \> move item in (become the child of preceding sibling)
+* < move item out (become the sibling of its parent)
+
+### Persistence
 * s to save as sqlite file 
 * o to load (up/down to select, press right/enter/ctrl+n to open)
-
+* It's a sqlite file so now you have the data in a db, maybe that's cool for you.
 
 
 I like having lots of short lists and they're stored for posterity in sqlite. Maybe in future, some kind of tool
@@ -56,3 +58,4 @@ Will integrate with my clockrust, my nascent timetracking project. In time. In t
 <img src="./open_file.png" title="Opening files" >
 <img src="./rutud_1.gif" title="The cursor works...in the forward direction" width="1046" height="555">
 <img src="./hierarchies.png" title="sub-lists"/>
+<img src="./list_item_manipulation.gif" title="item manipulation" />
