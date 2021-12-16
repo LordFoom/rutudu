@@ -506,13 +506,13 @@ impl RutuduList {
                                                    .iter()
                                                    .position(|i| i.id == sibling_above.id)
                                                    .unwrap_or(0);
+
                         if sibling_above.expand == ExpandStatus::Closed {//expand the new parent
                             self.items.state.select(Some(new_select_index));
                             self.expand_selected();
-                            self.items.state.select(Some(new_select_index+1));//select the new child
-                        }else{
-                            self.items.state.select(Some(new_select_index+1));//select the new child
                         }
+
+                        self.items.state.select(Some(new_select_index+1));//select the new child
 
 
                         self.dirty_list = true;
