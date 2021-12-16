@@ -39,13 +39,13 @@ pub enum MoveDirection {
     Out,
 }
 
-impl Display for MoveDirection{
-    fn fmt(&self, f:&mut fmt::Formatter<'_>)->fmt::Result{
-       let mut write_str = match *self {
-            MoveDirection::Up => {"Up"}
-            MoveDirection::Down => {"Down"}
-            MoveDirection::In => {"In"}
-            MoveDirection::Out => {"Out"}
+impl Display for MoveDirection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut write_str = match *self {
+            MoveDirection::Up => { "Up" }
+            MoveDirection::Down => { "Down" }
+            MoveDirection::In => { "In" }
+            MoveDirection::Out => { "Out" }
         };
         write!(f, "{}", write_str)
     }
@@ -406,15 +406,15 @@ impl RutuduList {
         debug!("Parent id:{}", parent_id);
         let item_id = self.items.items[i].id;
         let num_children = self.item_tree
-                              .entry(item_id)
-                              .or_insert_with(Vec::new)
-                              .len();
+                               .entry(item_id)
+                               .or_insert_with(Vec::new)
+                               .len();
         if let Some(bucket) = self.item_tree.get_mut(&parent_id) {//get the list we belong to, could be zero
             bucket.iter_mut().for_each(|item| {
                 if item.id == item_id {
                     item.collapse();
-                    if num_children == 0{//roll up all the way
-                       item.collapse();
+                    if num_children == 0 {//roll up all the way
+                        item.collapse();
                     }
                 }
             })
@@ -438,20 +438,20 @@ impl RutuduList {
         let mut grand_parent_id = 0;
         let mut grand_parent_bucket = 0;
         self.item_tree.iter()
-            .for_each(|( k, v )|{
-                v.iter().for_each(|i|{
-                    if i.id == parent_id{
+            .for_each(|(k, v)| {
+                v.iter().for_each(|i| {
+                    if i.id == parent_id {
                         grand_parent_id = i.parent_id;
                     }
                 });
-            } );
+            });
 
         //if we move up or down siblings, we need to find the bucket of siblings and swap
         if let Some(mut parent_child_bucket) = self.item_tree.get_mut(&parent_id) {
             debug!("Found the bucket");
             if let Some(mut idx) = parent_child_bucket
-                                                      .iter_mut()
-                                                      .position(|item| { item.id == id }) {
+                .iter_mut()
+                .position(|item| { item.id == id }) {
                 //now we have the idx, we can decide what to do
                 match dir {
                     MoveDirection::Up => {
@@ -474,7 +474,7 @@ impl RutuduList {
                         parent_child_bucket.swap(idx, idx_to_swap);
                     }
                     MoveDirection::In => {//become the child of sibling immediately above on list
-                        if parent_child_bucket.len() == 1{
+                        if parent_child_bucket.len() == 1 {//if it's only one on this level, it cannot become its own child
                             return;
                         }
 
@@ -485,11 +485,12 @@ impl RutuduList {
                             idx - 1
                         };
 
-                        //get your sibling's id and then set it as your own parent id
-                        let new_parent_id = parent_child_bucket
+                        //get a handle on what will be the new parent - the Sibling Above
+                        let sibling_above = parent_child_bucket
                             .get(idx_to_swap)
                             .unwrap()
-                            .id;
+                            .clone();
+                        let new_parent_id = sibling_above.id;
 
                         //remove from the  original child bucket
                         let mut oi = parent_child_bucket.remove(idx);
@@ -500,17 +501,30 @@ impl RutuduList {
                             .or_insert_with(Vec::new)
                             .insert(0, oi);
 
+                        //expand the new parent if it was not expanded
+                        let new_select_index = self.items.items
+                                                   .iter()
+                                                   .position(|i| i.id == sibling_above.id)
+                                                   .unwrap_or(0);
+                        if sibling_above.expand == ExpandStatus::Closed {//expand the new parent
+                            self.items.state.select(Some(new_select_index));
+                            self.expand_selected();
+                            self.items.state.select(Some(new_select_index+1));//select the new child
+                        }else{
+                            self.items.state.select(Some(new_select_index+1));//select the new child
+                        }
+
 
                         self.dirty_list = true;
                     }
                     MoveDirection::Out => {//make your grandparent your parent id and put yourself in the right bucket
-                        if parent_id == 0{//if it's at the root level, we are as far out (man) as we can go
+                        if parent_id == 0 {//if it's at the root level, we are as far out (man) as we can go
                             return;
                         }
-                            //how to find one's parent....
+                        //how to find one's parent....
                         let parent = self.items.items.iter()
-                            .find(|i| i.id ==  parent_id)
-                            .unwrap();
+                                         .find(|i| i.id == parent_id)
+                                         .unwrap();
 
                         //take out of the old vector
                         let mut oi = parent_child_bucket.remove(idx);
@@ -518,18 +532,18 @@ impl RutuduList {
 
                         //what is the  new sibling's id, we want to go after it
                         let parent_idx = self.item_tree.get(&grand_parent_id)
-                            .unwrap()
-                            .iter()
-                            .position(|i| i.id == parent_id)
-                            .unwrap_or(0);
+                                             .unwrap()
+                                             .iter()
+                                             .position(|i| i.id == parent_id)
+                                             .unwrap_or(0);
 
 
                         let mut offset = if self.item_tree.get(&grand_parent_id)
-                            .unwrap()
-                            .len() > 0{
+                                                .unwrap()
+                                                .len() > 0 {
                             1
-                        }else{
-                           0
+                        } else {
+                            0
                         };
 
                         let fin_idx = parent_idx.clone() + offset;
@@ -539,14 +553,13 @@ impl RutuduList {
 
 
                         self.dirty_list = true;
-
                     }
                 }
             } else {
                 debug!("Did not find any bucket? {} ", parent_id );
                 error!("Unable to navigate through bucket to move items");
             }
-        } else{
+        } else {
             debug!("Did not find any bucket? {} ", parent_id );
         }
         self.dirty_list = true;
@@ -576,7 +589,6 @@ impl RutuduList {
                 if num_children == 0 {//no children, expand all the way
                     i.expand();
                 }
-
             });
         // .for_each(|item| {
         // if item.id == item_id {//should only happen once
