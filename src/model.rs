@@ -82,9 +82,9 @@ impl Item {
     // }
 
     ///constructor, no parent
-    pub fn new(id: u32, title: &str, entry: &str) -> Item {
+    pub fn new(id: u32, title: &str, entry: &str) -> Self {
         // Item { title, entry, parent: Box::new(None) }
-        Item {
+        Self {
             id,
             title: title.to_string(),
             entry: entry.to_string(),
@@ -227,15 +227,15 @@ pub struct StatefulList<T> {
 }
 
 impl<T> StatefulList<T> {
-    pub fn new() -> StatefulList<T> {
-        StatefulList {
+    pub fn new() -> Self {
+        Self {
             state: ListState::default(),
             items: Vec::new(),
         }
     }
 
-    pub fn with_items(items: Vec<T>) -> StatefulList<T> {
-        StatefulList {
+    pub fn with_items(items: Vec<T>) -> Self {
+        Self {
             state: ListState::default(),
             items,
         }
