@@ -621,6 +621,9 @@ impl RutuduList {
         self.dirty_list = true;
     }
 
+    pub fn delete_selected(&mut self){
+
+    }
 
     pub fn toggle_selected_status(&mut self) {
         let i = self.items.state.selected().unwrap_or(0);

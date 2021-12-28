@@ -273,6 +273,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
 
                     //TODO yeah gonna add delete in sigh
+                    Key::Delete | Key::Backspace => tudu_list.delete_selected(),
 
                     Key::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
                     Key::Ctrl('a') => tudu_list.enter_insert_mode(InputMode::InsertChild),
