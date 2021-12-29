@@ -423,7 +423,6 @@ impl RutuduList {
     }
 
     ///Move an up and down its siblings
-    /// TODO implement out (going up a level) and in (become a child)
     pub fn move_item(&mut self, dir: MoveDirection) {
         debug!("move_item, direction: {}", dir);
         let i = if let Some(i) = self.items.state.selected() {
@@ -512,7 +511,7 @@ impl RutuduList {
                             self.expand_selected();
                         }
 
-                        self.items.state.select(Some(new_select_index+1));//select the new child
+                        self.items.state.select(Some(new_select_index + 1));//select the new child
 
 
                         self.dirty_list = true;
@@ -590,42 +589,59 @@ impl RutuduList {
                     i.expand();
                 }
             });
-        // .for_each(|item| {
-        // if item.id == item_id {//should only happen once
-        //     item.expand();
-        // }
-        //
-        // });
-        // if let Some(item_list) = self.item_tree.get_mut(&parent_id) {
-        //     item_list.iter_mut().for_each(|item|{
-        //         if item.id == item_id {//should only happen once
-        //             item.expand();
-        //             //if it has no children, immediately expand again, don't need to display kids
-        //             //     let expand_twice = if let Some(kids) = self.item_tree.get(&item.id){
-        //             //         if kids.len() == 0 {
-        //             //             true
-        //             //         }
-        //             //         else {
-        //             //             false
-        //             //         }
-        //             //     } else {
-        //             //         true
-        //             //     };
-        //             //
-        //             //     if expand_twice {
-        //             //         item.expand();
-        //             //     }
-        //             // }
-        //             // mem::replace(self.item_tree.)
-        //         }})}
         self.dirty_list = true;
     }
 
-    pub fn delete_selected(&mut self){
+    pub fn delete_selected(&mut self) {
+        let i = if let Some(index) = self.items.state.selected() {
+            index
+        } else {
+            return;//nothing selected, nothing to delete
+        };
 
+        //find item to delete
+        let item_id = self.items.items[i].id;
+        //find its parent
+        let grand_parent_id = self.items.items[i].parent_id;
+
+        //find its children and set the parent ids of the children to the parents parent
+        self.item_tree
+            .entry(i as u32)
+            .or_insert_with(Vec::new)
+            .iter_mut()
+            .for_each(|c| c.parent_id = grand_parent_id);
+
+        //now we want to remove the child vector from the item tree, and add it to the grandparent id
+        //remove the parent from the representative tree, and stick the child bucket in
+        // let grand_parent_bucket = self.item_tree.entry(grand_parent_id)
+        //                               .or_insert_with(Vec::new);
+        if let Some(item_idx) = self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new)
+            .iter()
+            .position(|c| c.id == item_id){
+            self.item_tree
+                .entry(grand_parent_id)
+                .or_insert_with(Vec::new)
+                .remove(item_idx);
+        }
+
+        let mut tmp: Vec<Item> = Vec::new();
+        let mut item_bucket = self.item_tree.get_mut(&item_id).unwrap_or(&mut tmp).clone();
+        self.move_children_to_new_bucket(grand_parent_id, &mut item_bucket);
+        // self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new)
+        //     .append();
+
+        // grand_parent_bucket.append(self.item_tree.entry(i as u32).or_insert_with(Vec::new));
+
+        // self.item_tree.remove(&(i as u32));
+        //rebuild the list
+        self.dirty_list = true;
     }
 
-    pub fn toggle_selected_status(&mut self) {
+    fn move_children_to_new_bucket(&mut self, new_parent_id:u32, old_bucket: &mut Vec<Item>){
+       self.item_tree.entry(new_parent_id).or_insert_with(Vec::new).append(old_bucket);
+    }
+
+    pub fn toggle_selected_item_completion_status(&mut self) {
         let i = self.items.state.selected().unwrap_or(0);
         //mark it on the list
         if let Some(item) = self.items.items.get_mut(i) {

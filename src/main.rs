@@ -259,7 +259,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('q') => tudu_list.enter_quit_mode(),
                     Key::Char('s') => tudu_list.enter_save_mode(),
                     Key::Char('o') => tudu_list.enter_open_mode(),
-                    Key::Char('x') => tudu_list.toggle_selected_status(),//println!("{}", clear::All);
+                    Key::Char('x') => tudu_list.toggle_selected_item_completion_status(),//println!("{}", clear::All);
                         // break;
 
                     Key::Char('d') => tudu_list.move_item(MoveDirection::Down),
