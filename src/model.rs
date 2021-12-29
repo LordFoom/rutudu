@@ -615,7 +615,10 @@ impl RutuduList {
         //remove the parent from the representative tree, and stick the child bucket in
         // let grand_parent_bucket = self.item_tree.entry(grand_parent_id)
         //                               .or_insert_with(Vec::new);
-        if let Some(item_idx) = self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new)
+        //remove selected item
+        if let Some(item_idx) = self.item_tree
+            .entry(grand_parent_id)
+            .or_insert_with(Vec::new)
             .iter()
             .position(|c| c.id == item_id){
             self.item_tree
@@ -624,9 +627,14 @@ impl RutuduList {
                 .remove(item_idx);
         }
 
-        let mut tmp: Vec<Item> = Vec::new();
-        let mut item_bucket = self.item_tree.get_mut(&item_id).unwrap_or(&mut tmp).clone();
-        self.move_children_to_new_bucket(grand_parent_id, &mut item_bucket);
+        //get all the child items of removed parent
+        let mut item_bucket = self.item_tree
+            .get_mut(&item_id)
+            .unwrap_or(&mut Vec::new())
+            .drain(..)
+            .collect();
+        self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new).append(&mut item_bucket);
+        // self.move_children_to_new_bucket(grand_parent_id, &mut item_bucket);
         // self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new)
         //     .append();
 
