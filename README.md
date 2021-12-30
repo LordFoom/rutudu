@@ -9,7 +9,7 @@ Work in progress but you can:
 Wanted a TUI based todo list with hierarchies that doesn't just cat to the console,
 but allows navigation,collapsing, etc. Couldn't find one so here we are.
 
-You cannot edit and you cannot delete, just yet.
+You cannot edit, just yet.
 
 You can cross-out and and uncross-out. Move items up and down - sibling-list and hierarchy.
 
@@ -36,6 +36,7 @@ open/create passed in list name.
 * d move item *d*own (decrease its rank among its siblings)
 * \> move item in (become the child of preceding sibling)
 * < move item out (become the sibling of its parent)
+* delete or backspace to delete an item
 
 ### Persistence
 * s to save as sqlite file 
