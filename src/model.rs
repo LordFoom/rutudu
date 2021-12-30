@@ -567,6 +567,8 @@ impl RutuduList {
     ///Moves expansion status up the scale
     pub fn expand_selected(&mut self) {
         let i = self.items.state.selected().unwrap_or(0);
+        let list_size = self.items.items.len();
+        debug!("Expanding item with selected index {} on list of size {}", i, list_size);
         //expand the parent
         // self.items.items[i].expand(); // this doesn't matter because we are rebuilding the list from the map
         //get the parent id and then get the item and set its expansion status
@@ -577,6 +579,7 @@ impl RutuduList {
                                .or_insert_with(Vec::new)
                                .len();
 
+        debug!("parent_id={}, item_id={}, num_children={}", parent_id, item_id, num_children);
 
         self.item_tree
             .entry(parent_id)
@@ -584,6 +587,7 @@ impl RutuduList {
             .iter_mut()
             .filter(|i| i.id == item_id)
             .for_each(|i| {
+                debug!("We are going to expand");
                 i.expand();
                 if num_children == 0 {//no children, expand all the way
                     i.expand();
@@ -621,26 +625,27 @@ impl RutuduList {
             .or_insert_with(Vec::new)
             .iter()
             .position(|c| c.id == item_id){
-            self.item_tree
-                .entry(grand_parent_id)
-                .or_insert_with(Vec::new)
-                .remove(item_idx);
+                self.item_tree
+                    .entry(grand_parent_id)
+                    .or_insert_with(Vec::new)
+                    .remove(item_idx);
         }
 
+        //could I have used the "move" functionality for this? hmmmm dunno
         //get all the child items of removed parent
-        let mut item_bucket = self.item_tree
+        let mut item_bucket: Vec<Item> = self.item_tree
             .get_mut(&item_id)
             .unwrap_or(&mut Vec::new())
             .drain(..)
             .collect();
+        //need to reset the parent id
+        item_bucket.iter_mut()
+            .for_each(|c| c.parent_id = grand_parent_id);
         self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new).append(&mut item_bucket);
-        // self.move_children_to_new_bucket(grand_parent_id, &mut item_bucket);
-        // self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new)
-        //     .append();
 
-        // grand_parent_bucket.append(self.item_tree.entry(i as u32).or_insert_with(Vec::new));
+        //now we need to change the selection to one higher....
 
-        // self.item_tree.remove(&(i as u32));
+        self.items.previous();
         //rebuild the list
         self.dirty_list = true;
     }

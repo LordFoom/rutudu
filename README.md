@@ -16,6 +16,8 @@ You can cross-out and and uncross-out. Move items up and down - sibling-list and
 Will auto open a new list with today's date, creating if necessary, if started with no arguments. Otherwise will
 open/create passed in list name.
 
+There is no undo. Sweaty palms but steady hands, my friend.
+
 ### You can add items!
 
 * a to add an item
@@ -36,7 +38,8 @@ open/create passed in list name.
 * d move item *d*own (decrease its rank among its siblings)
 * \> move item in (become the child of preceding sibling)
 * < move item out (become the sibling of its parent)
-* delete or backspace to delete an item
+* delete or backspace to delete an item - but NOT it's children
+* to be implemented: a ctrl+delete that also includes children
 
 ### Persistence
 * s to save as sqlite file 
