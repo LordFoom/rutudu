@@ -913,15 +913,21 @@ impl RutuduList {
         //split by newlines
         let first_new_line = entry.find("\n").unwrap_or(entry.len());
         let title: String = entry.drain(..first_new_line).collect();
-        // content - we set the id to the maximum
-        //we set the content to the number of TOTAL items
-        let total_length: usize = self.item_tree.iter()
-                                      .map(|(k, v)| v.len())
-                                      .sum();
-        debug!("Next item id: {}", total_length+1);
+        // content - we set the id to the maximum id +i
+        let mut max_id = 0;
+        self.item_tree.iter()
+            .for_each(|(x,v)| {
+               v.iter().for_each(|c| {
+                   if c.id > max_id{
+                       max_id = c.id;
+                   }
+               })
+            });
+                                // .max()
+        debug!("Next item id: {}", max_id+1);
         // let i = self.items.items.len().clone() as u32;
         //we want to start this at ONE so we reserve the zero index for the root nodes of the forest
-        Item::new((total_length as u32) + 1, &title, &entry)
+        Item::new((max_id as u32) + 1, &title, &entry)
     }
 
     ///Add character to current input
@@ -1097,4 +1103,16 @@ impl RutuduList {
     // fn get_item_tree(&mut self) -> HashMap<u32, Vec<Item>> {
     //     self.item_tree
     // }
+}
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+
+    //deleting is doing super weird things
+    //why not try and test it? like a real little programmer
+    // #[test]
+    // fn test_delete_then_add
+
+
 }
