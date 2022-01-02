@@ -1026,7 +1026,7 @@ impl RutuduList {
         let save_needed = if self.unsaved { "*" } else { "" };
         let fp = format!("{}{}", self.file_path.clone(), save_needed);
         //trim off the first path of the filepath`
-        match fp.rfind("/") {
+        match fp.rfind('/') {
             None => fp,
             Some(i) => fp.split_at(i + 1).1.to_string(),//get the last part, eg foom.rtd from /home/foom/foom.rtd
         }
