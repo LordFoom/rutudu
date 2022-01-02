@@ -911,7 +911,7 @@ impl RutuduList {
     pub fn get_current_input_as_item(&mut self) -> Item {
         let mut entry: String = self.current_item.drain(..).collect();
         //split by newlines
-        let first_new_line = entry.find('\n').unwrap_or(entry.len());
+        let first_new_line = entry.find('\n').unwrap_or_else(||entry.len());
         let title: String = entry.drain(..first_new_line).collect();
         // content - we set the id to the maximum id +i
         let mut max_id = 0;
