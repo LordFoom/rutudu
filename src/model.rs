@@ -911,7 +911,7 @@ impl RutuduList {
     pub fn get_current_input_as_item(&mut self) -> Item {
         let mut entry: String = self.current_item.drain(..).collect();
         //split by newlines
-        let first_new_line = entry.find("\n").unwrap_or(entry.len());
+        let first_new_line = entry.find('\n').unwrap_or(entry.len());
         let title: String = entry.drain(..first_new_line).collect();
         // content - we set the id to the maximum id +i
         let mut max_id = 0;
@@ -936,21 +936,21 @@ impl RutuduList {
         self.current_item.push(c);
         if c == '\n' { //newline!
             self.cursor_position[0] = 1;
-            self.cursor_position[1] = self.cursor_position[1] + 1;
+            self.cursor_position[1] += 1;
         } else {
-            self.cursor_position[0] = self.cursor_position[0] + 1;
+            self.cursor_position[0] += 1;
         }
     }
 
     pub fn cursor_left(&mut self) {
         if self.cursor_position[0] > 0 {
-            self.cursor_position[0] = self.cursor_position[0] - 1;
+            self.cursor_position[0] -= 1;
         }
     }
 
     pub fn cursor_right(&mut self) {
         if self.cursor_position[0] < self.current_item.len() as u16 {
-            self.cursor_position[0] = self.cursor_position[0] + 1;
+            self.cursor_position[0] += 1;
         }
     }
 
