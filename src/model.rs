@@ -1016,7 +1016,7 @@ impl RutuduList {
         //-1 because we want to delete BEHIND the cursor
         let delete_pos = self.file_path.len() - 1 - self.cursor_offset as usize;
         self.file_path.remove(delete_pos);
-        self.cursor_position[0] = self.cursor_position[0] - 1;
+        self.cursor_position[0] -= 1;
         // self.cursor_position[0] = self.file_path.len() as u16;
         // debug!("x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
     }
