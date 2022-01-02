@@ -992,7 +992,7 @@ impl RutuduList {
     pub fn right_save_cursor(&mut self) {
         debug!("Move save cursor right, cursor[0] = {} ", self.cursor_position[0]);
         if self.cursor_position[0] < self.file_path.len() as u16 {
-            self.cursor_position[0] = self.cursor_position[0] + 1;
+            self.cursor_position[0] += 1;
             self.cursor_offset -= 1;
         }
     }
