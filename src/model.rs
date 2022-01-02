@@ -957,13 +957,13 @@ impl RutuduList {
     ///TODO remove a character where the cursor is and implement delete
     pub fn remove_character(&mut self) {
         //do nothing if current_item is zero length
-        if self.current_item.len() == 0 {
+        if self.current_item.is_empty() {
             return ();
         }
         let c = self.current_item.pop().unwrap_or('\0');
         if c == '\n' {//deleted a new line!
             //reduce y by 1
-            self.cursor_position[1] = self.cursor_position[1] - 1;
+            self.cursor_position[1] -= 1;
             //we need the len of this line.....!
             let mut line_len = 0;
             //find out length of line we are at the end of
@@ -975,14 +975,14 @@ impl RutuduList {
             self.cursor_position[0] = line_len as u16;
         } else {
             //reduce x by 1
-            self.cursor_position[0] = self.cursor_position[0] - 1;
+            self.cursor_position[0] -= 1;
         }
     }
 
     pub fn left_save_cursor(&mut self) {
         debug!("Move save cursor left, cursor[0] = {} ", self.cursor_position[0]);
         if self.cursor_position[0] > 0 {
-            self.cursor_position[0] = self.cursor_position[0] - 1;
+            self.cursor_position[0] -= 1;
             self.cursor_offset += 1;
         } else {
             debug!("Not moving?");
