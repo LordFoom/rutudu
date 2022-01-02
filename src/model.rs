@@ -1002,7 +1002,7 @@ impl RutuduList {
         let insert_index = self.file_path.len() as u16 - self.cursor_offset;
         self.file_path.insert(insert_index as usize, c);
         // self.file_path.push(c);
-        self.cursor_position[0] = self.cursor_position[0] + 1;
+        self.cursor_position[0] += 1;
     }
 
     pub fn remove_save_file_char(&mut self) {
