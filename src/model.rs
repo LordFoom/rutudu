@@ -1006,7 +1006,7 @@ impl RutuduList {
     }
 
     pub fn remove_save_file_char(&mut self) {
-        if self.file_path.len() == 0 {
+        if self.file_path.is_empty() {
             return;
         }
         debug!("remove_save_file_char, where x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
