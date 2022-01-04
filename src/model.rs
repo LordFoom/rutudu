@@ -106,7 +106,6 @@ impl Item {
         }
     }
 
-    ///todo Is THIS where we decide if and how to display children
     ///Return the item as text, either just the title,
     /// or the title and the entry, depending on expand status
     pub fn text(&self, item_no: usize) -> Vec<Spans> {
