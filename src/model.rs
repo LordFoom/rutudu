@@ -99,11 +99,11 @@ impl Item {
 
     ///Symbol to indicate if item is expanded or collapsed
     pub fn expansion_state_symbol(&self) -> String {
-        return match self.expand {
+        match self.expand {
             ExpandStatus::Open => String::from("[-]"),
             ExpandStatus::Closed => String::from("[+]"),
             ExpandStatus::ShowChildren => String::from("[|]"),
-        };
+        }
     }
 
     ///todo Is THIS where we decide if and how to display children
@@ -365,7 +365,7 @@ impl RutuduList {
     }
 
     pub fn is_save_mode(&self) -> bool {
-        return self.input_mode == InputMode::Save;
+        self.input_mode == InputMode::Save
     }
 
     pub fn enter_quit_mode(&mut self) {
