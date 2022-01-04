@@ -493,7 +493,7 @@ impl RutuduList {
 
                         //remove from the  original child bucket
                         let mut oi = parent_child_bucket.remove(idx);
-                        oi.parent_id = new_parent_id.clone();
+                        oi.parent_id = new_parent_id;
 
                         //put it into the sibling's bucket at the beginning
                         self.item_tree.entry(new_parent_id)
