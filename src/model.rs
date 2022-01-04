@@ -458,8 +458,8 @@ impl RutuduList {
                         } else {
                             idx - 1
                         };
-                        parent_child_bucket.swap(idx, idx_to_swap);
                         self.items.previous();
+                        parent_child_bucket.swap(idx, idx_to_swap);
                     }
                     MoveDirection::Down => {
                         let idx_to_swap = if idx == parent_child_bucket.len() - 1 {//last time, loop around
