@@ -539,10 +539,10 @@ impl RutuduList {
 
                         let mut offset = if self.item_tree.get(&grand_parent_id)
                                                 .unwrap()
-                                                .len() > 0 {
-                            1
-                        } else {
+                                                .is_empty(){
                             0
+                        } else {
+                            1
                         };
 
                         let fin_idx = parent_idx + offset;
