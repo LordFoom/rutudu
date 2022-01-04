@@ -545,7 +545,7 @@ impl RutuduList {
                             0
                         };
 
-                        let fin_idx = parent_idx.clone() + offset;
+                        let fin_idx = parent_idx + offset;
                         self.item_tree.entry(grand_parent_id)
                             .or_insert_with(Vec::new)
                             .insert(fin_idx, oi);
