@@ -662,7 +662,7 @@ impl RutuduList {
             //mark it on the tree
             if let Some(container_vec_) = self.item_tree.get_mut(&item.parent_id) {
                 container_vec_.iter_mut()
-                              .filter(|i| &i.id == &item.id)
+                              .filter(|i| i.id == item.id)
                               .for_each(|i| i.toggle_complete_status());
             }
             self.unsaved = true;
@@ -734,25 +734,25 @@ impl RutuduList {
                 item.depth = depth;
                 ret_list.push(item.clone());
                 if item.should_show_children() {
-                    let sub_sub_tree_vec = self.get_subtree_vec(item.id.clone(), depth + 1);
+                    let sub_sub_tree_vec = self.get_subtree_vec(item.id, depth + 1);
                     sub_sub_tree_vec.iter().for_each(|i| { ret_list.push(i.clone()) })
                 }
             }
         }
-        return ret_list;
+        ret_list
     }
 
     pub fn build_item_spans_as_vec(&self, item_no: usize, item_id: u32, depth: usize) -> Vec<Spans> {
         // let item = self.items.items.get(item_id as usize).unwrap();
         let item = self.items.items.get(item_id as usize).unwrap();
         // let mut item_text_as_vec= item.text(item_no, depth);
-        let mut item_text_as_vec = item.text(item_no.clone());
+        let mut item_text_as_vec = item.text(item_no);
         //now we get the children
         if let Some(children) = self.item_tree.get(&item_id) {
             let i = 0;
             for child in children {
                 // let sub_number = format!("{}.{}", item_no, i);
-                let sub_vec = &self.build_item_spans_as_vec(item_no.clone(), child.id.clone(), depth.clone() + 1);
+                let sub_vec = &self.build_item_spans_as_vec(item_no, child.id, depth + 1);
                 for span in sub_vec {
                     item_text_as_vec.push(span.clone());
                 }
@@ -805,12 +805,12 @@ impl RutuduList {
                 InputMode::InsertChild => {//parent is the node we selected
                     if let Some(i) = self.items.state.selected() {
                         //children lists are by implication - mapped by item.id in the hashmap
-                        self.items.items[i].id.clone()
+                        self.items.items[i].id
                     } else { 0 }
                 }
                 InputMode::InsertSibling => {//parent is parent of node we selected
                     if let Some(i) = self.items.state.selected() {
-                        self.items.items[i].parent_id.clone()
+                        self.items.items[i].parent_id
                     } else { 0 }
                 }
                 InputMode::InsertParent => {//
@@ -822,12 +822,12 @@ impl RutuduList {
             }
         }
         //this will leave parent ids intact, which is good for when we open up lists
-        debug!("Parent id: {}", item.parent_id.clone());
+        debug!("Parent id: {}", item.parent_id);
 
         //now we place the item in the right bucket
         let mut new_item = item.clone();
         let bucket = self.item_tree
-                         .entry(item.parent_id.clone())
+                         .entry(item.parent_id)
                          .or_insert_with(Vec::new);
         new_item.order = bucket.len() as u16;
         bucket.push(new_item);
@@ -841,7 +841,7 @@ impl RutuduList {
                 None => None,
             };
             if let Some(list_item) = opt_parent {
-                self.item_tree.entry(list_item.parent_id.clone())
+                self.item_tree.entry(list_item.parent_id)
                     .or_insert_with(Vec::new)
                     .iter_mut()
                     .filter(|i| { i.id == list_item.id })
@@ -859,9 +859,9 @@ impl RutuduList {
 
         //if we add as new parent, we now SWAP the two around in the tree :D
         if let Some(parent) = opt_parent {
-            let old_parent_id = parent.parent_id.clone();
-            let old_id = parent.id.clone();
-            let new_item_id = item.id.clone();
+            let old_parent_id = parent.parent_id;
+            let old_id = parent.id;
+            let new_item_id = item.id;
 
             let mut old_item = None;
             let mut new_item = None;
