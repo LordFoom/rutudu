@@ -461,7 +461,7 @@ impl RutuduList {
 
                         parent_child_bucket.swap(idx, idx_to_swap);
 
-                        self.select_item(id);
+                        // self.select_item(id);
                         // // self.dirty_list = true;
                         // self.rebuild_list();
                         // // self.items.previous();
@@ -481,7 +481,7 @@ impl RutuduList {
                         // self.items.next();
                         parent_child_bucket.swap(idx, idx_to_swap);
 
-                        self.select_item(id);
+                        // self.select_item(id);
                         // self.dirty_list = true;
                         // self.rebuild_list();
                         // // self.items.previous();
@@ -532,9 +532,9 @@ impl RutuduList {
 
                         // self.items.state.select(Some(new_select_index + 1));//select the new child
 
-                        self.select_item(id);
+                        // self.select_item(id);
 
-                        self.dirty_list = true;
+                        // self.dirty_list = true;
                     }
                     MoveDirection::Out => {//make your grandparent your parent id and put yourself in the right bucket
                         if parent_id == 0 {//if it's at the root level, we are as far out (man) as we can go
@@ -571,8 +571,8 @@ impl RutuduList {
                             .insert(fin_idx, oi);
 
 
-                        self.select_item(id);
-                        self.dirty_list = true;
+                        // self.select_item(id);
+                        // self.dirty_list = true;
                     }
                 }
             } else {
@@ -582,6 +582,7 @@ impl RutuduList {
         } else {
             debug!("Did not find any bucket? {} ", parent_id );
         }
+        self.select_item(id);
         self.dirty_list = true;
     }
 
