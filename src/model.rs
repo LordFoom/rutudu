@@ -461,14 +461,15 @@ impl RutuduList {
 
                         parent_child_bucket.swap(idx, idx_to_swap);
 
-                        // self.dirty_list = true;
-                        self.rebuild_list();
-                        // self.items.previous();
-                        //we need to select the id
-                        let new_sel_idx = self.items.items.iter()
-                            .position(|i| i.id == id)
-                            .unwrap_or(0);
-                        self.items.state.select(Some(new_sel_idx));
+                        self.select_item(id);
+                        // // self.dirty_list = true;
+                        // self.rebuild_list();
+                        // // self.items.previous();
+                        // //we need to select the id
+                        // let new_sel_idx = self.items.items.iter()
+                        //     .position(|i| i.id == id)
+                        //     .unwrap_or(0);
+                        // self.items.state.select(Some(new_sel_idx));
                     }
                     MoveDirection::Down => {
                         let idx_to_swap = if idx == parent_child_bucket.len() - 1 {//last time, loop around
@@ -480,14 +481,15 @@ impl RutuduList {
                         // self.items.next();
                         parent_child_bucket.swap(idx, idx_to_swap);
 
+                        self.select_item(id);
                         // self.dirty_list = true;
-                        self.rebuild_list();
-                        // self.items.previous();
-                        //we need to select the id
-                        let new_sel_idx = self.items.items.iter()
-                                              .position(|i| i.id == id)
-                                              .unwrap_or(0);
-                        self.items.state.select(Some(new_sel_idx));
+                        // self.rebuild_list();
+                        // // self.items.previous();
+                        // //we need to select the id
+                        // let new_sel_idx = self.items.items.iter()
+                        //                       .position(|i| i.id == id)
+                        //                       .unwrap_or(0);
+                        // self.items.state.select(Some(new_sel_idx));
                     }
                     MoveDirection::In => {//become the child of sibling immediately above on list
                         if parent_child_bucket.len() == 1 {//if it's only one on this level, it cannot become its own child
@@ -524,12 +526,13 @@ impl RutuduList {
                                                    .unwrap_or(0);
 
                         if sibling_above.expand == ExpandStatus::Closed {//expand the new parent
-                            self.items.state.select(Some(new_select_index));
+                            // self.items.state.select(Some(new_select_index));
                             self.expand_selected();
                         }
 
-                        self.items.state.select(Some(new_select_index + 1));//select the new child
+                        // self.items.state.select(Some(new_select_index + 1));//select the new child
 
+                        self.select_item(id);
 
                         self.dirty_list = true;
                     }
@@ -568,6 +571,7 @@ impl RutuduList {
                             .insert(fin_idx, oi);
 
 
+                        self.select_item(id);
                         self.dirty_list = true;
                     }
                 }
@@ -581,8 +585,16 @@ impl RutuduList {
         self.dirty_list = true;
     }
 
-    fn select_item(&self, id_to_select: &u32){
-
+    ///Select the item with the appropriate id
+    fn select_item(&mut self, id_to_select: u32){
+        //cos they been doing stuff maybe, eh
+        self.rebuild_list();
+        // self.items.previous();
+        //we need to select the id
+        let new_sel_idx = self.items.items.iter()
+                              .position(|i| i.id == id_to_select)
+                              .unwrap_or(0);
+        self.items.state.select(Some(new_sel_idx));
     }
 
     ///Moves expansion status up the scale
