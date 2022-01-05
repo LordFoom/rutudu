@@ -458,8 +458,17 @@ impl RutuduList {
                         } else {
                             idx - 1
                         };
-                        self.items.previous();
+
                         parent_child_bucket.swap(idx, idx_to_swap);
+
+                        // self.dirty_list = true;
+                        self.rebuild_list();
+                        // self.items.previous();
+                        //we need to select the id
+                        let new_sel_idx = self.items.items.iter()
+                            .position(|i| i.id == id)
+                            .unwrap_or(0);
+                        self.items.state.select(Some(new_sel_idx));
                     }
                     MoveDirection::Down => {
                         let idx_to_swap = if idx == parent_child_bucket.len() - 1 {//last time, loop around
@@ -468,8 +477,17 @@ impl RutuduList {
                             idx + 1
                         };
                         // debug!("Going down idx: {} idx_to_swap {}", idx, idx_to_swap);
-                        self.items.next();
+                        // self.items.next();
                         parent_child_bucket.swap(idx, idx_to_swap);
+
+                        // self.dirty_list = true;
+                        self.rebuild_list();
+                        // self.items.previous();
+                        //we need to select the id
+                        let new_sel_idx = self.items.items.iter()
+                                              .position(|i| i.id == id)
+                                              .unwrap_or(0);
+                        self.items.state.select(Some(new_sel_idx));
                     }
                     MoveDirection::In => {//become the child of sibling immediately above on list
                         if parent_child_bucket.len() == 1 {//if it's only one on this level, it cannot become its own child
@@ -561,6 +579,10 @@ impl RutuduList {
             debug!("Did not find any bucket? {} ", parent_id );
         }
         self.dirty_list = true;
+    }
+
+    fn select_item(&self, id_to_select: &u32){
+
     }
 
     ///Moves expansion status up the scale
