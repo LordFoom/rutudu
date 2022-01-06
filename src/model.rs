@@ -1130,7 +1130,7 @@ impl RutuduList {
         self.has_scanned = true;
     }
 
-    ///reset the scan variable
+    //reset the scan variable
     // pub fn reset_scan_guard(&mut self) {
     //     self.has_scanned = false;
     // }
