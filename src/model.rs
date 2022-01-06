@@ -1131,9 +1131,9 @@ impl RutuduList {
     }
 
     ///reset the scan variable
-    pub fn reset_scan_guard(&mut self) {
-        self.has_scanned = false;
-    }
+    // pub fn reset_scan_guard(&mut self) {
+    //     self.has_scanned = false;
+    // }
     // fn get_item_tree(&mut self) -> HashMap<u32, Vec<Item>> {
     //     self.item_tree
     // }
