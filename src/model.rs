@@ -803,17 +803,17 @@ impl RutuduList {
         self.items.previous();
     }
 
-    pub fn right(&mut self) {
-        if let Some(i) = self.items.state.selected() {
-            self.items.items[i].expand();
-        }
-    }
+    // pub fn right(&mut self) {
+    //     if let Some(i) = self.items.state.selected() {
+    //         self.items.items[i].expand();
+    //     }
+    // }
 
-    pub fn left(&mut self) {
-        if let Some(i) = self.items.state.selected() {
+    // pub fn left(&mut self) {
+/*        if let Some(i) = self.items.state.selected() {
             self.items.items[i].collapse();
-        }
-    }
+        }*/
+    // }
 
 
     pub fn add_item_to_list(&mut self) {
