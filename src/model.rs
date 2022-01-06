@@ -176,41 +176,41 @@ impl Item {
         self.expand >= ExpandStatus::ShowChildren
     }
 
-    pub fn is_collapsed(&self) -> bool {
-        self.expand == ExpandStatus::Closed
-    }
+    // pub fn is_collapsed(&self) -> bool {
+    //     self.expand == ExpandStatus::Closed
+    // }
 
-    pub fn is_open(&self) -> bool {
-        self.expand == ExpandStatus::Open
-    }
+    // pub fn is_open(&self) -> bool {
+    //     self.expand == ExpandStatus::Open
+    // }
 
-    pub fn is_closed(&self) -> bool {
-        self.is_collapsed()
-    }
+    // pub fn is_closed(&self) -> bool {
+    //     self.is_collapsed()
+    // }
     // pub fn get_parent() -> Option<Item>{
     //
     // }
 }
 
-pub struct MapState {
-    /// for root items==0, then id 1 has a list of its children at index 1, id 2 at idx 2, and so forth
-    item_idx: usize,
-    offset: usize,
-    ///row and column
-    selected: Option<(usize, usize)>,
-}
-
-impl Default for MapState {
-    fn default() -> MapState {
-        MapState {
-            item_idx: 0,
-            offset: 0,
-            selected: None,
-        }
-    }
-}
-
-impl MapState {}
+// pub struct MapState {
+//     /// for root items==0, then id 1 has a list of its children at index 1, id 2 at idx 2, and so forth
+//     item_idx: usize,
+//     offset: usize,
+//     ///row and column
+//     selected: Option<(usize, usize)>,
+// }
+//
+// impl Default for MapState {
+//     fn default() -> MapState {
+//         MapState {
+//             item_idx: 0,
+//             offset: 0,
+//             selected: None,
+//         }
+//     }
+// }
+//
+// impl MapState {}
 
 ///This will be a hierarchy of items, associated by parent id, until we get to the last one
 // #[derive(Clone)]

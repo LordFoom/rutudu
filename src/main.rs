@@ -186,8 +186,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             // let mut items: Vec<ListItem> = tudu_list.items_as_vec();
             // tudu_list.clear_list();
             tudu_list.rebuild_list_if_dirty();
-            let mut item_list = tudu_list.items_as_vec();
-            let mut items = item_list.clone();
+            let item_list = tudu_list.items_as_vec();
+            let items = item_list.clone();
             let mut lst_state = tudu_list.items.state.clone();
             let tui_items = List::new(items)
                 .block(Block::default().title(title).borders(Borders::ALL))
@@ -349,7 +349,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn show_new_item_input(mut tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+fn show_new_item_input(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
     let size = f.size();
     let input_box = Paragraph::new(tudu_list.current_item.as_ref())
         .style(Style::default().fg(Color::Yellow))
@@ -392,7 +392,7 @@ fn draw_save_dialog(tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<RawT
     f.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16 +1, area.y as u16 + tudu_list.cursor_position[1] );
 }
 
-fn draw_open_dialog(mut tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+fn draw_open_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
     tudu_list.scan_files_once();
 
     // debug!("Trying to draw open dialog");
