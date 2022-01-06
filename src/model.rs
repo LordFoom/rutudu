@@ -233,20 +233,20 @@ impl<T> StatefulList<T> {
         }
     }
 
-    pub fn with_items(items: Vec<T>) -> Self {
-        Self {
-            state: ListState::default(),
-            items,
-        }
-    }
-
-
-    pub fn with_items_and_state(items: Vec<T>, state: ListState) -> StatefulList<T> {
-        StatefulList {
-            state,
-            items,
-        }
-    }
+    // pub fn with_items(items: Vec<T>) -> Self {
+    //     Self {
+    //         state: ListState::default(),
+    //         items,
+    //     }
+    // }
+    //
+    //
+    // pub fn with_items_and_state(items: Vec<T>, state: ListState) -> StatefulList<T> {
+    //     StatefulList {
+    //         state,
+    //         items,
+    //     }
+    // }
 
     pub fn next(&mut self) {
         let i = match self.state.selected() {
@@ -280,9 +280,9 @@ impl<T> StatefulList<T> {
         }
     }
 
-    pub fn unselect(&mut self) {
-        self.state.select(None);
-    }
+    // pub fn unselect(&mut self) {
+    //     self.    }state.select(None);
+    // }
 }
 
 #[derive(Eq, PartialEq, Clone)]
@@ -363,9 +363,9 @@ impl RutuduList {
         self.enter_edit_mode();
     }
 
-    pub fn is_save_mode(&self) -> bool {
-        self.input_mode == InputMode::Save
-    }
+    // pub fn is_save_mode(&self) -> bool {
+    //     self.input_mode == InputMode::Save
+    // }
 
     pub fn enter_quit_mode(&mut self) {
         self.input_mode = InputMode::Quit;
@@ -705,9 +705,9 @@ impl RutuduList {
         };
     }
 
-    pub fn clear_list(&mut self) {
-        self.items.items.clear();
-    }
+    // pub fn clear_list(&mut self) {
+    //     self.items.items.clear();
+    // }
 
     pub fn load_list_from_file_dialog(&mut self) {
         let s = self.open_file_dialog_files.state.clone();
@@ -776,24 +776,24 @@ impl RutuduList {
         ret_list
     }
 
-    pub fn build_item_spans_as_vec(&self, item_no: usize, item_id: u32, depth: usize) -> Vec<Spans> {
-        // let item = self.items.items.get(item_id as usize).unwrap();
-        let item = self.items.items.get(item_id as usize).unwrap();
-        // let mut item_text_as_vec= item.text(item_no, depth);
-        let mut item_text_as_vec = item.text(item_no);
-        //now we get the children
-        if let Some(children) = self.item_tree.get(&item_id) {
-            let i = 0;
-            for child in children {
-                // let sub_number = format!("{}.{}", item_no, i);
-                let sub_vec = &self.build_item_spans_as_vec(item_no, child.id, depth + 1);
-                for span in sub_vec {
-                    item_text_as_vec.push(span.clone());
-                }
-            }
-        };
-        item_text_as_vec
-    }
+    // pub fn build_item_spans_as_vec(&self, item_no: usize, item_id: u32, depth: usize) -> Vec<Spans> {
+    //     // let item = self.items.items.get(item_id as usize).unwrap();
+    //     let item = self.items.items.get(item_id as usize).unwrap();
+    //     // let mut item_text_as_vec= item.text(item_no, depth);
+    //     let mut item_text_as_vec = item.text(item_no);
+    //     //now we get the children
+    //     if let Some(children) = self.item_tree.get(&item_id) {
+    //         let i = 0;
+    //         for child in children {
+    //             // let sub_number = format!("{}.{}", item_no, i);
+    //             let sub_vec = &self.build_item_spans_as_vec(item_no, child.id, depth + 1);
+    //             for span in sub_vec {
+    //                 item_text_as_vec.push(span.clone());
+    //             }
+    //         }
+    //     };
+    //     item_text_as_vec
+    // }
 
     pub fn down(&mut self) {
         self.items.next();

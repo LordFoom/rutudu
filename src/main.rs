@@ -378,7 +378,7 @@ fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
     f.render_widget(button_text, area);
 }
 
-fn draw_save_dialog(mut tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>){
+fn draw_save_dialog(tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>){
     let rect = f.size();
     let save_text = Paragraph::new(tudu_list.file_path.clone())
         .style(Style::default().fg(Color::Cyan))
