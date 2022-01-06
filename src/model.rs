@@ -684,9 +684,9 @@ impl RutuduList {
         self.dirty_list = true;
     }
 
-    fn move_children_to_new_bucket(&mut self, new_parent_id:u32, old_bucket: &mut Vec<Item>){
-       self.item_tree.entry(new_parent_id).or_insert_with(Vec::new).append(old_bucket);
-    }
+    // fn move_children_to_new_bucket(&mut self, new_parent_id:u32, old_bucket: &mut Vec<Item>){
+    //    self.item_tree.entry(new_parent_id).or_insert_with(Vec::new).append(old_bucket);
+    // }
 
     pub fn toggle_selected_item_completion_status(&mut self) {
         let i = self.items.state.selected().unwrap_or(0);
