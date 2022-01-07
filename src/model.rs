@@ -644,7 +644,7 @@ impl RutuduList {
 
         //find its children and set the parent ids of the children to the parents parent
         self.item_tree
-            .entry(i as u32)
+            .entry(item_id as u32)
             .or_insert_with(Vec::new)
             .iter_mut()
             .for_each(|c| c.parent_id = grand_parent_id);
@@ -678,10 +678,14 @@ impl RutuduList {
         self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new).append(&mut item_bucket);
 
         //now we need to change the selection to one higher....
-
         self.items.previous();
         //rebuild the list
         self.dirty_list = true;
+    }
+
+    ///Return the number of items in this list (whether shown or not)
+    pub fn size(&self) -> usize{
+        self.item_tree.len()
     }
 
     // fn move_children_to_new_bucket(&mut self, new_parent_id:u32, old_bucket: &mut Vec<Item>){
@@ -1161,8 +1165,11 @@ mod tests{
     ///Create a new test
     #[test]
     pub fn test_add_new_item_list(){
-        let list = RutuduList::default();
-        list.add_input_text_as_item_to_list()
+        let mut list = RutuduList::default();
+        let mut item = Item::new(1, "Test item", "Test item text\nwith a newline");
+        list.insert_item(&mut item);
+        assert_eq!(1, list.size());
+        list.delete_selected()
     }
     //deleting is doing super weird things
     //why not try and test it? like a real little programmer
