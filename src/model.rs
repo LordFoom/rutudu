@@ -816,7 +816,7 @@ impl RutuduList {
     // }
 
 
-    pub fn add_item_to_list(&mut self) {
+    pub fn add_input_text_as_item_to_list(&mut self) {
         // debug!("Adding item to list");
         //it will use the currently selected node if exists or 0 otherwise
         //here we get the parent id if it exists
@@ -941,6 +941,19 @@ impl RutuduList {
         opt_parent
     }
 
+    pub fn get_max_id(&self)->u32{
+        let mut max_id = 0;
+        self.item_tree.iter()
+            .for_each(|(x,v)| {
+                v.iter().for_each(|c| {
+                    if c.id > max_id{
+                        max_id = c.id;
+                    }
+                })
+            });
+        max_id
+    }
+
 
     pub fn get_current_input_as_item(&mut self) -> Item {
         let mut entry: String = self.current_item.drain(..).collect();
@@ -948,16 +961,17 @@ impl RutuduList {
         let first_new_line = entry.find('\n').unwrap_or_else(||entry.len());
         let title: String = entry.drain(..first_new_line).collect();
         // content - we set the id to the maximum id +i
-        let mut max_id = 0;
-        self.item_tree.iter()
-            .for_each(|(x,v)| {
-               v.iter().for_each(|c| {
-                   if c.id > max_id{
-                       max_id = c.id;
-                   }
-               })
-            });
+        // let mut max_id = 0;
+        // self.item_tree.iter()
+        //     .for_each(|(x,v)| {
+        //        v.iter().for_each(|c| {
+        //            if c.id > max_id{
+        //                max_id = c.id;
+        //            }
+        //        })
+        //     });
                                 // .max()
+        let max_id = self.get_max_id();
         debug!("Next item id: {}", max_id+1);
         // let i = self.items.items.len().clone() as u32;
         //we want to start this at ONE so we reserve the zero index for the root nodes of the forest
@@ -1143,6 +1157,13 @@ impl RutuduList {
 mod tests{
     use super::*;
 
+
+    ///Create a new test
+    #[test]
+    pub fn test_add_new_item_list(){
+        let list = RutuduList::default();
+        list.add_input_text_as_item_to_list()
+    }
     //deleting is doing super weird things
     //why not try and test it? like a real little programmer
     // #[test]
