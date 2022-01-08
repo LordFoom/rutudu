@@ -316,7 +316,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }else{
                         tudu_list.add_save_input_char(c);
                     },
-                    Key::Ctrl(n) => {//how can I combine with the above?
+                    Key::Ctrl('\n') => {//how can I combine with the above?
                         db::save_list(&tudu_list).unwrap();
                         tudu_list.mark_saved();
 
@@ -339,7 +339,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         println!("{}", clear::All);
                         break;
                     },
-                    Key::Char('n') => tudu_list.enter_edit_mode(),
+                    Key::Char('n') | Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {}
                 }
             }
