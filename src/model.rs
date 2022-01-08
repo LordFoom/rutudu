@@ -903,7 +903,7 @@ impl RutuduList {
 
             let mut old_item = None;
             let mut new_item = None;
-            for (parent_id, mut children) in self.item_tree.iter_mut() {
+            for (parent_id, children) in self.item_tree.iter_mut() {
                 if parent_id == &old_parent_id {
                     for child in children.iter_mut() {
                         if child.id == old_id {
