@@ -9,7 +9,7 @@ use rusqlite::{Connection, params};
 use std::path::Path;
 
 pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
-    let mut fp = &list.file_path.clone();
+    let fp = &list.file_path.clone();
     debug!("About to save list '{}', number of items: {}", fp, list.items.items.len().to_string());
     let fp_suffixed= if !fp.to_ascii_lowercase().ends_with(".rtd") {
         format!("{}.rtd", fp)
