@@ -335,7 +335,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     _ => {}
                 },
                 InputMode::Quit => match input {
-                    Key::Char('y') => {
+                    Key::Char('y') | Key::Char('\n') => {
                         println!("{}", clear::All);
                         break;
                     },
