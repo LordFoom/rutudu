@@ -289,13 +289,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                     //alt+\n just does not seem to work?
                     Key::Alt(c) => if c as u32 == 13 {
                         debug!("Alt was pressed with enter!!");
-                        tudu_list.add_item_to_list();
+                        tudu_list.add_input_text_as_item_to_list();
                     }
                     else{
                         debug!("We pressed alt+{}", c);
                         debug!("Ascii val == {}", c as u32);
                     }
-                    Key::Ctrl('n') =>  tudu_list.add_item_to_list(),
+                    Key::Ctrl('n') =>  tudu_list.add_input_text_as_item_to_list(),
                     Key::Backspace => tudu_list.remove_character(),
                     Key::Left => tudu_list.cursor_left(),
                     Key::Right => tudu_list.cursor_right(),
