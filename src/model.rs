@@ -161,9 +161,6 @@ impl Item {
         }
     }
 
-    #[test]
-    pub fn test_collapse() {}
-
     // pub fn depth(&self)->u8{
     //     if self.parent_id == 0{
     //         return 0;
@@ -1169,12 +1166,13 @@ mod tests{
         let mut item = Item::new(1, "Test item", "Test item text\nwith a newline");
         list.insert_item(&mut item);
         assert_eq!(1, list.size());
-        list.delete_selected()
+        // list.delete_selected()
     }
-    //deleting is doing super weird things
-    //why not try and test it? like a real little programmer
-    // #[test]
-    // fn test_delete_then_add
+
+    #[test]
+    fn test_delete_then_add{
+
+    }
 
 
 }
