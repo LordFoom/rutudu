@@ -638,7 +638,51 @@ impl RutuduList {
         let item_id = self.items.items[i].id;
         //find its parent
         let grand_parent_id = self.items.items[i].parent_id;
+        self.delete_item(grand_parent_id, item_id);
 
+        // //find its children and set the parent ids of the children to the parents parent
+        // self.item_tree
+        //     .entry(item_id as u32)
+        //     .or_insert_with(Vec::new)
+        //     .iter_mut()
+        //     .for_each(|c| c.parent_id = grand_parent_id);
+        //
+        // //now we want to remove the child vector from the item tree, and add it to the grandparent id
+        // //remove the parent from the representative tree, and stick the child bucket in
+        // // let grand_parent_bucket = self.item_tree.entry(grand_parent_id)
+        // //                               .or_insert_with(Vec::new);
+        // //remove selected item
+        // if let Some(item_idx) = self.item_tree
+        //     .entry(grand_parent_id)
+        //     .or_insert_with(Vec::new)
+        //     .iter()
+        //     .position(|c| c.id == item_id){
+        //         self.item_tree
+        //             .entry(grand_parent_id)
+        //             .or_insert_with(Vec::new)
+        //             .remove(item_idx);
+        // }
+        //
+        // //could I have used the "move" functionality for this? hmmmm dunno
+        // //get all the child items of removed parent
+        // let mut item_bucket: Vec<Item> = self.item_tree
+        //     .get_mut(&item_id)
+        //     .unwrap_or(&mut Vec::new())
+        //     .drain(..)
+        //     .collect();
+        // //need to reset the parent id
+        // item_bucket.iter_mut()
+        //     .for_each(|c| c.parent_id = grand_parent_id);
+        // self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new).append(&mut item_bucket);
+        //
+        // //now we need to change the selection to one higher....
+        // self.items.previous();
+        // //rebuild the list
+        // self.dirty_list = true;
+    }
+
+    ///Parent id is the bucket id of the item
+    pub fn delete_item(&mut self, grand_parent_id:u32, item_id: u32){
         //find its children and set the parent ids of the children to the parents parent
         self.item_tree
             .entry(item_id as u32)
@@ -652,26 +696,26 @@ impl RutuduList {
         //                               .or_insert_with(Vec::new);
         //remove selected item
         if let Some(item_idx) = self.item_tree
-            .entry(grand_parent_id)
-            .or_insert_with(Vec::new)
-            .iter()
-            .position(|c| c.id == item_id){
-                self.item_tree
-                    .entry(grand_parent_id)
-                    .or_insert_with(Vec::new)
-                    .remove(item_idx);
+                                    .entry(grand_parent_id)
+                                    .or_insert_with(Vec::new)
+                                    .iter()
+                                    .position(|c| c.id == item_id){
+            self.item_tree
+                .entry(grand_parent_id)
+                .or_insert_with(Vec::new)
+                .remove(item_idx);
         }
 
         //could I have used the "move" functionality for this? hmmmm dunno
         //get all the child items of removed parent
         let mut item_bucket: Vec<Item> = self.item_tree
-            .get_mut(&item_id)
-            .unwrap_or(&mut Vec::new())
-            .drain(..)
-            .collect();
+                                             .get_mut(&item_id)
+                                             .unwrap_or(&mut Vec::new())
+                                             .drain(..)
+                                             .collect();
         //need to reset the parent id
         item_bucket.iter_mut()
-            .for_each(|c| c.parent_id = grand_parent_id);
+                   .for_each(|c| c.parent_id = grand_parent_id);
         self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new).append(&mut item_bucket);
 
         //now we need to change the selection to one higher....
@@ -682,7 +726,10 @@ impl RutuduList {
 
     ///Return the number of items in this list (whether shown or not)
     pub fn size(&self) -> usize{
-        self.item_tree.len()
+        //add up the number of items in each of buckets
+        self.item_tree
+            .iter()
+            .fold(0, |acc,(i, v)|{acc+v.len()})
     }
 
     // fn move_children_to_new_bucket(&mut self, new_parent_id:u32, old_bucket: &mut Vec<Item>){
@@ -1161,18 +1208,21 @@ mod tests{
 
     ///Create a new test
     #[test]
-    pub fn test_add_new_item_list(){
+    pub fn test_add_new_item_to_list(){
         let mut list = RutuduList::default();
         let mut item = Item::new(1, "Test item", "Test item text\nwith a newline");
         list.insert_item(&mut item);
         assert_eq!(1, list.size());
-        // list.delete_selected()
     }
 
     #[test]
-    fn test_delete_then_add{
-
+    pub fn test_delete_item_from_list(){
+        let mut list = RutuduList::default();
+        let mut item = Item::new(1, "Test item", "Test item text\nwith a newline");
+        list.insert_item(&mut item);
+        assert_eq!(1, list.size());
+        list.delete_item(0,1);
+        assert_eq!(0, list.size());
     }
-
 
 }
