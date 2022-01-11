@@ -42,7 +42,8 @@ There is no undo. Sweaty palms but steady hands, my friend.
 * to be implemented: a ctrl+delete that also includes children
 
 ### Persistence
-* s to save as sqlite file 
+* s to save to sqlite file 
+* shift+S to 'save as...'
 * o to load (up/down to select, press right/enter/ctrl+n to open)
 * It's a sqlite file so now you have the data in a db, maybe that's cool for you.
 

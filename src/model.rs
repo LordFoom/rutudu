@@ -730,6 +730,11 @@ impl RutuduList {
         self.item_tree
             .iter()
             .fold(0, |acc,(i, v)|{acc+v.len()})
+
+        // self.item_tree
+        //     .iter()
+        //     .map(|(i,v)| v.len())
+        //     .sum()
     }
 
     // fn move_children_to_new_bucket(&mut self, new_parent_id:u32, old_bucket: &mut Vec<Item>){
