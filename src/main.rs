@@ -257,7 +257,12 @@ fn main() -> Result<(), Box<dyn Error>> {
             match tudu_list.input_mode {
                 InputMode::Edit => match input {
                     Key::Char('q') => tudu_list.enter_quit_mode(),
-                    Key::Char('s') => tudu_list.enter_save_mode(),
+                    Key::Char('S') => tudu_list.enter_save_mode(),
+                    Key::Char('s') => {
+                        //TODO put this into a method maybe, eh?
+                        db::save_list(&tudu_list).expect("Could not save list");
+                        tudu_list.mark_saved();
+                    }
                     Key::Char('o') => tudu_list.enter_open_mode(),
                     Key::Char('x') => tudu_list.toggle_selected_item_completion_status(),//println!("{}", clear::All);
                         // break;
