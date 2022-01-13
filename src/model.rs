@@ -627,6 +627,34 @@ impl RutuduList {
         self.dirty_list = true;
     }
 
+    //Will erase the selected item - including its children.
+    pub fn erase_selected(&mut self){
+        let i = if let Some(index) = self.items.state.selected(){
+            index
+        } else {
+            return;
+        };
+
+        let item_id = self.items.items[i].id;
+        let parent_id = self.items.items[i].parent_id;
+
+        self.item_tree.remove(&item_id);
+        let mut parent_vec = self.item_tree.get_mut(&parent_id);
+        if let Some(v) = parent_vec{
+           if let Some(idx) = v.iter().position(|item| item.id ==item_id){
+               v.remove(idx);
+           }
+        }
+        self.dirty_list = true;
+        // parent_vec.
+        // self.item_tree.entry(parent_id)
+        //     .or_insert_with(Vec::new)
+        //     .remove()
+
+    }
+
+    ///Delete's the selected item, but does not delete children:
+    /// they get attached to parent
     pub fn delete_selected(&mut self) {
         let i = if let Some(index) = self.items.state.selected() {
             index
@@ -682,6 +710,7 @@ impl RutuduList {
     }
 
     ///Parent id is the bucket id of the item
+    /// Preserves children by making their grandparent the parent
     pub fn delete_item(&mut self, grand_parent_id:u32, item_id: u32){
         //find its children and set the parent ids of the children to the parents parent
         self.item_tree

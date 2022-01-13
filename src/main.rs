@@ -278,6 +278,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
 
                     Key::Delete | Key::Backspace => tudu_list.delete_selected(),
+                    //ctrl+e ...really? why no ctrl+backspace - guess cos it's a weird hex code not a char...
+                    Key::Ctrl('e') => tudu_list.erase_selected(),//does not preserve children
 
                     Key::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
                     Key::Ctrl('a') => tudu_list.enter_insert_mode(InputMode::InsertChild),

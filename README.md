@@ -38,8 +38,8 @@ There is no undo. Sweaty palms but steady hands, my friend.
 * d move item *d*own (decrease its rank among its siblings)
 * \> move item in (become the child of preceding sibling)
 * < move item out (become the sibling of its parent)
-* delete or backspace to delete an item - but NOT it's children
-* to be implemented: a ctrl+delete that also includes children
+* delete or backspace to delete an item - but NOT its children
+* ctrl+e to *e*rase an item (delete it AND its children)
 
 ### Persistence
 * s to save to sqlite file 
