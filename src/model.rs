@@ -748,7 +748,7 @@ impl RutuduList {
         self.item_tree.entry(grand_parent_id).or_insert_with(Vec::new).append(&mut item_bucket);
 
         //now we need to change the selection to one higher....
-        self.items.previous();
+        // self.items.previous();
         //rebuild the list
         self.dirty_list = true;
     }
