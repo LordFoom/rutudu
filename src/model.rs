@@ -538,9 +538,9 @@ impl RutuduList {
                             return;
                         }
                         //how to find one's parent....
-                        let parent = self.items.items.iter()
-                                         .find(|i| i.id == parent_id)
-                                         .unwrap();
+                        // let parent = self.items.items.iter()
+                        //                  .find(|i| i.id == parent_id)
+                        //                  .unwrap();
 
                         //take out of the old vector
                         let mut oi = parent_child_bucket.remove(idx);
