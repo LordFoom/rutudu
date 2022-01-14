@@ -1096,7 +1096,7 @@ impl RutuduList {
             self.cursor_position[1] -= 1;
             //we need the len of this line.....!
             //find out length of line we are at the end of
-            let mut line_len = match self.current_item.rfind('\n') {
+            let line_len = match self.current_item.rfind('\n') {
                 None =>  self.current_item.len(),
                 Some(nli) => self.current_item.len() - nli,
             };
