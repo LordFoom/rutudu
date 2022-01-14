@@ -547,6 +547,7 @@ impl RutuduList {
                         oi.parent_id = grand_parent_id;
 
                         //what is the  new sibling's id, we want to go after it
+                        //so become sibling by getting the same parent
                         let parent_idx = self.item_tree.get(&grand_parent_id)
                                              .unwrap()
                                              .iter()
