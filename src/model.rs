@@ -758,7 +758,7 @@ impl RutuduList {
         //add up the number of items in each of buckets
         self.item_tree
             .iter()
-            .fold(0, |acc,(i, v)|{acc+v.len()})
+            .fold(0, |acc,(_, v)|{acc+v.len()})
 
         // self.item_tree
         //     .iter()
@@ -836,7 +836,7 @@ impl RutuduList {
 
         let root_items_vec = self.get_subtree_vec(0, 0);
         self.items.items.clear();
-        root_items_vec.iter().enumerate().for_each(|(i, item)| {
+        root_items_vec.iter().enumerate().for_each(|(_, item)| {
             // let new_item = ListItem::new(item.text(i));
             self.items.items.push(item.clone());
         });
@@ -1026,7 +1026,7 @@ impl RutuduList {
     pub fn get_max_id(&self)->u32{
         let mut max_id = 0;
         self.item_tree.iter()
-            .for_each(|(x,v)| {
+            .for_each(|(_,v)| {
                 v.iter().for_each(|c| {
                     if c.id > max_id{
                         max_id = c.id;

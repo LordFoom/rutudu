@@ -24,7 +24,7 @@ pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
         Err(e) => error!("Could not empty table? {}", e),
     }
     list.item_tree.iter()
-        .for_each(|(i, sub_list )|{
+        .for_each(|(_, sub_list )|{
            sub_list.iter().for_each(|item|{
                debug!("Trying to insert '{}' item with '{}' id", item.title, item.id);
                match conn.execute("INSERT INTO rutudu_list(id, parent_id, title, entry, completeStatus, expandStatus , create_date)
