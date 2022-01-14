@@ -1095,12 +1095,11 @@ impl RutuduList {
             //reduce y by 1
             self.cursor_position[1] -= 1;
             //we need the len of this line.....!
-            let mut line_len = 0;
             //find out length of line we are at the end of
-            match self.current_item.rfind('\n') {
-                None => line_len = self.current_item.len(),
-                Some(nli) => line_len = self.current_item.len() - nli,
-            }
+            let mut line_len = match self.current_item.rfind('\n') {
+                None =>  self.current_item.len(),
+                Some(nli) => self.current_item.len() - nli,
+            };
             //put cursor at end of line
             self.cursor_position[0] = line_len as u16;
         } else {
