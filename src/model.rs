@@ -41,7 +41,7 @@ pub enum MoveDirection {
 
 impl Display for MoveDirection {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut write_str = match *self {
+        let write_str = match *self {
             MoveDirection::Up => { "Up" }
             MoveDirection::Down => { "Down" }
             MoveDirection::In => { "In" }
@@ -431,7 +431,7 @@ impl RutuduList {
         let parent_id = self.items.items[i].parent_id;
         let id = self.items.items[i].id;
         let mut grand_parent_id = 0;
-        let mut grand_parent_bucket = 0;
+        let grand_parent_bucket = 0;
         self.item_tree.iter()
             .for_each(|(k, v)| {
                 v.iter().for_each(|i| {
@@ -442,9 +442,9 @@ impl RutuduList {
             });
 
         //if we move up or down siblings, we need to find the bucket of siblings and swap
-        if let Some(mut parent_child_bucket) = self.item_tree.get_mut(&parent_id) {
+        if let Some(parent_child_bucket) = self.item_tree.get_mut(&parent_id) {
             debug!("Found the bucket");
-            if let Some(mut idx) = parent_child_bucket
+            if let Some(idx) = parent_child_bucket
                 .iter_mut()
                 .position(|item| { item.id == id }) {
                 //now we have the idx, we can decide what to do
@@ -554,7 +554,7 @@ impl RutuduList {
                                              .unwrap_or(0);
 
 
-                        let mut offset = if self.item_tree.get(&grand_parent_id)
+                        let offset = if self.item_tree.get(&grand_parent_id)
                                                 .unwrap()
                                                 .is_empty(){
                             0
@@ -639,7 +639,7 @@ impl RutuduList {
         let parent_id = self.items.items[i].parent_id;
 
         self.item_tree.remove(&item_id);
-        let mut parent_vec = self.item_tree.get_mut(&parent_id);
+        let parent_vec = self.item_tree.get_mut(&parent_id);
         if let Some(v) = parent_vec{
            if let Some(idx) = v.iter().position(|item| item.id ==item_id){
                v.remove(idx);
@@ -815,7 +815,7 @@ impl RutuduList {
             .iter()
             .enumerate()
             .map(|(i, msg)| {
-                let mut content = msg.text(i);
+                let content = msg.text(i);
                 ListItem::new(content)
             }).collect()
     }
