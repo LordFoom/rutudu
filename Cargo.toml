@@ -19,3 +19,8 @@ rusqlite = "0.25.3"
 num-traits = "0.2.14"
 num = "0.4.0"
 num-derive = "0.3.3"
+clockrusting = { git = "https://github.com/LordFoom/clockrusting", optional = true}
+
+[features]
+clockrust = ["clockrusting"]
+

@@ -523,7 +523,7 @@ impl RutuduList {
                                                    .unwrap_or(0);
 
                         if sibling_above.expand == ExpandStatus::Closed {//expand the new parent
-                            // self.items.state.select(Some(new_select_index));
+                            self.items.state.select(Some(new_select_index));
                             self.expand_selected();
                         }
 
