@@ -46,7 +46,8 @@ fn init() -> ArgMatches {
             .index(1)
         .required(false))
         .arg("-v, --verbose 'All that info'")
-        .arg("-d, --create-default 'Create rutudu$DATE.db'")
+        .arg("-t, --track-time=TRACKING_DB_FILE_NAME 'If you run with time tracking and want to specify a non-default location'")
+        // .arg("-d, --create-default 'Create rutudu$DATE.db'")
         .get_matches()
 }
 
@@ -269,7 +270,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                     Key::Char('d') => tudu_list.move_item(MoveDirection::Down),
                     Key::Char('u') => tudu_list.move_item(MoveDirection::Up),
-                    Key::Char('>') => tudu_list.move_item(MoveDirection::In),
+                    Key::Char('>') | Key::Char('i') => tudu_list.move_item(MoveDirection::In),
                     Key::Char('<') => tudu_list.move_item(MoveDirection::Out),
 
                     Key::Char('h') | Key::Left => tudu_list.collapse_selected(),
@@ -281,10 +282,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                     //ctrl+e ...really? why no ctrl+backspace - guess cos it's a weird hex code not a char...
                     Key::Ctrl('e') => tudu_list.erase_selected(),//does not preserve children
 
-                    Key::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
+                    Key::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertSibling),
+                    Key::Char('A') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
                     Key::Ctrl('a') => tudu_list.enter_insert_mode(InputMode::InsertChild),
                     Key::Alt('a') => tudu_list.enter_insert_mode(InputMode::InsertParent),
-                    Key::Char('A') => tudu_list.enter_insert_mode(InputMode::InsertSibling),
+
+                    #[cfg(clockrust)]
+                    Key::Ctrl('t') => tudu_list.track_time(),
 
                     _ => {}
                 },
@@ -293,6 +297,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     //what's a better key combo? ctrl+[ does weird things...
                     //terminal doesn't support ctrl+\n, ctrl/shift don't modify the key being pressed dammit
                     //alt+\n just does not seem to work?
+                    Key::Ctrl('n') =>  tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
                     Key::Alt(c) => if c as u32 == 13 {
                         debug!("Alt was pressed with enter!!");
                         tudu_list.add_input_text_as_item_to_list();
@@ -301,7 +306,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                         debug!("We pressed alt+{}", c);
                         debug!("Ascii val == {}", c as u32);
                     }
-                    Key::Ctrl('n') =>  tudu_list.add_input_text_as_item_to_list(),
                     Key::Backspace => tudu_list.remove_character(),
                     Key::Left => tudu_list.cursor_left(),
                     Key::Right => tudu_list.cursor_right(),

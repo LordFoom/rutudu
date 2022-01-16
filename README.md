@@ -1,13 +1,17 @@
 # rutudu
 The simple, tui rust to do list. You can say it roo-too-doo or rah-tah-dah, or even rah-too-doo!
 
+Wanted a TUI based todo list with hierarchies that doesn't just cat to the console,
+but allows navigation,collapsing, etc. Couldn't find one so here we are.
+
+I  want to be able to go fast, so the idea is to have a vim-ish interface where single key strokes,
+in the right mode, perform activities quickly.
+
 Work in progress but you can:
 
 * Make simple list, with entry text
 * Sub lists.
 
-Wanted a TUI based todo list with hierarchies that doesn't just cat to the console,
-but allows navigation,collapsing, etc. Couldn't find one so here we are.
 
 You cannot edit, just yet.
 
@@ -18,12 +22,14 @@ open/create passed in list name.
 
 There is no undo. Sweaty palms but steady hands, my friend.
 
+Busy adding some time tracking integration. The rust of clocks is timesheets.
+
 ### You can add items!
 
-* a to add an item
+* a to *a*dd a new sibling
 * Ctrl+a to add a sub item
 * Alt+a to add new parent
-* Shift + A to add new sibling
+* Shift + A to add new root item
 * __It is CTRL+N  to e(N)ter on the add item screen__
     * That's because enter is for newlines when creating items.
   * __As of recently, also Alt+Enter!! :D__
@@ -36,8 +42,8 @@ There is no undo. Sweaty palms but steady hands, my friend.
 * x to (un)cross out item
 * u move item *u*p (increase its rank among its siblings)
 * d move item *d*own (decrease its rank among its siblings)
-* \> move item in (become the child of preceding sibling)
-* < move item out (become the sibling of its parent)
+* i or \> move item *i*n (become the child of preceding sibling)
+* o or < move item *o*ut (become the sibling of its parent)
 * delete or backspace to delete an item - but NOT its children
 * ctrl+e to *e*rase an item (delete it AND its children)
 
