@@ -432,7 +432,7 @@ impl RutuduList {
         let id = self.items.items[i].id;
         let mut grand_parent_id = 0;
         self.item_tree.iter()
-            .for_each(|(k, v)| {
+            .for_each(|(_, v)| {
                 v.iter().for_each(|i| {
                     if i.id == parent_id {
                         grand_parent_id = i.parent_id;
