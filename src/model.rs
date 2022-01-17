@@ -431,7 +431,6 @@ impl RutuduList {
         let parent_id = self.items.items[i].parent_id;
         let id = self.items.items[i].id;
         let mut grand_parent_id = 0;
-        let grand_parent_bucket = 0;
         self.item_tree.iter()
             .for_each(|(k, v)| {
                 v.iter().for_each(|i| {
@@ -458,15 +457,6 @@ impl RutuduList {
 
                         parent_child_bucket.swap(idx, idx_to_swap);
 
-                        // self.select_item(id);
-                        // // self.dirty_list = true;
-                        // self.rebuild_list();
-                        // // self.items.previous();
-                        // //we need to select the id
-                        // let new_sel_idx = self.items.items.iter()
-                        //     .position(|i| i.id == id)
-                        //     .unwrap_or(0);
-                        // self.items.state.select(Some(new_sel_idx));
                     }
                     MoveDirection::Down => {
                         let idx_to_swap = if idx == parent_child_bucket.len() - 1 {//last time, loop around
@@ -1224,6 +1214,11 @@ impl RutuduList {
                       self.open_file_dialog_files.items.push(String::from(s));
                   });
         self.has_scanned = true;
+    }
+
+    #[cfg(clockrusting)]
+    pub fn track_time(&self){
+
     }
 
     //reset the scan variable
