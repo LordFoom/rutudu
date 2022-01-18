@@ -50,6 +50,20 @@ fn init() -> ArgMatches {
         .arg(arg!("-t, --track-time=TRACKING_DB_FILE_NAME 'If you run with time tracking and want to specify a non-default location'"))
         // .arg("-d, --create-default 'Create rutudu$DATE.db'")
         .get_matches()
+
+    App::new("Rutudu Todo List")
+        .version("1.0")
+        .author("FOOM")
+        .about("Todo List, Terminal style, Rust vibes")
+        .arg(Arg::new("list_name")
+            .value_name("list_name")
+            .help("Name of list, will default to 'rutudu$DATE.rtd' if not supplied. Name of sqlite file.")
+            // .about("Name of list, will default to 'rutudu$DATE.rtd' if not supplied. Name of sqlite file.")
+            .index(1))
+        .args(&[
+            arg!(-v, --verbose "All that info"),
+            arg!(-t --tracking-time <TIME_SQLITE_FILE_NAME> "If you run with time tracking and want to specify a non-default location")
+        ]).get_matches()
 }
 
 fn init_logger(verbose: bool) {
