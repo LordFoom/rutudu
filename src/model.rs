@@ -19,6 +19,8 @@ use rusqlite::ToSql;
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, BorderType, List, ListItem, ListState};
+#[cfg(clockrusting)]
+use clockrusting;
 
 use crate::{db, show_new_item_input};
 
@@ -1179,7 +1181,7 @@ impl RutuduList {
 
     ///If list exists, will open it
     pub fn open_list(&mut self, list_name: &str) {
-        let abs_list_name = if (!list_name.starts_with("./")) {
+        let abs_list_name = if !list_name.starts_with("./") {
             format!("./{}", list_name)
         } else {
             String::from(list_name)
@@ -1216,9 +1218,13 @@ impl RutuduList {
         self.has_scanned = true;
     }
 
+    ///This will insert a track time command, either clock-in if it's untracked (with clock-out for the tracked task),
+    /// or simply clock-out for the tracked task if it is the selected one
     #[cfg(clockrusting)]
     pub fn track_time(&self){
-
+        //look for tracking item
+        //is there a selected tracking item? simply untrack it
+        //if selected item is untracked, untrack tracked item if exists, then track
     }
 
     //reset the scan variable
