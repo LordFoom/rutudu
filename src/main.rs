@@ -2,8 +2,8 @@ use std::error::Error;
 use std::io::Stdout;
 
 use chrono::prelude::*;
-use clap::{App, ArgMatches, Arg};
-use log::{debug, error, LevelFilter};
+use clap::{App, ArgMatches, Arg, arg};
+use log::{debug, LevelFilter};
 use regex::Regex;
 use log4rs;
 use termion::{clear, raw::IntoRawMode};
@@ -42,11 +42,12 @@ fn init() -> ArgMatches {
         .about("Todo List, Terminal style, Rust vibes")
         .arg(Arg::new("list_name")
             .value_name("list_name")
-            .about("Name of list, will default to 'rutudu$DATE.rtd' if not supplied. Name of sqlite file.")
+            .help("Name of list, will default to 'rutudu$DATE.rtd' if not supplied. Name of sqlite file.")
+            // .about("Name of list, will default to 'rutudu$DATE.rtd' if not supplied. Name of sqlite file.")
             .index(1)
         .required(false))
-        .arg("-v, --verbose 'All that info'")
-        .arg("-t, --track-time=TRACKING_DB_FILE_NAME 'If you run with time tracking and want to specify a non-default location'")
+        .arg(arg!("-v, --verbose 'All that info'"))
+        .arg(arg!("-t, --track-time=TRACKING_DB_FILE_NAME 'If you run with time tracking and want to specify a non-default location'"))
         // .arg("-d, --create-default 'Create rutudu$DATE.db'")
         .get_matches()
 }
