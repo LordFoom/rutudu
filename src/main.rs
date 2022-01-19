@@ -289,7 +289,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Ctrl('a') => tudu_list.enter_insert_mode(InputMode::InsertChild),
                     Key::Alt('a') => tudu_list.enter_insert_mode(InputMode::InsertParent),
 
-                    #[cfg(clockrust)]
+                    #[cfg(feature ="clockrust")]
                     Key::Ctrl('t') => tudu_list.track_time(),
 
                     _ => {}

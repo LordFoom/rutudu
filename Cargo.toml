@@ -23,6 +23,3 @@ clockrusting = { git = "https://github.com/LordFoom/clockrusting", optional = tr
 
 [features]
 clockrust = ["clockrusting"]
-
-[build]
-target = "clockrusting"
