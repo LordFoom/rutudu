@@ -151,7 +151,6 @@ fn little_popup(min_horizontal:u16, min_vertical:u16, r:Rect) -> Rect {
 
 }
 
-// fun make_vec_for_lest(items: )
 fn get_default_list_name()->String{
     debug!("No name arg passed...");
     let today = Utc::now().format(DATE_FMT);
@@ -266,11 +265,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::Edit => match input {
                     Key::Char('q') => tudu_list.enter_quit_mode(),
                     Key::Char('S') => tudu_list.enter_save_mode(),
-                    Key::Char('s') => {
-                        //TODO put this into a method maybe, eh?
-                        db::save_list(&tudu_list).expect("Could not save list");
-                        tudu_list.mark_saved();
-                    }
+                    Key::Char('s') => tudu_list.save(),
                     Key::Char('o') => tudu_list.enter_open_mode(),
                     Key::Char('x') => tudu_list.toggle_selected_item_completion_status(),//println!("{}", clear::All);
                         // break;

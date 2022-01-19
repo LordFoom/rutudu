@@ -357,6 +357,10 @@ impl RutuduList {
         self.input_mode = InputMode::Save;
     }
 
+    pub fn save(&mut self){
+        db::save_list(& self).expect("Could not save list");
+        self.mark_saved();
+    }
     pub fn mark_saved(&mut self) {
         self.unsaved = false;
         self.enter_edit_mode();
