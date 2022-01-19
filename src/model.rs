@@ -1224,7 +1224,7 @@ impl RutuduList {
 
     ///This will insert a track time command, either clock-in if it's untracked (with clock-out for the tracked task),
     /// or simply clock-out for the tracked task if it is the selected one
-    #[cfg(clockrusting)]
+    #[cfg(feature ="clockrust")]
     pub fn track_time(&self){
         //look for tracking item
         //is there a selected tracking item? simply untrack it
