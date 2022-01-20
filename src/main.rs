@@ -196,12 +196,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             let item_list = tudu_list.items_as_vec();
             let items = item_list.clone();
             let mut lst_state = tudu_list.items.state.clone();
+            let mut highlight_color =  tudu_list.highlight_color();
+
             let tui_items = List::new(items)
                 .block(Block::default().title(title).borders(Borders::ALL))
                 // .style(Style::default().fg(Color::White))
                 .highlight_style(Style::default()
                     .add_modifier(Modifier::BOLD)
-                    .fg(Color::Cyan))
+                    .fg(highlight_color))
                 .highlight_symbol(">");
 
 

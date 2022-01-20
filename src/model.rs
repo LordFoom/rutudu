@@ -21,6 +21,7 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, BorderType, List, ListItem, ListState};
 #[cfg(clockrusting)]
 use clockrusting;
+use tui::style::Color::Red;
 
 use crate::{db, show_new_item_input};
 
@@ -117,10 +118,16 @@ impl Item {
             CompleteStatus::Complete => Modifier::CROSSED_OUT | Modifier::ITALIC,
             CompleteStatus::Incomplete => Modifier::empty(),
         };
-        let color = match self.complete {
-            CompleteStatus::Complete => Color::DarkGray,
-            CompleteStatus::Incomplete => Color::White,
+
+        let color = if self.tracking_time {
+            Color::Red
+        } else {
+            match self.complete {
+                CompleteStatus::Complete => Color::DarkGray,
+                CompleteStatus::Incomplete => Color::White,
+            }
         };
+
         let depth_string = "--".to_string().repeat(self.depth);
         let mut content = vec![Spans::from(
             Span::styled(format!("{}{}.{}: {} {}", depth_string,
@@ -970,7 +977,7 @@ impl RutuduList {
 
     ///Will add item as the parent of the currently selected item, if one is selected
     fn add_item_as_parent(&mut self, item: &mut Item) {
-        let opt_parent = self.selected_item();
+        let opt_parent = self.selected_item_mut();
 
         //if we add as new parent, we now SWAP the two around in the tree :D
         if let Some(parent) = opt_parent {
@@ -1014,12 +1021,18 @@ impl RutuduList {
         }
     }
 
-    fn selected_item(&mut self) -> Option<&mut Item> {
-        let opt_parent = match self.items.state.selected() {
+    fn selected_item_mut(&mut self) -> Option<&mut Item> {
+        match self.items.state.selected() {
             Some(i) => self.items.items.get_mut(i),
             None => None,
-        };
-        opt_parent
+        }
+    }
+
+    fn selected_item(&self) -> Option<&Item>{
+        match self.items.state.selected() {
+            Some(i) => self.items.items.get(i),
+            None => None,
+        }
     }
 
     pub fn get_max_id(&self)->u32{
@@ -1227,10 +1240,26 @@ impl RutuduList {
     ///This will insert a track time command, either clock-in if it's untracked (with clock-out for the tracked task),
     /// or simply clock-out for the tracked task if it is the selected one
     #[cfg(feature ="clockrust")]
-    pub fn track_time(&self){
+    pub fn track_time(&mut self){
+        debug!("Tracking time");
         //look for tracking item
         //is there a selected tracking item? simply untrack it
-        //if selected item is untracked, untrack tracked item if exists, then track
+        //if selected item is untracked, untrack tracked item if exists,
+        // then track selected item
+        match self.selected_item_mut() {
+            None => {}
+            Some(item) => {
+                item.tracking_time = !item.tracking_time;
+            }
+        }
+    }
+
+    // #[cfg(feature = "clockrust")]
+    pub fn highlight_color(&self) -> Color{
+        match self.selected_item(){
+            None => Color::Cyan,
+            Some(item) => if item.tracking_time { Color::Red } else { Color::Cyan }
+        }
     }
 
     //reset the scan variable
