@@ -75,6 +75,7 @@ pub struct Item {
     pub depth: usize,
     ///Order among its siblings
     pub order: u16,
+    pub tracking_time: bool,
 }
 
 impl Item {
@@ -96,6 +97,7 @@ impl Item {
             complete: CompleteStatus::Incomplete,
             depth: 0,
             order: 0,
+            tracking_time: false,
         }
     }
 

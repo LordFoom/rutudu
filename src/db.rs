@@ -81,6 +81,7 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
             expand: FromPrimitive::from_u8(row.get("expandStatus")?).unwrap_or(ExpandStatus::Closed),
             depth:0,
             order:0,
+            tracking_time: false,
             })
         })?
         .map(|i| i.unwrap()).collect();
