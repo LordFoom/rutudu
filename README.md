@@ -17,7 +17,7 @@ You cannot edit, just yet.
 
 You can cross-out and and uncross-out. Move items up and down - sibling-list and hierarchy.
 
-Will auto open a new list with today's date, creating if necessary, if started with no arguments. Otherwise will
+Will auto open a new list with today's date, creating if necessary, if started with no arguments. Otherwise, will
 open/create passed in list name.
 
 There is no undo. Sweaty palms but steady hands, my friend.
