@@ -19,8 +19,11 @@ use rusqlite::ToSql;
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, BorderType, List, ListItem, ListState};
-#[cfg(clockrusting)]
-use clockrusting;
+#[cfg(feature ="clockrust")]
+use clockrusting::db::ClockRuster;
+#[cfg(feature ="clockrust")]
+use clockrusting::command::{Command, CommandType};
+
 use tui::style::Color::Red;
 
 use crate::{db, show_new_item_input};
@@ -1237,19 +1240,34 @@ impl RutuduList {
         self.has_scanned = true;
     }
 
-    ///This will insert a track time command, either clock-in if it's untracked (with clock-out for the tracked task),
-    /// or simply clock-out for the tracked task if it is the selected one
+    ///Send a track command for highlighted task.
+    /// If it's not 'tracking', clock-in
+    /// If it's 'tracking', clock-out
+    /// Takes optional conn_str, if non-default location for sqlite table is desired (eg the rutudu sqlite file)
     #[cfg(feature ="clockrust")]
-    pub fn track_time(&mut self){
+    pub fn track_time(&mut self, conn_str: Option<&str>){
         debug!("Tracking time");
-        //look for tracking item
-        //is there a selected tracking item? simply untrack it
-        //if selected item is untracked, untrack tracked item if exists,
-        // then track selected item
         match self.selected_item_mut() {
             None => {}
             Some(item) => {
                 item.tracking_time = !item.tracking_time;
+                let cmd_type = if item.tracking_time{
+                    CommandType::ClockIn
+                }else{
+                    CommandType::ClockOut
+                };
+                let cmd = Command::new(cmd_type, Utc::now(), item.title.clone());
+                let cr = if let Some(location) = conn_str{
+                    ClockRuster::init(location)
+                }else{
+                    ClockRuster::new()
+                };
+                if let Err(e) = cr.run_clock_command(cmd){
+                    item.tracking_time = !item.tracking_time;//reverse tracking bool change
+                    error!("Unable to run clock command {}, : {}", cmd, e);
+                }else{
+                    debug!("Ran clock command {}", cmd);
+                }
             }
         }
     }

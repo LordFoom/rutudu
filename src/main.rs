@@ -2,9 +2,8 @@ use std::error::Error;
 use std::io::Stdout;
 
 use chrono::prelude::*;
-use clap::{App, ArgMatches, Arg, arg};
+use clap::{App, ArgMatches, Arg};
 use log::{debug, LevelFilter};
-use regex::Regex;
 use log4rs;
 use termion::{clear, raw::IntoRawMode};
 use termion::event::Key;
@@ -14,12 +13,12 @@ use tui::backend::TermionBackend;
 use tui::layout::{Constraint, Direction, Layout, Rect, Alignment};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, BorderType};
+use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, BorderType};
 
 use model::InputMode;
 
 use crate::events::{Event, Events};
-use crate::model::{MoveDirection, RutuduList, StatefulList};
+use crate::model::{MoveDirection, RutuduList};
 use rusqlite::Connection;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
@@ -35,7 +34,7 @@ use num_traits::cast::ToPrimitive;
 // const DATE_FMT: &str = "%Y%m%d%H%M%s";
 const DATE_FMT: &str = "%Y%m%d";
 
-fn init() -> ArgMatches {
+fn init_args() -> ArgMatches {
     App::new("Rutudu Todo List")
         .version("1.0")
         .author("FOOM")
@@ -50,11 +49,11 @@ fn init() -> ArgMatches {
             .long("verbose")
             .short('v')
             .help("All the info"))
-        .arg(Arg::new("time tracking file")
+        .arg(Arg::new("time_tracking_file")
             .short('t')
-            .long("track-time")
+            .long("time-track-file")
             .takes_value(true)
-            .help("If you run with time tracking and want to specify a non-default location"))
+            .help("If you run with time tracking and want to specify a location separate from the sqlite file used by list"))
         .get_matches()
 }
 
@@ -158,11 +157,16 @@ fn get_default_list_name()->String{
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let args = init();
+    let args = init_args();
     init_logger(args.is_present("verbose"));
     let default_name = get_default_list_name();
     // let list_name = args.value_of("list_name").unwrap_or(&default_name);
     let list_name = args.value_of("list_name").unwrap_or(&default_name);
+    let tracking_name:Option<&str> = if let Some(tn) = args.value_of("time_tracking_file"){
+        Some(tn)
+    }else{
+        None
+    };
     //setup the gui display
     let stdout = match std::io::stdout().into_raw_mode() {
         Ok(outstream) => outstream,
@@ -291,7 +295,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Alt('a') => tudu_list.enter_insert_mode(InputMode::InsertParent),
 
                     #[cfg(feature ="clockrust")]
-                    Key::Ctrl('t') => tudu_list.track_time(),
+                    Key::Ctrl('t') => if let Some(track_file) = tracking_name{
+                        tudu_list.track_time(Some(track_file));
+                    }else{
+                        let tf = Some(&tudu_list.file_path);
+                    },
 
                     _ => {}
                 },
