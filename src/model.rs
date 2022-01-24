@@ -1262,7 +1262,7 @@ impl RutuduList {
                 }else{
                     ClockRuster::new()
                 };
-                if let Err(e) = cr.run_clock_command(cmd){
+                if let Err(e) = cr.run_clock_command(&cmd){
                     item.tracking_time = !item.tracking_time;//reverse tracking bool change
                     error!("Unable to run clock command {}, : {}", cmd, e);
                 }else{
