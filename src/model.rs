@@ -1038,6 +1038,17 @@ impl RutuduList {
         }
     }
 
+    ///Since we have a backing "tree",
+    /// we can use this to get an item
+    fn get_item_in_tree_mut(&mut self, &item: Item) -> Option<&mut Item>{
+        let parent_id = item.parent_id;
+        self.item_tree.entry(parent_id)
+            .or_insert_with(Vec::new)
+            .iter_mut()
+            .find(|i| { i.id == item.id })
+
+    }
+
     pub fn get_max_id(&self)->u32{
         let mut max_id = 0;
         self.item_tree.iter()
@@ -1267,6 +1278,7 @@ impl RutuduList {
                     error!("Unable to run clock command '{}' : {}", cmd, e);
                 }else{
                     debug!("Ran clock command {}", cmd);
+                    //now we update it in the tree
                 }
             }
         }
