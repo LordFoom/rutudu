@@ -1040,9 +1040,8 @@ impl RutuduList {
 
     ///Since we have a backing "tree",
     /// we can use this to get an item
-    fn get_item_in_tree_mut(&mut self, &item: Item) -> Option<&mut Item>{
-        let parent_id = item.parent_id;
-        self.item_tree.entry(parent_id)
+    fn get_item_in_tree_mut(&mut self, item: &Item) -> Option<&mut Item>{
+        self.item_tree.entry(item.parent_id)
             .or_insert_with(Vec::new)
             .iter_mut()
             .find(|i| { i.id == item.id })
