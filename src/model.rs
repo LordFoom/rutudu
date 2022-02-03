@@ -1,32 +1,24 @@
 use core::fmt;
-use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::Display;
-use std::fs::File;
 use std::mem;
-use std::ops::Index;
-use std::os::unix::process::parent_id;
 use std::path::Path;
 
-use chrono::{DateTime, Utc};
+#[cfg(feature="clockrust")]
+use chrono::{Utc};
 use log::{debug, error, warn};
-use num;
 use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::{FromPrimitive, ToPrimitive};
 use regex::Regex;
-use rusqlite::ToSql;
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, BorderType, List, ListItem, ListState};
+use tui::widgets::{ ListItem, ListState};
 #[cfg(feature ="clockrust")]
 use clockrusting::db::ClockRuster;
 #[cfg(feature ="clockrust")]
 use clockrusting::command::{Command, CommandType};
 
-use tui::style::Color::Red;
-
-use crate::{db, show_new_item_input};
+use crate::{db};
 
 #[derive(FromPrimitive, ToPrimitive, Clone)]
 pub enum CompleteStatus {
@@ -1039,7 +1031,7 @@ impl RutuduList {
     }
 
     ///Since we have a backing "tree",
-    /// we can use this to get an item
+    /// we can use this to get an item whose state we want to persist
     fn get_item_in_tree_mut(&mut self, item: &Item) -> Option<&mut Item>{
         self.item_tree.entry(item.parent_id)
             .or_insert_with(Vec::new)
@@ -1257,30 +1249,41 @@ impl RutuduList {
     #[cfg(feature ="clockrust")]
     pub fn track_time(&mut self, conn_str: Option<&str>){
         debug!("Tracking time");
-        match self.selected_item_mut() {
-            None => {}
-            Some(item) => {
-                item.tracking_time = !item.tracking_time;
-                let cmd_type = if item.tracking_time{
-                    CommandType::ClockIn
-                }else{
-                    CommandType::ClockOut
-                };
-                let cmd = Command::new(cmd_type, Utc::now(), item.title.clone());
-                let cr = if let Some(location) = conn_str{
-                    ClockRuster::init(location)
-                }else{
-                    ClockRuster::new()
-                };
-                if let Err(e) = cr.run_clock_command(&cmd){
-                    item.tracking_time = !item.tracking_time;//reverse tracking bool change
-                    error!("Unable to run clock command '{}' : {}", cmd, e);
-                }else{
-                    debug!("Ran clock command {}", cmd);
-                    //now we update it in the tree
-                }
+        if let Some(list_item) = match self.items.state.selected(){
+           Some(i) => self.items.items.get(i),
+           None => None,
+        }{
+            if let Some(item) =  self.item_tree.entry(list_item.parent_id)
+                .or_insert_with(Vec::new)
+                .iter_mut()
+                .find(|i| { i.id == list_item.id}){
+                debug!("List item id is: {}, title is {} ", list_item.id, list_item.title);
+                debug!("Item id is: {}, title is {} ", item.id, item.title);
+
+                //toggle
+                    item.tracking_time = !item.tracking_time;
+                    let cmd_type = if item.tracking_time{
+                        CommandType::ClockIn
+                    }else{
+                        CommandType::ClockOut
+                    };
+                    let cmd = Command::new(cmd_type, Utc::now(), item.title.clone());
+                    let cr = if let Some(location) = conn_str{
+                        ClockRuster::init(location)
+                    }else{
+                        ClockRuster::new()
+                    };
+                    if let Err(e) = cr.run_clock_command(&cmd){
+                        item.tracking_time = !item.tracking_time;//reverse tracking bool change
+                        error!("Unable to run clock command '{}' : {}", cmd, e);
+                    }else{
+                        debug!("Ran clock command {}", cmd);
+                        //now we update it in the tree
+                    }
+                    self.dirty_list = true;
             }
         }
+
     }
 
     // #[cfg(feature = "clockrust")]
