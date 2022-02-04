@@ -7,6 +7,7 @@ use std::time::Duration;
 use termion::event::Key;
 use termion::input::TermRead;
 
+///This taken from the tui-rs examples, all credit to them for a great project
 pub enum Event<I> {
     Input(I),
     Tick,
