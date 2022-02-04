@@ -53,16 +53,23 @@ Busy adding some time tracking integration. The rust of clocks is timesheets.
 * o to load (up/down to select, press right/enter/ctrl+n to open)
 * It's a sqlite file so now you have the data in a db, maybe that's cool for you.
 
+###If built/running with 'clockrust' feature
+* ctrl+t run "clock-in" or "clock-out" command to store clock_rust_tasks table in the sqlite db file
+
+## Installation
+
+Check out of git and build --  cargo build
+
+If you want the time tracking (still alpha and evolving): cargo build --features clockrust
 
 I like having lots of short lists and they're stored for posterity in sqlite. Maybe in future, some kind of tool
-to aggregate lists? W
+to aggregate lists? 
 
 Will integrate with my clockrust, my nascent timetracking project. In time. In time.
 
 ### ROADMAP
 
-* Move items up/down
-* edit? delete? AND GIVE IN TO THE EPHEMERAL??
+* edit
 
 <img src="./item_manipulation.gif" title="item manipulation" />
 <img src="./example_pic.png" title="Looks like this" >

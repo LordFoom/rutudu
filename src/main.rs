@@ -160,6 +160,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let default_name = get_default_list_name();
     // let list_name = args.value_of("list_name").unwrap_or(&default_name);
     let list_name = args.value_of("list_name").unwrap_or(&default_name);
+    #[cfg(feature="clockrust")]
     let tracking_name:Option<&str> = if let Some(tn) = args.value_of("time_tracking_file"){
         Some(tn)
     }else{
