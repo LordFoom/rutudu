@@ -7,6 +7,9 @@ use num_traits::{ToPrimitive, FromPrimitive};
 use crate::model::{RutuduList, Item, CompleteStatus, ExpandStatus};
 use rusqlite::{Connection, params};
 use std::path::Path;
+#[cfg(feature="clockrust")]
+use clockrusting::db::ClockRuster;
+use crate::db;
 
 pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
     let fp = &list.file_path.clone();
@@ -87,17 +90,24 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
         .map(|i| i.unwrap()).collect();
 
     tudu_list.item_tree.clear();
-    tudu_list.items.items.clear();
+    //don't need to clear the list
+    // tudu_list.items.items.clear();
 
     items.iter_mut()
         .for_each(|i|{
+            i.tracking_time = false;
+            #[cfg(feature="clockrust")]{
+                let mut cr = ClockRuster::init(&tudu_list.file_path);
+                i.tracking_time = match cr.currently_tracking(&i.title){
+                    Ok(y) => y,
+                    Err(_) => false,
+                }
+            };
+            // check_currently_being_tracked(i);
             tudu_list.insert_item(i);
-            tudu_list.dirty_list = true;
         });
-    // for item in items {
-    //     tudu_list.add_item(&mut item)
-    //     tudu_list.items.items.push(item.unwrap());
-    // }
+    //only need to do this once
+    tudu_list.dirty_list = true;
 
     Ok(())
 }
