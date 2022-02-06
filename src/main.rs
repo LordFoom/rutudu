@@ -4,7 +4,6 @@ use std::io::Stdout;
 use chrono::prelude::*;
 use clap::{App, ArgMatches, Arg};
 use log::{debug, LevelFilter};
-use log4rs;
 use termion::{clear, raw::IntoRawMode};
 use termion::event::Key;
 use termion::raw::RawTerminal;

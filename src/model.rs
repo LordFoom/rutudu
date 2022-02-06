@@ -362,7 +362,7 @@ impl RutuduList {
     }
 
     pub fn save(&mut self){
-        db::save_list(& self).expect("Could not save list");
+        db::save_list(self).expect("Could not save list");
         self.mark_saved();
     }
     pub fn mark_saved(&mut self) {
@@ -1105,7 +1105,7 @@ impl RutuduList {
     pub fn remove_character(&mut self) {
         //do nothing if current_item is zero length
         if self.current_item.is_empty() {
-            return ();
+            return;
         }
         let c = self.current_item.pop().unwrap_or('\0');
         if c == '\n' {//deleted a new line!

@@ -9,7 +9,6 @@ use rusqlite::{Connection, params};
 use std::path::Path;
 #[cfg(feature="clockrust")]
 use clockrusting::db::ClockRuster;
-use crate::db;
 
 pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
     let fp = &list.file_path.clone();
