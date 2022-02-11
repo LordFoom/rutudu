@@ -260,6 +260,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::Save => draw_save_dialog(&mut tudu_list,f),
                 InputMode::Open =>  draw_open_dialog(&mut tudu_list,f),
                 InputMode::Edit =>  {},
+                #[cfg(feature ="clockrust")]
+                InputMode::PrintReport => draw_print_report_dialog(&mut tudu_list, f),
             }
         }).unwrap();
 
@@ -300,6 +302,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                         let tf = Some(&fp[..]);
                         tudu_list.track_time(tf);
                     },
+
+                    #[cfg(feature="clockrust")]
+                    Key::Ctrl('T') => tudu_list.enter_print_tracking_report_mode(),
 
                     _ => {}
                 },
@@ -363,6 +368,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('n') | Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {}
                 }
+                #[cfg(feature ="clockrust")]
+                InputMode::PrintReport => debug!("This is where we're going to put the time tracking report function")
             }
         };
     };
@@ -399,7 +406,9 @@ fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
     f.render_widget(button_text, area);
 }
 
-fn draw_save_dialog(tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>){
+///Draw dialog that allows saving of the tudulist
+/// Allows changing of the filename
+fn draw_save_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>){
     let rect = f.size();
     let save_text = Paragraph::new(tudu_list.file_path.clone())
         .style(Style::default().fg(Color::Cyan))
@@ -413,6 +422,14 @@ fn draw_save_dialog(tudu_list:&mut RutuduList, f: &mut Frame<TermionBackend<RawT
     f.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16 +1, area.y as u16 + tudu_list.cursor_position[1] );
 }
 
+///Draw dialog that allows printing of time tracking report.
+/// Allows entering of time tracking report name
+#[cfg(feature="clockrust")]
+fn draw_print_report_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+   let rect = f.size();
+}
+
+///Draw dialog with a display of the files in the current directory
 fn draw_open_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
     tudu_list.scan_files_once();
 

@@ -300,6 +300,8 @@ pub enum InputMode {
     Save,
     Open,
     Quit,
+    #[cfg(feature="clockrust")]
+    PrintReport,
 }
 
 #[derive(Clone)]
@@ -370,32 +372,18 @@ impl RutuduList {
         self.enter_edit_mode();
     }
 
-    // pub fn is_save_mode(&self) -> bool {
-    //     self.input_mode == InputMode::Save
-    // }
 
+    ///Display quit dialog and allow for exit/cancel
     pub fn enter_quit_mode(&mut self) {
         self.input_mode = InputMode::Quit;
     }
-    //Create an item as a sub item of the currently selected item
-    // pub fn enter_child_insert_mode(&mut self) {
-    //     debug!("Insert child mode");
-    //     // let i = self.items.state.selected().unwrap_or(0);
-    //     self.input_mode = InputMode::InsertChild;
-    // }
-    // pub fn enter_parent_insert_mode(&mut self) {
-    //     debug!("Insert parent mode");
-    //     // let i = self.items.state.selected().unwrap_or(0);
-    //     self.input_mode = InputMode::InsertParent;
-    // }
-    //
-    // pub fn enter_sibling_insert_mode(&mut self) {
-    //     debug!("Insert sibling mode");
-    //     // let i = self.items.state.selected().unwrap_or(0);
-    //     self.input_mode = InputMode::InsertSibling;
-    // }
 
-    //Create an item at the current level
+    #[cfg(feature="clockrust")]
+    pub fn enter_print_tracking_report_mode(&mut self){
+        self.input_mode = InputMode::PrintReport;
+    }
+
+    ///Create an item at the current level
     pub fn enter_insert_mode(&mut self, mode: InputMode) {
         self.input_mode = mode;
     }
