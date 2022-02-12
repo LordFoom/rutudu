@@ -358,7 +358,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('k') | Key::Up => tudu_list.open_file_up(),
                     Key::Char('l') | Key::Right | Key::Char('\n') | Key::Ctrl('n') =>tudu_list.load_list_from_file_dialog(),
                     Key::Esc => tudu_list.enter_edit_mode(),
-                    _ => {}
+                    _ => {},
                 },
                 InputMode::Quit => match input {
                     Key::Char('y') | Key::Char('\n') => {
@@ -369,7 +369,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                     _ => {}
                 }
                 #[cfg(feature ="clockrust")]
-                InputMode::PrintReport => debug!("This is where we're going to put the time tracking report function")
+                InputMode::PrintReport => match input{
+                    Key::Char('\n') => tudu_list.create_report(),
+                    Key::Char(c) => tudu_list.add_char_to_report_dialog(),
+                    Key::Backspace => tudu_list.remove_char_from_report_dialog(),
+                    Key::Esc => tudu_list.enter_edit_mode(),
+                    _ => {},
+                }
             }
         };
     };

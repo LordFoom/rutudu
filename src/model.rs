@@ -383,6 +383,19 @@ impl RutuduList {
         self.input_mode = InputMode::PrintReport;
     }
 
+
+    pub fn create_report(&self){
+
+    }
+
+    pub fn add_char_to_report_dialog(&mut self){
+
+    }
+
+    pub fn remove_char_from_report_dialog(&mut self){
+
+    }
+
     ///Create an item at the current level
     pub fn enter_insert_mode(&mut self, mode: InputMode) {
         self.input_mode = mode;
