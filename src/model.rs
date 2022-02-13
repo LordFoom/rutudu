@@ -20,6 +20,9 @@ use clockrusting::command::{Command, CommandType};
 
 use crate::{db};
 
+#[ cfg(feature="clockrust") ]
+pub const DEFAULT_REPORT_PATH: &str = "rutudu_time_report";
+
 #[derive(FromPrimitive, ToPrimitive, Clone)]
 pub enum CompleteStatus {
     Incomplete = 1,
@@ -303,6 +306,7 @@ pub enum InputMode {
     #[cfg(feature="clockrust")]
     PrintReport,
 }
+
 
 #[derive(Clone)]
 pub struct RutuduList {
@@ -1102,7 +1106,7 @@ impl RutuduList {
         }
     }
 
-    ///TODO remove a character where the cursor is and implement delete
+    ///Remove a character backwards when inputting  an item
     pub fn remove_character(&mut self) {
         //do nothing if current_item is zero length
         if self.current_item.is_empty() {

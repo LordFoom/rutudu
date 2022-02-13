@@ -17,7 +17,10 @@ use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, BorderType}
 use model::InputMode;
 
 use crate::events::{Event, Events};
-use crate::model::{MoveDirection, RutuduList};
+use crate::model::{ MoveDirection, RutuduList};
+#[cfg(feature="clockrust")]
+use crate::model::DEFAULT_REPORT_PATH;
+
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::{Config};
@@ -304,7 +307,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     },
 
                     #[cfg(feature="clockrust")]
-                    Key::Ctrl('T') => tudu_list.enter_print_tracking_report_mode(),
+                    Key::Alt('t') => tudu_list.enter_print_tracking_report_mode(),
 
                     _ => {}
                 },
@@ -433,6 +436,19 @@ fn draw_save_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<Raw
 #[cfg(feature="clockrust")]
 fn draw_print_report_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
    let rect = f.size();
+   let dt = chrono::offset::Local::now();
+    let default_report_path = format!("{}_{}", DEFAULT_REPORT_PATH, dt.to_string().replace(" ", "_"));
+    let report_path_text = Paragraph::new(DEFAULT_REPORT_PATH)
+        .style(Style::default().fg(Color::Cyan))
+        .block(Block::default().borders(Borders::ALL).title("Save report?"));
+    let area = little_popup(default_report_path.len() as u16, 5, rect);
+
+    f.render_widget(Clear, area);
+    f.render_widget(report_path_text, area);
+
+    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16  +default_report_path.len() as u16, area.y as u16 + tudu_list.cursor_position[1] );
+
+
 }
 
 ///Draw dialog with a display of the files in the current directory
@@ -440,7 +456,6 @@ fn draw_open_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<Raw
     tudu_list.scan_files_once();
 
     // debug!("Trying to draw open dialog");
-    // let lst_tudu_files = StatefulList::with_items(tudu_files);
     //get the files
     // tudu_list.scan_files_once();
     let tudu_files = tudu_list.open_file_dialog_files.items.clone();
