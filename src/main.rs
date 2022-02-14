@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::io::Stdout;
+use std::ptr::replace;
 
 use chrono::prelude::*;
 use clap::{App, ArgMatches, Arg};
@@ -437,8 +438,10 @@ fn draw_save_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<Raw
 fn draw_print_report_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
    let rect = f.size();
    let dt = chrono::offset::Local::now();
+    debug!("Date is {}", dt.to_string().replace(" ", "_"));
     let default_report_path = format!("{}_{}", DEFAULT_REPORT_PATH, dt.to_string().replace(" ", "_"));
-    let report_path_text = Paragraph::new(DEFAULT_REPORT_PATH)
+    debug!("default_report_path = {}", default_report_path);
+    let report_path_text = Paragraph::new(default_report_path.clone())
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL).title("Save report?"));
     let area = little_popup(default_report_path.len() as u16, 5, rect);
@@ -446,7 +449,7 @@ fn draw_print_report_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBac
     f.render_widget(Clear, area);
     f.render_widget(report_path_text, area);
 
-    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16  +default_report_path.len() as u16, area.y as u16 + tudu_list.cursor_position[1] );
+    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16  + default_report_path.len() as u16, area.y as u16 + tudu_list.cursor_position[1] );
 
 
 }
