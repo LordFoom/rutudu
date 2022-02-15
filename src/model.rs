@@ -333,6 +333,9 @@ pub struct RutuduList {
     pub unsaved: bool,
     //how far in from the end of the line are we
     cursor_offset: u16,
+    #[cfg(feature="clockrust")]
+    pub report_file_path: String,
+
 
 }
 
@@ -351,6 +354,9 @@ impl Default for RutuduList {
             dirty_list: false,
             unsaved: false,
             cursor_offset: 0,
+            #[cfg(feature="clockrust")]
+            report_file_path: String::new(),
+
         }
     }
 }
@@ -385,17 +391,33 @@ impl RutuduList {
     #[cfg(feature="clockrust")]
     pub fn enter_print_tracking_report_mode(&mut self){
         self.input_mode = InputMode::PrintReport;
+        let dt = chrono::offset::Local::now().to_string();
+        //  debug!("Date is {}", dt.to_string().replace(" ", "_"));
+
+        //chopp off everything after seconds
+        let offset = dt.find(".").unwrap_or(dt.len());
+        let date_part = dt.replace(" ", "_").drain(..offset).collect();
+         let default_report_path = format!("{}_{}.{}", DEFAULT_REPORT_PATH, date_part , "txt");
+        //  debug!("default_report_path = {}", default_report_path);
+        self.report_file_path = default_report_path;
     }
 
+    #[cfg(feature="clockrust")]
+    pub fn report_path(){
+        report_file_path.clone()
+    }
 
+    #[cfg(feature="clockrust")]
     pub fn create_report(&self){
 
     }
 
+    #[cfg(feature="clockrust")]
     pub fn add_char_to_report_dialog(&mut self){
 
     }
 
+    #[cfg(feature="clockrust")]
     pub fn remove_char_from_report_dialog(&mut self){
 
     }

@@ -428,7 +428,6 @@ fn draw_save_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<Raw
     f.render_widget(Clear,area);
     f.render_widget(save_text, area);
     // tudu_list.cursor_position[0] =
-    // f.set_cursor(area.x as u16 + tudu_list.file_path.len() as u16 +1, area.y as u16 + tudu_list.cursor_position[1] );
     f.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16 +1, area.y as u16 + tudu_list.cursor_position[1] );
 }
 
@@ -437,10 +436,11 @@ fn draw_save_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<Raw
 #[cfg(feature="clockrust")]
 fn draw_print_report_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
    let rect = f.size();
-   let dt = chrono::offset::Local::now();
-    debug!("Date is {}", dt.to_string().replace(" ", "_"));
-    let default_report_path = format!("{}_{}", DEFAULT_REPORT_PATH, dt.to_string().replace(" ", "_"));
-    debug!("default_report_path = {}", default_report_path);
+   // let dt = chrono::offset::Local::now();
+   //  debug!("Date is {}", dt.to_string().replace(" ", "_"));
+   //  let default_report_path = format!("{}_{}", DEFAULT_REPORT_PATH, dt.to_string().replace(" ", "_"));
+   //  debug!("default_report_path = {}", default_report_path);
+    let report_path = tudu_list().report_path();
     let report_path_text = Paragraph::new(default_report_path.clone())
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL).title("Save report?"));
@@ -449,7 +449,7 @@ fn draw_print_report_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBac
     f.render_widget(Clear, area);
     f.render_widget(report_path_text, area);
 
-    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16  + default_report_path.len() as u16, area.y as u16 + tudu_list.cursor_position[1] );
+    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16, area.y as u16 + tudu_list.cursor_position[1] );
 
 
 }
