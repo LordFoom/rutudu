@@ -1,6 +1,5 @@
 use std::error::Error;
 use std::io::Stdout;
-use std::ptr::replace;
 
 use chrono::prelude::*;
 use clap::{App, ArgMatches, Arg};
@@ -19,8 +18,6 @@ use model::InputMode;
 
 use crate::events::{Event, Events};
 use crate::model::{ MoveDirection, RutuduList};
-#[cfg(feature="clockrust")]
-use crate::model::DEFAULT_REPORT_PATH;
 
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
@@ -436,15 +433,11 @@ fn draw_save_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<Raw
 #[cfg(feature="clockrust")]
 fn draw_print_report_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
    let rect = f.size();
-   // let dt = chrono::offset::Local::now();
-   //  debug!("Date is {}", dt.to_string().replace(" ", "_"));
-   //  let default_report_path = format!("{}_{}", DEFAULT_REPORT_PATH, dt.to_string().replace(" ", "_"));
-   //  debug!("default_report_path = {}", default_report_path);
-    let report_path = tudu_list().report_path();
-    let report_path_text = Paragraph::new(default_report_path.clone())
+    let report_path = tudu_list.report_path();
+    let report_path_text = Paragraph::new(report_path)
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL).title("Save report?"));
-    let area = little_popup(default_report_path.len() as u16, 5, rect);
+    let area = little_popup(80, 5, rect);
 
     f.render_widget(Clear, area);
     f.render_widget(report_path_text, area);

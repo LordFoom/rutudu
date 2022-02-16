@@ -396,15 +396,15 @@ impl RutuduList {
 
         //chopp off everything after seconds
         let offset = dt.find(".").unwrap_or(dt.len());
-        let date_part = dt.replace(" ", "_").drain(..offset).collect();
-         let default_report_path = format!("{}_{}.{}", DEFAULT_REPORT_PATH, date_part , "txt");
+        let date_part = dt.replace(" ", "_").drain(..offset).collect::<String>();
         //  debug!("default_report_path = {}", default_report_path);
-        self.report_file_path = default_report_path;
+        self.report_file_path = format!("{}_{}.{}", DEFAULT_REPORT_PATH, date_part, "txt");
+        self.cursor_position[0]=self.report_file_path.len() as u16;
     }
 
     #[cfg(feature="clockrust")]
-    pub fn report_path(){
-        report_file_path.clone()
+    pub fn report_path(&self) -> String{
+        self.report_file_path.clone()
     }
 
     #[cfg(feature="clockrust")]
