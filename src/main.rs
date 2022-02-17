@@ -2,7 +2,7 @@ use std::error::Error;
 use std::io::Stdout;
 
 use chrono::prelude::*;
-use clap::{App, ArgMatches, Arg};
+use clap::{Command, ArgMatches, Arg};
 use log::{debug, LevelFilter};
 use termion::{clear, raw::IntoRawMode};
 use termion::event::Key;
@@ -33,7 +33,7 @@ use num_traits::cast::ToPrimitive;
 const DATE_FMT: &str = "%Y%m%d";
 
 fn init_args() -> ArgMatches {
-    App::new("Rutudu Todo List")
+    Command::new("Rutudu Todo List")
         .version("1.0")
         .author("FOOM")
         .about("Todo List, Terminal style, Rust vibes")
@@ -371,8 +371,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
                 #[cfg(feature ="clockrust")]
                 InputMode::PrintReport => match input{
-                    Key::Char('\n') => tudu_list.create_report(),
-                    Key::Char(c) => tudu_list.add_char_to_report_dialog(),
+                    // Key::Char('\n') => tudu_list.create_report(),
+                    Key::Char(c) => if c=='\n'{
+                        tudu_list.create_report();
+                    }else{
+                        tudu_list.add_char_to_report_dialog(c);
+                    }
                     Key::Backspace => tudu_list.remove_char_from_report_dialog(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {},
@@ -437,7 +441,7 @@ fn draw_print_report_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBac
     let report_path_text = Paragraph::new(report_path)
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL).title("Save report?"));
-    let area = little_popup(80, 5, rect);
+    let area = little_popup(70, 5, rect);
 
     f.render_widget(Clear, area);
     f.render_widget(report_path_text, area);

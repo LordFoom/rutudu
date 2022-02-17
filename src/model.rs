@@ -399,7 +399,7 @@ impl RutuduList {
         let date_part = dt.replace(" ", "_").drain(..offset).collect::<String>();
         //  debug!("default_report_path = {}", default_report_path);
         self.report_file_path = format!("{}_{}.{}", DEFAULT_REPORT_PATH, date_part, "txt");
-        self.cursor_position[0]=self.report_file_path.len() as u16;
+        self.cursor_position[0]=self.report_file_path.len()  as u16 + 1;
     }
 
     #[cfg(feature="clockrust")]
@@ -408,12 +408,24 @@ impl RutuduList {
     }
 
     #[cfg(feature="clockrust")]
+    ///Writes a simple time tracking report to a text file
     pub fn create_report(&self){
-
+        debug!("Fired create_report...");
+        //could be a different spot than the main file...or just remove that functionality...yeah, maybe
+        let cr = ClockRuster::init(&self.file_path);
+        debug!("Fired create_report...");
+        match cr.command_list(None, None, None){
+            Ok(cmds) => match clockrusting::output::write_tracking_report(&self.report_file_path, &cmds){
+                Err(why) => error!("Failed to write tracking report: {} ", why),
+                Ok(_) =>  {}, //don't need to do anything if it's okay
+            },
+            Err(why) => error!("Failed to retrieve commands: {}", why)
+        }
     }
 
     #[cfg(feature="clockrust")]
-    pub fn add_char_to_report_dialog(&mut self){
+    pub fn add_char_to_report_dialog(&mut self, c: char){
+        debug!("Fired add_char_to_report_dialog, char = {}", c);
 
     }
 
