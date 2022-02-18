@@ -372,8 +372,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 #[cfg(feature ="clockrust")]
                 InputMode::PrintReport => match input{
                     // Key::Char('\n') => tudu_list.create_report(),
-                    Key::Char(c) => if c=='\n'{
+                    Key::Char(c) => if c=='\n'{//won't pick it up if it's standalone for some reason, the \n
                         tudu_list.create_report();
+                        //bleargh will fix later
+                        // draw_success_popup("Report saved", f);
+                        tudu_list.enter_edit_mode();
                     }else{
                         tudu_list.add_char_to_report_dialog(c);
                     }
@@ -388,6 +391,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn draw_popup(txt: &str, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+    let size = f.size();
+    let text = Paragraph::new(txt)
+        .style(Style::default().fg(Color::Cyan));
+    let area = little_popup(20, 3, size);
+    f.render_widget(Clear, area);
+    // f.render_widget(quit_text, quit_chunks[0]);
+    f.render_widget(text, area);
+}
 fn show_new_item_input(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
     let size = f.size();
     let input_box = Paragraph::new(tudu_list.current_item.as_ref())
