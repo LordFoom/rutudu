@@ -1267,10 +1267,11 @@ impl RutuduList {
         }
         // debug!("Scanning files...");
         //go through the directory
-        let tudu_files = match self.scan_directory("./", "rtd") {
+        let mut tudu_files = match self.scan_directory("./", "rtd") {
             Err(e) => panic!("Unable to open file dialog: {}", e),
             Ok(entries) => entries,
         };
+        tudu_files.sort();
         // debug!("We found {} files!",  &tudu_files.len());
         // tudu_files.i
         tudu_files.iter()
