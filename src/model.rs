@@ -21,7 +21,7 @@ use clockrusting::command::{Command, CommandType};
 use crate::{db};
 
 #[ cfg(feature="clockrust") ]
-pub const DEFAULT_REPORT_PATH: &str = "rutudu_time_report";
+pub const DEFAULT_REPORT_PATH: &str = "_time_report";
 
 #[derive(FromPrimitive, ToPrimitive, Clone)]
 pub enum CompleteStatus {
@@ -397,8 +397,9 @@ impl RutuduList {
         //chopp off everything after seconds
         let offset = dt.find(".").unwrap_or(dt.len());
         let date_part = dt.replace(" ", "_").drain(..offset).collect::<String>();
-        //  debug!("default_report_path = {}", default_report_path);
-        self.report_file_path = format!("{}_{}.{}", DEFAULT_REPORT_PATH, date_part, "txt");
+        //  slice off the .rtd at the end...hopefully nobody has double .rtdsomething.rtd..but small potatoes
+        let fp_without_ext = self.file_path.clone().replace(".rtd", "");
+        self.report_file_path = format!("{}{}_{}.{}", fp_without_ext, DEFAULT_REPORT_PATH, date_part, "txt");
         self.cursor_position[0]=self.report_file_path.len()  as u16 + 1;
     }
 
