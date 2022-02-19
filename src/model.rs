@@ -305,6 +305,7 @@ pub enum InputMode {
     Quit,
     #[cfg(feature="clockrust")]
     PrintReport,
+    DisplaySuccess,
 }
 
 
@@ -356,7 +357,6 @@ impl Default for RutuduList {
             cursor_offset: 0,
             #[cfg(feature="clockrust")]
             report_file_path: String::new(),
-
         }
     }
 }
@@ -410,7 +410,7 @@ impl RutuduList {
 
     #[cfg(feature="clockrust")]
     ///Writes a simple time tracking report to a text file
-    pub fn create_report(&self){
+    pub fn create_report(&mut self){
         debug!("Fired create_report...");
         //could be a different spot than the main file...or just remove that functionality...yeah, maybe
         let cr = ClockRuster::init(&self.file_path);
@@ -422,6 +422,8 @@ impl RutuduList {
             },
             Err(why) => error!("Failed to retrieve commands: {}", why)
         }
+
+        self.input_mode = InputMode::DisplaySuccess;
     }
 
     #[cfg(feature="clockrust")]

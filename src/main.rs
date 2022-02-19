@@ -140,7 +140,7 @@ fn little_popup(min_horizontal:u16, min_vertical:u16, r:Rect) -> Rect {
         .direction(Direction::Horizontal)
         .constraints(
             [
-                Constraint::Percentage(40),
+                Constraint::Percentage(30),
                 Constraint::Min(min_horizontal),
                 Constraint::Percentage(60),
             ].as_ref(),
@@ -263,6 +263,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::Edit =>  {},
                 #[cfg(feature ="clockrust")]
                 InputMode::PrintReport => draw_print_report_dialog(&mut tudu_list, f),
+                InputMode::DisplaySuccess => draw_popup("Success!", f),
             }
         }).unwrap();
 
@@ -371,18 +372,20 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
                 #[cfg(feature ="clockrust")]
                 InputMode::PrintReport => match input{
-                    // Key::Char('\n') => tudu_list.create_report(),
+                    // Key::Char('\n') => tudu_list.create_report(),//wtf, why did this not work?
                     Key::Char(c) => if c=='\n'{//won't pick it up if it's standalone for some reason, the \n
                         tudu_list.create_report();
-                        //bleargh will fix later
-                        // draw_success_popup("Report saved", f);
-                        tudu_list.enter_edit_mode();
                     }else{
                         tudu_list.add_char_to_report_dialog(c);
                     }
                     Key::Backspace => tudu_list.remove_char_from_report_dialog(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {},
+                }
+
+                InputMode::DisplaySuccess => match input{
+                    //whatever you do, go back to edit mode
+                    _ => tudu_list.enter_edit_mode(),
                 }
             }
         };
@@ -394,7 +397,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn draw_popup(txt: &str, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
     let size = f.size();
     let text = Paragraph::new(txt)
-        .style(Style::default().fg(Color::Cyan));
+        .style(Style::default().fg(Color::Cyan))
+        .block(Block::default().borders(Borders::ALL));
     let area = little_popup(20, 3, size);
     f.render_widget(Clear, area);
     // f.render_widget(quit_text, quit_chunks[0]);
