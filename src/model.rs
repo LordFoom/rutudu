@@ -834,6 +834,7 @@ impl RutuduList {
     //     self.items.items.clear();
     // }
 
+    ///Load the list selected in the open file dialog
     pub fn load_list_from_file_dialog(&mut self) {
         let s = self.open_file_dialog_files.state.clone();
         let filename = self.open_file_dialog_files.items[s.selected().unwrap_or(0)].clone();
@@ -844,6 +845,7 @@ impl RutuduList {
         self.enter_edit_mode();
     }
 
+    ///Go up in the open file dialog
     pub fn open_file_up(&mut self) {
         self.open_file_dialog_files.previous();
     }
