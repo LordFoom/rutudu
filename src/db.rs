@@ -98,8 +98,14 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
             #[cfg(feature="clockrust")]{
                 let cr = ClockRuster::init(&tudu_list.file_path);
                 i.tracking_time = match cr.currently_tracking(&i.title){
-                    Ok(y) => y,
-                    Err(_) => false,
+                    Ok(y) => {
+                        debug!("We got a result for currently tracking: {}, which was: {} ", &i.title, y);
+                        y
+                    },
+                    Err(why) =>{
+                        error!("Error when trying to check tracking: {}, reason: {}",&i.title, why);
+                        false
+                    },
                 }
             };
             // check_currently_being_tracked(i);
