@@ -401,6 +401,7 @@ impl RutuduList {
         let fp_without_ext = self.file_path.clone().replace(".rtd", "");
         self.report_file_path = format!("{}{}_{}.{}", fp_without_ext, DEFAULT_REPORT_PATH, date_part, "txt");
         self.cursor_position[0]=self.report_file_path.len()  as u16 + 1;
+        self.cursor_offset=0;
     }
 
     #[cfg(feature="clockrust")]
@@ -426,16 +427,8 @@ impl RutuduList {
         self.input_mode = InputMode::DisplaySuccess;
     }
 
-    #[cfg(feature="clockrust")]
-    pub fn add_char_to_report_dialog(&mut self, c: char){
-        debug!("Fired add_char_to_report_dialog, char = {}", c);
 
-    }
 
-    #[cfg(feature="clockrust")]
-    pub fn remove_char_from_report_dialog(&mut self){
-
-    }
 
     ///Create an item at the current level
     pub fn enter_insert_mode(&mut self, mode: InputMode) {
@@ -1103,22 +1096,32 @@ impl RutuduList {
         //split by newlines
         let first_new_line = entry.find('\n').unwrap_or_else(||entry.len());
         let title: String = entry.drain(..first_new_line).collect();
-        // content - we set the id to the maximum id +i
-        // let mut max_id = 0;
-        // self.item_tree.iter()
-        //     .for_each(|(x,v)| {
-        //        v.iter().for_each(|c| {
-        //            if c.id > max_id{
-        //                max_id = c.id;
-        //            }
-        //        })
-        //     });
-                                // .max()
         let max_id = self.get_max_id();
         debug!("Next item id: {}", max_id+1);
-        // let i = self.items.items.len().clone() as u32;
         //we want to start this at ONE so we reserve the zero index for the root nodes of the forest
         Item::new((max_id as u32) + 1, &title, &entry)
+    }
+
+    #[cfg(feature="clockrust")]
+    pub fn add_char_to_report_dialog(&mut self, c: char){
+        // debug!("Fired add_char_to_report_dialog, char = {}", c);
+        //we insert at the cursor position
+        let idx = self.report_file_path.len() as u16 - self.cursor_offset;
+        self.report_file_path.insert(idx as usize, c);
+        // self.file_path.push(c);
+        self.cursor_position[0] += 1;
+    }
+
+    #[cfg(feature="clockrust")]
+    pub fn remove_char_from_report_dialog(&mut self){
+        if self.report_file_path.is_empty(){
+           return;
+        }
+        let idx_del = self.report_file_path.len() as u16 - 1  - self.cursor_offset;
+
+        self.report_file_path.remove(idx_del as usize);
+        self.cursor_position[0] -= 1;
+
     }
 
     ///Add character to current input
@@ -1195,20 +1198,17 @@ impl RutuduList {
         self.cursor_position[0] += 1;
     }
 
+    ///Remove characters backward in save dialog
     pub fn remove_save_file_char(&mut self) {
         if self.file_path.is_empty() {
             return;
         }
-        debug!("remove_save_file_char, where x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
-
-        // self.file_path.pop();
+        // debug!("remove_save_file_char, where x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
 
         //-1 because we want to delete BEHIND the cursor
         let delete_pos = self.file_path.len() - 1 - self.cursor_offset as usize;
         self.file_path.remove(delete_pos);
         self.cursor_position[0] -= 1;
-        // self.cursor_position[0] = self.file_path.len() as u16;
-        // debug!("x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
     }
 
     pub fn list_name(&mut self) -> String {
