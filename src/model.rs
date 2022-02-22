@@ -1330,6 +1330,7 @@ impl RutuduList {
                         //now we update it in the tree
                     }
                     self.dirty_list = true;
+                self.unsaved = true;
             }
         }
 
