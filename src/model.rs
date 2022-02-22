@@ -1265,6 +1265,8 @@ impl RutuduList {
                 self.file_path = String::from(list_name)
             }
         }
+        //it IS saved if we just loaded it
+        self.unsaved = false;
     }
 
     ///Will scan the current directory once, to prevent loop jamming
