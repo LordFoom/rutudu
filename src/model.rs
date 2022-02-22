@@ -835,6 +835,8 @@ impl RutuduList {
             Ok(_) => {}
             Err(why) => panic!("Failed to load list {}", why),
         }
+        self.unsaved=false;
+        // self.mark_saved();
         self.enter_edit_mode();
     }
 

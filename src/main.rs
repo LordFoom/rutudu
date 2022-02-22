@@ -186,6 +186,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut tudu_list = RutuduList::default();
     tudu_list.file_path = list_name.to_string();
     tudu_list.open_list(list_name);
+    debug!("We think our list is unsaved = {}", tudu_list.unsaved.clone());
 
     // let mut items = [ListItem::new("Item 1"),
     //     ListItem::new("Item 2"), ListItem::new("Item 3")];

@@ -112,7 +112,7 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
             tudu_list.insert_item(i);
         });
     //only need to do this once
-    tudu_list.dirty_list = true;
+    // tudu_list.dirty_list = true;
 
     Ok(())
 }
