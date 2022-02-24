@@ -320,8 +320,11 @@ pub struct RutuduList {
     pub item_tree: HashMap<u32, Vec<Item>>,
     pub open_file_dialog_files: StatefulList<String>,
 
-    ///if the list has been saved, this is where
-    pub file_path: String,
+
+    ///Any path can go in here.
+    pub paths: HashMap<String, String>,
+    //if the list has been saved, this is where
+    // pub file_path: String,
     ///When opening files, we only want to scan the one time
     pub has_scanned: bool,
 
@@ -350,7 +353,8 @@ impl Default for RutuduList {
             open_file_dialog_files: StatefulList::new(),
             current_item: "".to_string(),
             cursor_position: [1, 1],
-            file_path: String::new(),
+            paths: HashMap::new(),
+            // file_path: String::new(),
             has_scanned: false,
             dirty_list: false,
             unsaved: false,
@@ -1126,6 +1130,7 @@ impl RutuduList {
 
     }
 
+    // pub fn remove_char_from_dialog(&mut self, )
     ///Add character to current input
     /// while keeping track of the cursor
     pub fn add_character(&mut self, c: char) {
