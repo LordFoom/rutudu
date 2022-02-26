@@ -365,6 +365,8 @@ impl Default for RutuduList {
     }
 }
 
+const FILE_PATH_KEY: &'static str = ":file_path";
+
 impl RutuduList {
     pub fn enter_edit_mode(&mut self) {
         self.cursor_position = [1, 1];
@@ -372,7 +374,7 @@ impl RutuduList {
     }
 
     pub fn enter_save_mode(&mut self) {
-        self.cursor_position = [self.file_path.len() as u16, 1];
+        self.cursor_position = [self.paths[":file_path"].len() as u16, 1];
         self.cursor_offset = 0;
         self.input_mode = InputMode::Save;
     }
@@ -398,7 +400,7 @@ impl RutuduList {
         let dt = chrono::offset::Local::now().to_string();
         //  debug!("Date is {}", dt.to_string().replace(" ", "_"));
 
-        //chopp off everything after seconds
+        //chop off everything after seconds
         let offset = dt.find(".").unwrap_or(dt.len());
         let date_part = dt.replace(" ", "_").drain(..offset).collect::<String>();
         //  slice off the .rtd at the end...hopefully nobody has double .rtdsomething.rtd..but small potatoes
@@ -1191,7 +1193,7 @@ impl RutuduList {
 
     pub fn right_save_cursor(&mut self) {
         debug!("Move save cursor right, cursor[0] = {} ", self.cursor_position[0]);
-        if self.cursor_position[0] < self.file_path.len() as u16 {
+        if self.cursor_position[0] < self.file_path().len() as u16 {
             self.cursor_position[0] += 1;
             self.cursor_offset -= 1;
         }
@@ -1199,29 +1201,29 @@ impl RutuduList {
 
     pub fn add_save_input_char(&mut self, c: char) {
         //we insert at the cursor position
-        let insert_index = self.file_path.len() as u16 - self.cursor_offset;
-        self.file_path.insert(insert_index as usize, c);
+        let insert_index = self.file_path().len() as u16 - self.cursor_offset;
+        self.file_path().insert(insert_index as usize, c);
         // self.file_path.push(c);
         self.cursor_position[0] += 1;
     }
 
     ///Remove characters backward in save dialog
     pub fn remove_save_file_char(&mut self) {
-        if self.file_path.is_empty() {
+        if self.file_path().is_empty() {
             return;
         }
         // debug!("remove_save_file_char, where x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
 
         //-1 because we want to delete BEHIND the cursor
-        let delete_pos = self.file_path.len() - 1 - self.cursor_offset as usize;
-        self.file_path.remove(delete_pos);
+        let delete_pos = self.file_path().len() - 1 - self.cursor_offset as usize;
+        self.file_path().remove(delete_pos);
         self.cursor_position[0] -= 1;
     }
 
     pub fn list_name(&mut self) -> String {
         //we add an asterisk if it is unsaved
         let save_needed = if self.unsaved { "*" } else { "" };
-        let fp = format!("{}{}", self.file_path.clone(), save_needed);
+        let fp = format!("{}{}", self.file_path(), save_needed);
         //trim off the first path of the filepath`
         match fp.rfind('/') {
             None => fp,
@@ -1267,7 +1269,7 @@ impl RutuduList {
         //can we find the list? open it
         if Path::new(&abs_list_name).exists() {
             if let Ok(()) = db::load_list(self, &abs_list_name) {
-                self.file_path = String::from(list_name)
+                self.set_file_path( list_name);
             }
         }
         //it IS saved if we just loaded it
@@ -1356,6 +1358,15 @@ impl RutuduList {
     // fn get_item_tree(&mut self) -> HashMap<u32, Vec<Item>> {
     //     self.item_tree
     // }
+    pub fn file_path(&self)->String{
+        self.paths[FILE_PATH_KEY].clone()
+    }
+
+    pub fn set_file_path(&mut self, val: &str){
+        let fp = self.paths.entry(FILE_PATH_KEY.to_string())
+            .or_insert(String::new());
+        *fp = String::from(val);
+    }
 }
 
 #[cfg(test)]

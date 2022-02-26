@@ -184,7 +184,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         //few more modes now, we in state machine territory
     // let mut edit_mode = true;
     let mut tudu_list = RutuduList::default();
-    tudu_list.file_path = list_name.to_string();
+    tudu_list.set_file_path( list_name);
     tudu_list.open_list(list_name);
     debug!("We think our list is unsaved = {}", tudu_list.unsaved.clone());
 
@@ -438,7 +438,7 @@ fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
 /// Allows changing of the filename
 fn draw_save_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>){
     let rect = f.size();
-    let save_text = Paragraph::new(tudu_list.file_path.clone())
+    let save_text = Paragraph::new(tudu_list.file_path())
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL).title("[S]ave?"));
     let area = little_popup(40,5, rect);
