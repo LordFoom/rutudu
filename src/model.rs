@@ -1202,8 +1202,9 @@ impl RutuduList {
     pub fn add_save_input_char(&mut self, c: char) {
         //we insert at the cursor position
         let insert_index = self.file_path().len() as u16 - self.cursor_offset;
-        self.file_path().insert(insert_index as usize, c);
-        // self.file_path.push(c);
+        let mut fp = self.file_path();
+        fp.insert(insert_index as usize, c);
+        self.set_file_path(&fp);
         self.cursor_position[0] += 1;
     }
 
