@@ -374,7 +374,7 @@ impl RutuduList {
     }
 
     pub fn enter_save_mode(&mut self) {
-        self.cursor_position = [self.paths[":file_path"].len() as u16, 1];
+        self.cursor_position = [self.file_path().len() as u16, 1];
         self.cursor_offset = 0;
         self.input_mode = InputMode::Save;
     }
@@ -1210,13 +1210,16 @@ impl RutuduList {
     ///Remove characters backward in save dialog
     pub fn remove_save_file_char(&mut self) {
         if self.file_path().is_empty() {
+            debug!("Nothing to remove, file_path is empty");
             return;
         }
         // debug!("remove_save_file_char, where x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
 
         //-1 because we want to delete BEHIND the cursor
         let delete_pos = self.file_path().len() - 1 - self.cursor_offset as usize;
-        self.file_path().remove(delete_pos);
+        let mut fp = self.file_path();
+        fp.remove(delete_pos);
+        self.set_file_path(&fp);
         self.cursor_position[0] -= 1;
     }
 
