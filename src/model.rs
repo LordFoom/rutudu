@@ -337,8 +337,6 @@ pub struct RutuduList {
     pub unsaved: bool,
     //how far in from the end of the line are we
     cursor_offset: u16,
-    #[cfg(feature="clockrust")]
-    pub report_file_path: String,
 
 
 }
@@ -359,13 +357,13 @@ impl Default for RutuduList {
             dirty_list: false,
             unsaved: false,
             cursor_offset: 0,
-            #[cfg(feature="clockrust")]
-            report_file_path: String::new(),
         }
     }
 }
 
 const FILE_PATH_KEY: &'static str = ":file_path";
+#[ cfg( feature="clockrust" ) ]
+const REPORT_FILE_PATH_KEY: &'static str = ":report_file_path";
 
 impl RutuduList {
     pub fn enter_edit_mode(&mut self) {
@@ -404,15 +402,16 @@ impl RutuduList {
         let offset = dt.find(".").unwrap_or(dt.len());
         let date_part = dt.replace(" ", "_").drain(..offset).collect::<String>();
         //  slice off the .rtd at the end...hopefully nobody has double .rtdsomething.rtd..but small potatoes
-        let fp_without_ext = self.file_path.clone().replace(".rtd", "");
-        self.report_file_path = format!("{}{}_{}.{}", fp_without_ext, DEFAULT_REPORT_PATH, date_part, "txt");
-        self.cursor_position[0]=self.report_file_path.len()  as u16 + 1;
+        let fp_without_ext = self.file_path().replace(".rtd", "");
+        let rname = format!("{}{}_{}.{}", fp_without_ext, DEFAULT_REPORT_PATH, date_part, "txt");
+        self.set_report_file_path( &rname );
+        self.cursor_position[0]= rname.len()  as u16 + 1;
         self.cursor_offset=0;
     }
 
     #[cfg(feature="clockrust")]
     pub fn report_path(&self) -> String{
-        self.report_file_path.clone()
+        self.report_file_path()
     }
 
     #[cfg(feature="clockrust")]
@@ -420,10 +419,10 @@ impl RutuduList {
     pub fn create_report(&mut self){
         debug!("Fired create_report...");
         //could be a different spot than the main file...or just remove that functionality...yeah, maybe
-        let cr = ClockRuster::init(&self.file_path);
+        let cr = ClockRuster::init(&self.file_path());
         debug!("Fired create_report...");
         match cr.command_list(None, None, None){
-            Ok(cmds) => match clockrusting::output::write_tracking_report(&self.report_file_path, &cmds){
+            Ok(cmds) => match clockrusting::output::write_tracking_report(&self.report_file_path(), &cmds){
                 Err(why) => error!("Failed to write tracking report: {} ", why),
                 Ok(_) =>  {}, //don't need to do anything if it's okay
             },
@@ -1112,24 +1111,27 @@ impl RutuduList {
 
     #[cfg(feature="clockrust")]
     pub fn add_char_to_report_dialog(&mut self, c: char){
+        let mut rfp = self.report_file_path();
         // debug!("Fired add_char_to_report_dialog, char = {}", c);
         //we insert at the cursor position
-        let idx = self.report_file_path.len() as u16 - self.cursor_offset;
-        self.report_file_path.insert(idx as usize, c);
+        let idx = rfp.len() as u16 - self.cursor_offset;
+        rfp.insert(idx as usize, c);
+        self.set_report_file_path(&rfp);
         // self.file_path.push(c);
         self.cursor_position[0] += 1;
     }
 
     #[cfg(feature="clockrust")]
     pub fn remove_char_from_report_dialog(&mut self){
-        if self.report_file_path.is_empty(){
+        let mut rfp = self.report_file_path();
+        if rfp.is_empty(){
            return;
         }
-        let idx_del = self.report_file_path.len() as u16 - 1  - self.cursor_offset;
+        let idx_del = rfp.len() as u16 - 1  - self.cursor_offset;
 
-        self.report_file_path.remove(idx_del as usize);
+        rfp.remove(idx_del as usize);
+        self.set_report_file_path(&rfp);
         self.cursor_position[0] -= 1;
-
     }
 
     // pub fn remove_char_from_dialog(&mut self, )
@@ -1362,15 +1364,32 @@ impl RutuduList {
     // fn get_item_tree(&mut self) -> HashMap<u32, Vec<Item>> {
     //     self.item_tree
     // }
+    ///Return a copy of the file path string
     pub fn file_path(&self)->String{
         self.paths[FILE_PATH_KEY].clone()
     }
 
+    ///Update the value of the :file_path key in paths,
+    /// returned by self.file_path() method
     pub fn set_file_path(&mut self, val: &str){
         let fp = self.paths.entry(FILE_PATH_KEY.to_string())
-            .or_insert(String::new());
+                     .or_insert(String::new());
         *fp = String::from(val);
     }
+
+    ///Return a copy of the report_file_path String
+    #[cfg(feature="clockrust")]
+    pub fn report_file_path(&self)->String{
+        self.paths[REPORT_FILE_PATH_KEY].clone()
+    }
+
+
+    pub fn set_report_file_path(&mut self, rpf: &str){
+        let rfp = self.paths.entry(REPORT_FILE_PATH_KEY.to_string())
+            .or_insert(String::new());
+        *rfp = String::from(rpf);
+    }
+
 }
 
 #[cfg(test)]

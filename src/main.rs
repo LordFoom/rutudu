@@ -301,7 +301,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Ctrl('t') => if let Some(track_file) = tracking_name{
                         tudu_list.track_time(Some(track_file));
                     }else{
-                        let fp = tudu_list.file_path.clone();
+                        let fp = tudu_list.file_path();
                         let tf = Some(&fp[..]);
                         tudu_list.track_time(tf);
                     },
