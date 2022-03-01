@@ -1372,9 +1372,10 @@ impl RutuduList {
     ///Update the value of the :file_path key in paths,
     /// returned by self.file_path() method
     pub fn set_file_path(&mut self, val: &str){
-        let fp = self.paths.entry(FILE_PATH_KEY.to_string())
-                     .or_insert(String::new());
-        *fp = String::from(val);
+        // let fp = self.paths.entry(FILE_PATH_KEY.to_string())
+        //              .or_insert(String::new());
+        // *fp = String::from(val);
+        self.set_path(FILE_PATH_KEY, val);
     }
 
     ///Return a copy of the report_file_path String
@@ -1384,11 +1385,20 @@ impl RutuduList {
     }
 
 
+    ///Set the REPORT_FILE_PATH variable
     #[cfg(feature="clockrust")]
     pub fn set_report_file_path(&mut self, rpf: &str){
-        let rfp = self.paths.entry(REPORT_FILE_PATH_KEY.to_string())
-            .or_insert(String::new());
-        *rfp = String::from(rpf);
+        // let rfp = self.paths.entry(REPORT_FILE_PATH_KEY.to_string())
+        //     .or_insert(String::new());
+        // *rfp = String::from(rpf);
+        self.set_path(REPORT_FILE_PATH_KEY, rpf);
+    }
+
+    ///Set a value in the "paths" map as identified by the key
+    pub fn set_path(&mut self, key: &str, val: &str){
+        let fp = self.paths.entry(key.to_string())
+                      .or_insert(String::new());
+        *fp = String::from(val);
     }
 
 }
