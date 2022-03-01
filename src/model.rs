@@ -1384,6 +1384,7 @@ impl RutuduList {
     }
 
 
+    #[cfg(feature="clockrust")]
     pub fn set_report_file_path(&mut self, rpf: &str){
         let rfp = self.paths.entry(REPORT_FILE_PATH_KEY.to_string())
             .or_insert(String::new());
