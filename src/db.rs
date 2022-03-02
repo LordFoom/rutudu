@@ -11,7 +11,7 @@ use std::path::Path;
 use clockrusting::db::ClockRuster;
 
 pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
-    let fp = &list.file_path.clone();
+    let fp = &list.file_path();
     debug!("About to save list '{}', number of items: {}", fp, list.items.items.len().to_string());
     let fp_suffixed= if !fp.to_ascii_lowercase().ends_with(".rtd") {
         format!("{}.rtd", fp)
@@ -66,7 +66,7 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
     // save_list(tudu_list)?;
     debug!("About to load new list");
     //import the new items into our list
-    tudu_list.file_path = String::from(file_name);
+    tudu_list.set_file_path(file_name);
     let conn = Connection::open(Path::new(file_name))?;
     let mut stmt = conn
         .prepare("select id, title, entry, parent_id, completeStatus, expandStatus from rutudu_list")?;
@@ -96,7 +96,7 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
         .for_each(|i|{
             i.tracking_time = false;
             #[cfg(feature="clockrust")]{
-                let cr = ClockRuster::init(&tudu_list.file_path);
+                let cr = ClockRuster::init(&tudu_list.file_path());
                 i.tracking_time = match cr.currently_tracking(&i.title){
                     Ok(y) => {
                         debug!("We got a result for currently tracking: {}, which was: {} ", &i.title, y);

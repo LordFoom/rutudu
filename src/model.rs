@@ -320,8 +320,11 @@ pub struct RutuduList {
     pub item_tree: HashMap<u32, Vec<Item>>,
     pub open_file_dialog_files: StatefulList<String>,
 
-    ///if the list has been saved, this is where
-    pub file_path: String,
+
+    ///Any path can go in here.
+    pub paths: HashMap<String, String>,
+    //if the list has been saved, this is where
+    // pub file_path: String,
     ///When opening files, we only want to scan the one time
     pub has_scanned: bool,
 
@@ -334,8 +337,6 @@ pub struct RutuduList {
     pub unsaved: bool,
     //how far in from the end of the line are we
     cursor_offset: u16,
-    #[cfg(feature="clockrust")]
-    pub report_file_path: String,
 
 
 }
@@ -350,16 +351,19 @@ impl Default for RutuduList {
             open_file_dialog_files: StatefulList::new(),
             current_item: "".to_string(),
             cursor_position: [1, 1],
-            file_path: String::new(),
+            paths: HashMap::new(),
+            // file_path: String::new(),
             has_scanned: false,
             dirty_list: false,
             unsaved: false,
             cursor_offset: 0,
-            #[cfg(feature="clockrust")]
-            report_file_path: String::new(),
         }
     }
 }
+
+const FILE_PATH_KEY: &'static str = ":file_path";
+#[ cfg( feature="clockrust" ) ]
+const REPORT_FILE_PATH_KEY: &'static str = ":report_file_path";
 
 impl RutuduList {
     pub fn enter_edit_mode(&mut self) {
@@ -368,7 +372,7 @@ impl RutuduList {
     }
 
     pub fn enter_save_mode(&mut self) {
-        self.cursor_position = [self.file_path.len() as u16, 1];
+        self.cursor_position = [self.file_path().len() as u16, 1];
         self.cursor_offset = 0;
         self.input_mode = InputMode::Save;
     }
@@ -394,19 +398,20 @@ impl RutuduList {
         let dt = chrono::offset::Local::now().to_string();
         //  debug!("Date is {}", dt.to_string().replace(" ", "_"));
 
-        //chopp off everything after seconds
+        //chop off everything after seconds
         let offset = dt.find(".").unwrap_or(dt.len());
         let date_part = dt.replace(" ", "_").drain(..offset).collect::<String>();
         //  slice off the .rtd at the end...hopefully nobody has double .rtdsomething.rtd..but small potatoes
-        let fp_without_ext = self.file_path.clone().replace(".rtd", "");
-        self.report_file_path = format!("{}{}_{}.{}", fp_without_ext, DEFAULT_REPORT_PATH, date_part, "txt");
-        self.cursor_position[0]=self.report_file_path.len()  as u16 + 1;
+        let fp_without_ext = self.file_path().replace(".rtd", "");
+        let rname = format!("{}{}_{}.{}", fp_without_ext, DEFAULT_REPORT_PATH, date_part, "txt");
+        self.set_report_file_path( &rname );
+        self.cursor_position[0]= rname.len()  as u16 + 1;
         self.cursor_offset=0;
     }
 
     #[cfg(feature="clockrust")]
     pub fn report_path(&self) -> String{
-        self.report_file_path.clone()
+        self.report_file_path()
     }
 
     #[cfg(feature="clockrust")]
@@ -414,10 +419,10 @@ impl RutuduList {
     pub fn create_report(&mut self){
         debug!("Fired create_report...");
         //could be a different spot than the main file...or just remove that functionality...yeah, maybe
-        let cr = ClockRuster::init(&self.file_path);
+        let cr = ClockRuster::init(&self.file_path());
         debug!("Fired create_report...");
         match cr.command_list(None, None, None){
-            Ok(cmds) => match clockrusting::output::write_tracking_report(&self.report_file_path, &cmds){
+            Ok(cmds) => match clockrusting::output::write_tracking_report(&self.report_file_path(), &cmds){
                 Err(why) => error!("Failed to write tracking report: {} ", why),
                 Ok(_) =>  {}, //don't need to do anything if it's okay
             },
@@ -1106,26 +1111,30 @@ impl RutuduList {
 
     #[cfg(feature="clockrust")]
     pub fn add_char_to_report_dialog(&mut self, c: char){
+        let mut rfp = self.report_file_path();
         // debug!("Fired add_char_to_report_dialog, char = {}", c);
         //we insert at the cursor position
-        let idx = self.report_file_path.len() as u16 - self.cursor_offset;
-        self.report_file_path.insert(idx as usize, c);
+        let idx = rfp.len() as u16 - self.cursor_offset;
+        rfp.insert(idx as usize, c);
+        self.set_report_file_path(&rfp);
         // self.file_path.push(c);
         self.cursor_position[0] += 1;
     }
 
     #[cfg(feature="clockrust")]
     pub fn remove_char_from_report_dialog(&mut self){
-        if self.report_file_path.is_empty(){
+        let mut rfp = self.report_file_path();
+        if rfp.is_empty(){
            return;
         }
-        let idx_del = self.report_file_path.len() as u16 - 1  - self.cursor_offset;
+        let idx_del = rfp.len() as u16 - 1  - self.cursor_offset;
 
-        self.report_file_path.remove(idx_del as usize);
+        rfp.remove(idx_del as usize);
+        self.set_report_file_path(&rfp);
         self.cursor_position[0] -= 1;
-
     }
 
+    // pub fn remove_char_from_dialog(&mut self, )
     ///Add character to current input
     /// while keeping track of the cursor
     pub fn add_character(&mut self, c: char) {
@@ -1144,8 +1153,9 @@ impl RutuduList {
         }
     }
 
-    pub fn cursor_right(&mut self) {
-        if self.cursor_position[0] < self.current_item.len() as u16 {
+    pub fn cursor_right(&mut self, len:usize) {
+        if self.cursor_position[0] < len as u16 {
+        // if self.cursor_position[0] < self.current_item.len() as u16 {
             self.cursor_position[0] += 1;
         }
     }
@@ -1174,49 +1184,53 @@ impl RutuduList {
         }
     }
 
-    pub fn left_save_cursor(&mut self) {
-        debug!("Move save cursor left, cursor[0] = {} ", self.cursor_position[0]);
-        if self.cursor_position[0] > 0 {
-            self.cursor_position[0] -= 1;
-            self.cursor_offset += 1;
-        } else {
-            debug!("Not moving?");
-        }
-    }
+    // pub fn left_save_cursor(&mut self) {
+    //     // debug!("Move save cursor left, cursor[0] = {} ", self.cursor_position[0]);
+    //     if self.cursor_position[0] > 0 {
+    //         self.cursor_position[0] -= 1;
+    //         self.cursor_offset += 1;
+    //     } else {
+    //         debug!("Not moving?");
+    //     }
+    // }
 
-    pub fn right_save_cursor(&mut self) {
-        debug!("Move save cursor right, cursor[0] = {} ", self.cursor_position[0]);
-        if self.cursor_position[0] < self.file_path.len() as u16 {
-            self.cursor_position[0] += 1;
-            self.cursor_offset -= 1;
-        }
-    }
+    // pub fn right_save_cursor(&mut self) {
+    //     // debug!("Move save cursor right, cursor[0] = {} ", self.cursor_position[0]);
+    //     if self.cursor_position[0] < self.file_path().len() as u16 {
+    //         self.cursor_position[0] += 1;
+    //         self.cursor_offset -= 1;
+    //     }
+    // }
 
     pub fn add_save_input_char(&mut self, c: char) {
         //we insert at the cursor position
-        let insert_index = self.file_path.len() as u16 - self.cursor_offset;
-        self.file_path.insert(insert_index as usize, c);
-        // self.file_path.push(c);
+        let insert_index = self.file_path().len() as u16 - self.cursor_offset;
+        let mut fp = self.file_path();
+        fp.insert(insert_index as usize, c);
+        self.set_file_path(&fp);
         self.cursor_position[0] += 1;
     }
 
     ///Remove characters backward in save dialog
     pub fn remove_save_file_char(&mut self) {
-        if self.file_path.is_empty() {
+        if self.file_path().is_empty() {
+            debug!("Nothing to remove, file_path is empty");
             return;
         }
         // debug!("remove_save_file_char, where x={}, y={} ", self.cursor_position[0], self.cursor_position[1]);
 
         //-1 because we want to delete BEHIND the cursor
-        let delete_pos = self.file_path.len() - 1 - self.cursor_offset as usize;
-        self.file_path.remove(delete_pos);
+        let delete_pos = self.file_path().len() - 1 - self.cursor_offset as usize;
+        let mut fp = self.file_path();
+        fp.remove(delete_pos);
+        self.set_file_path(&fp);
         self.cursor_position[0] -= 1;
     }
 
     pub fn list_name(&mut self) -> String {
         //we add an asterisk if it is unsaved
         let save_needed = if self.unsaved { "*" } else { "" };
-        let fp = format!("{}{}", self.file_path.clone(), save_needed);
+        let fp = format!("{}{}", self.file_path(), save_needed);
         //trim off the first path of the filepath`
         match fp.rfind('/') {
             None => fp,
@@ -1262,7 +1276,7 @@ impl RutuduList {
         //can we find the list? open it
         if Path::new(&abs_list_name).exists() {
             if let Ok(()) = db::load_list(self, &abs_list_name) {
-                self.file_path = String::from(list_name)
+                self.set_file_path( list_name);
             }
         }
         //it IS saved if we just loaded it
@@ -1344,13 +1358,37 @@ impl RutuduList {
         }
     }
 
-    //reset the scan variable
-    // pub fn reset_scan_guard(&mut self) {
-    //     self.has_scanned = false;
-    // }
-    // fn get_item_tree(&mut self) -> HashMap<u32, Vec<Item>> {
-    //     self.item_tree
-    // }
+    ///Return a copy of the file path string
+    pub fn file_path(&self)->String{
+        self.paths[FILE_PATH_KEY].clone()
+    }
+
+    ///Update the value of the :file_path key in paths,
+    /// returned by self.file_path() method
+    pub fn set_file_path(&mut self, val: &str){
+        self.set_path(FILE_PATH_KEY, val);
+    }
+
+    ///Return a copy of the report_file_path String
+    #[cfg(feature="clockrust")]
+    pub fn report_file_path(&self)->String{
+        self.paths[REPORT_FILE_PATH_KEY].clone()
+    }
+
+
+    ///Set the REPORT_FILE_PATH variable
+    #[cfg(feature="clockrust")]
+    pub fn set_report_file_path(&mut self, rpf: &str){
+        self.set_path(REPORT_FILE_PATH_KEY, rpf);
+    }
+
+    ///Set a value in the "paths" map as identified by the key
+    pub fn set_path(&mut self, key: &str, val: &str){
+        let fp = self.paths.entry(key.to_string())
+                      .or_insert(String::new());
+        *fp = String::from(val);
+    }
+
 }
 
 #[cfg(test)]

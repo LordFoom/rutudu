@@ -184,7 +184,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         //few more modes now, we in state machine territory
     // let mut edit_mode = true;
     let mut tudu_list = RutuduList::default();
-    tudu_list.file_path = list_name.to_string();
+    tudu_list.set_file_path( list_name);
     tudu_list.open_list(list_name);
     debug!("We think our list is unsaved = {}", tudu_list.unsaved.clone());
 
@@ -301,7 +301,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Ctrl('t') => if let Some(track_file) = tracking_name{
                         tudu_list.track_time(Some(track_file));
                     }else{
-                        let fp = tudu_list.file_path.clone();
+                        let fp = tudu_list.file_path();
                         let tf = Some(&fp[..]);
                         tudu_list.track_time(tf);
                     },
@@ -327,7 +327,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                     Key::Backspace => tudu_list.remove_character(),
                     Key::Left => tudu_list.cursor_left(),
-                    Key::Right => tudu_list.cursor_right(),
+                    Key::Right => tudu_list.cursor_right(tudu_list.file_path().len()),
                     Key::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     // Key::Char(c) => {println!("{}", c)}
@@ -350,8 +350,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                         tudu_list.mark_saved();
 
                     }
-                    Key::Left => tudu_list.left_save_cursor(),
-                    Key::Right => tudu_list.right_save_cursor(),
+                    Key::Left => tudu_list.cursor_left(),
+                    Key::Right => tudu_list.cursor_right(tudu_list.file_path().len()),
                     Key::Backspace => tudu_list.remove_save_file_char(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {}
@@ -379,6 +379,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }else{
                         tudu_list.add_char_to_report_dialog(c);
                     }
+                    Key::Left => tudu_list.cursor_left(),
+                    Key::Right => tudu_list.cursor_right(tudu_list.report_path().len()),
                     Key::Backspace => tudu_list.remove_char_from_report_dialog(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {},
@@ -438,7 +440,7 @@ fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
 /// Allows changing of the filename
 fn draw_save_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>){
     let rect = f.size();
-    let save_text = Paragraph::new(tudu_list.file_path.clone())
+    let save_text = Paragraph::new(tudu_list.file_path())
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL).title("[S]ave?"));
     let area = little_popup(40,5, rect);
