@@ -1153,8 +1153,9 @@ impl RutuduList {
         }
     }
 
-    pub fn cursor_right(&mut self) {
-        if self.cursor_position[0] < self.current_item.len() as u16 {
+    pub fn cursor_right(&mut self, len:usize) {
+        if self.cursor_position[0] < len as u16 {
+        // if self.cursor_position[0] < self.current_item.len() as u16 {
             self.cursor_position[0] += 1;
         }
     }
@@ -1183,23 +1184,23 @@ impl RutuduList {
         }
     }
 
-    pub fn left_save_cursor(&mut self) {
-        debug!("Move save cursor left, cursor[0] = {} ", self.cursor_position[0]);
-        if self.cursor_position[0] > 0 {
-            self.cursor_position[0] -= 1;
-            self.cursor_offset += 1;
-        } else {
-            debug!("Not moving?");
-        }
-    }
+    // pub fn left_save_cursor(&mut self) {
+    //     // debug!("Move save cursor left, cursor[0] = {} ", self.cursor_position[0]);
+    //     if self.cursor_position[0] > 0 {
+    //         self.cursor_position[0] -= 1;
+    //         self.cursor_offset += 1;
+    //     } else {
+    //         debug!("Not moving?");
+    //     }
+    // }
 
-    pub fn right_save_cursor(&mut self) {
-        debug!("Move save cursor right, cursor[0] = {} ", self.cursor_position[0]);
-        if self.cursor_position[0] < self.file_path().len() as u16 {
-            self.cursor_position[0] += 1;
-            self.cursor_offset -= 1;
-        }
-    }
+    // pub fn right_save_cursor(&mut self) {
+    //     // debug!("Move save cursor right, cursor[0] = {} ", self.cursor_position[0]);
+    //     if self.cursor_position[0] < self.file_path().len() as u16 {
+    //         self.cursor_position[0] += 1;
+    //         self.cursor_offset -= 1;
+    //     }
+    // }
 
     pub fn add_save_input_char(&mut self, c: char) {
         //we insert at the cursor position
@@ -1357,13 +1358,6 @@ impl RutuduList {
         }
     }
 
-    //reset the scan variable
-    // pub fn reset_scan_guard(&mut self) {
-    //     self.has_scanned = false;
-    // }
-    // fn get_item_tree(&mut self) -> HashMap<u32, Vec<Item>> {
-    //     self.item_tree
-    // }
     ///Return a copy of the file path string
     pub fn file_path(&self)->String{
         self.paths[FILE_PATH_KEY].clone()
@@ -1372,9 +1366,6 @@ impl RutuduList {
     ///Update the value of the :file_path key in paths,
     /// returned by self.file_path() method
     pub fn set_file_path(&mut self, val: &str){
-        // let fp = self.paths.entry(FILE_PATH_KEY.to_string())
-        //              .or_insert(String::new());
-        // *fp = String::from(val);
         self.set_path(FILE_PATH_KEY, val);
     }
 
@@ -1388,9 +1379,6 @@ impl RutuduList {
     ///Set the REPORT_FILE_PATH variable
     #[cfg(feature="clockrust")]
     pub fn set_report_file_path(&mut self, rpf: &str){
-        // let rfp = self.paths.entry(REPORT_FILE_PATH_KEY.to_string())
-        //     .or_insert(String::new());
-        // *rfp = String::from(rpf);
         self.set_path(REPORT_FILE_PATH_KEY, rpf);
     }
 

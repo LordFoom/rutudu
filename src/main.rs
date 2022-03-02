@@ -327,7 +327,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                     Key::Backspace => tudu_list.remove_character(),
                     Key::Left => tudu_list.cursor_left(),
-                    Key::Right => tudu_list.cursor_right(),
+                    Key::Right => tudu_list.cursor_right(tudu_list.file_path().len()),
                     Key::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     // Key::Char(c) => {println!("{}", c)}
@@ -350,8 +350,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                         tudu_list.mark_saved();
 
                     }
-                    Key::Left => tudu_list.left_save_cursor(),
-                    Key::Right => tudu_list.right_save_cursor(),
+                    Key::Left => tudu_list.cursor_left(),
+                    Key::Right => tudu_list.cursor_right(tudu_list.file_path().len()),
                     Key::Backspace => tudu_list.remove_save_file_char(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {}
@@ -379,6 +379,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }else{
                         tudu_list.add_char_to_report_dialog(c);
                     }
+                    Key::Left => tudu_list.cursor_left(),
+                    Key::Right => tudu_list.cursor_right(tudu_list.report_path().len()),
                     Key::Backspace => tudu_list.remove_char_from_report_dialog(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {},
