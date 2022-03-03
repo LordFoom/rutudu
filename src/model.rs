@@ -552,9 +552,10 @@ impl RutuduList {
                         oi.parent_id = new_parent_id;
 
                         //put it into the sibling's bucket at the beginning
+                         //no, at the end
                         self.item_tree.entry(new_parent_id)
                             .or_insert_with(Vec::new)
-                            .insert(0, oi);
+                            .push(oi);
 
                         //expand the new parent if it was not expanded
                         let new_select_index = self.items.items
