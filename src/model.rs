@@ -100,6 +100,7 @@ impl Item {
             depth: 0,
             order: 0,
             tracking_time: false,
+            color: Color::White,
         }
     }
 

@@ -9,6 +9,7 @@ use rusqlite::{Connection, params};
 use std::path::Path;
 #[cfg(feature="clockrust")]
 use clockrusting::db::ClockRuster;
+use tui::style::Color;
 
 pub fn save_list(list: &RutuduList) -> Result<(), Box<dyn Error>> {
     let fp = &list.file_path();
@@ -84,6 +85,7 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
             depth:0,
             order:0,
             tracking_time: false,
+            color: Color::White,
             })
         })?
         .map(|i| i.unwrap()).collect();
