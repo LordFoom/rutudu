@@ -74,7 +74,10 @@ pub struct Item {
     pub depth: usize,
     ///Order among its siblings
     pub order: u16,
+    ///Not reliant on ClockRust because it made coloring too hard
     pub tracking_time: bool,
+    ///
+    pub color: Color,
 }
 
 impl Item {
