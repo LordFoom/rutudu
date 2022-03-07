@@ -123,6 +123,8 @@ impl Item {
 
         let color = if self.tracking_time {
             Color::Red
+        }else if self.color != Color::White{//if we have a weird color, keep it
+           self.color
         } else {
             match self.complete {
                 CompleteStatus::Complete => Color::DarkGray,
