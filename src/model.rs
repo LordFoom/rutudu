@@ -1352,6 +1352,17 @@ impl RutuduList {
         *fp = String::from(val);
     }
 
+    ///Will mark/unmark an item
+    pub fn mark_selected_item(&mut self){
+        if let Some(mut item) = self.selected_item_mut(){
+            if item.color != Color::White {
+                item.color = Color::White;
+            }else {
+                item.color = Color::LightBlue;
+            }
+        }
+    }
+
 }
 
 #[cfg(test)]
