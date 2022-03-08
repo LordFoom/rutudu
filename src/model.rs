@@ -438,18 +438,18 @@ impl RutuduList {
         self.input_mode = InputMode::DisplaySuccess;
     }
 
-
-
-
     ///Create an item at the current level
     pub fn enter_insert_mode(&mut self, mode: InputMode) {
         self.input_mode = mode;
     }
 
+    ///Show file dialog to open files
     pub fn enter_open_mode(&mut self) {
         self.input_mode = InputMode::Open;
     }
 
+    ///Collapse selected item (don't show children, don't show description)
+    /// i.e. reduce expansion status
     pub fn collapse_selected(&mut self) {
         let i = self.items.state.selected().unwrap_or(0);
         //expand the parent
@@ -814,10 +814,7 @@ impl RutuduList {
         //     .sum()
     }
 
-    // fn move_children_to_new_bucket(&mut self, new_parent_id:u32, old_bucket: &mut Vec<Item>){
-    //    self.item_tree.entry(new_parent_id).or_insert_with(Vec::new).append(old_bucket);
-    // }
-
+    ///Cross or uncross selected item (but not children)
     pub fn toggle_selected_item_completion_status(&mut self) {
         let i = self.items.state.selected().unwrap_or(0);
         //mark it on the list
@@ -834,10 +831,6 @@ impl RutuduList {
             warn!("Tried to toggle complete status with nothing selected")
         };
     }
-
-    // pub fn clear_list(&mut self) {
-    //     self.items.items.clear();
-    // }
 
     ///Load the list selected in the open file dialog
     pub fn load_list_from_file_dialog(&mut self) {
@@ -910,46 +903,17 @@ impl RutuduList {
         ret_list
     }
 
-    // pub fn build_item_spans_as_vec(&self, item_no: usize, item_id: u32, depth: usize) -> Vec<Spans> {
-    //     // let item = self.items.items.get(item_id as usize).unwrap();
-    //     let item = self.items.items.get(item_id as usize).unwrap();
-    //     // let mut item_text_as_vec= item.text(item_no, depth);
-    //     let mut item_text_as_vec = item.text(item_no);
-    //     //now we get the children
-    //     if let Some(children) = self.item_tree.get(&item_id) {
-    //         let i = 0;
-    //         for child in children {
-    //             // let sub_number = format!("{}.{}", item_no, i);
-    //             let sub_vec = &self.build_item_spans_as_vec(item_no, child.id, depth + 1);
-    //             for span in sub_vec {
-    //                 item_text_as_vec.push(span.clone());
-    //             }
-    //         }
-    //     };
-    //     item_text_as_vec
-    // }
-
+    ///Move selection down
     pub fn down(&mut self) {
         self.items.next();
     }
 
+    ///Move selection up
     pub fn up(&mut self) {
         self.items.previous();
     }
 
-    // pub fn right(&mut self) {
-    //     if let Some(i) = self.items.state.selected() {
-    //         self.items.items[i].expand();
-    //     }
-    // }
-
-    // pub fn left(&mut self) {
-/*        if let Some(i) = self.items.state.selected() {
-            self.items.items[i].collapse();
-        }*/
-    // }
-
-
+    ///Will add text in "add" dialog as an item to the list
     pub fn add_input_text_as_item_to_list(&mut self) {
         // debug!("Adding item to list");
         //it will use the currently selected node if exists or 0 otherwise
@@ -1067,6 +1031,7 @@ impl RutuduList {
         }
     }
 
+    ///Get mutable reference to selected itm
     fn selected_item_mut(&mut self) -> Option<&mut Item> {
         match self.items.state.selected() {
             Some(i) => self.items.items.get_mut(i),
@@ -1074,6 +1039,7 @@ impl RutuduList {
         }
     }
 
+    ///Get selected item
     fn selected_item(&self) -> Option<&Item>{
         match self.items.state.selected() {
             Some(i) => self.items.items.get(i),
@@ -1091,6 +1057,7 @@ impl RutuduList {
 
     }
 
+    ///Get the maximum id of the items in the list
     pub fn get_max_id(&self)->u32{
         let mut max_id = 0;
         self.item_tree.iter()
@@ -1154,15 +1121,16 @@ impl RutuduList {
         }
     }
 
+    ///Move the cursor left in the dialog
     pub fn cursor_left(&mut self) {
         if self.cursor_position[0] > 0 {
             self.cursor_position[0] -= 1;
         }
     }
 
+    ///Move the cursor right in the dialog
     pub fn cursor_right(&mut self, len:usize) {
         if self.cursor_position[0] < len as u16 {
-        // if self.cursor_position[0] < self.current_item.len() as u16 {
             self.cursor_position[0] += 1;
         }
     }
@@ -1191,24 +1159,7 @@ impl RutuduList {
         }
     }
 
-    // pub fn left_save_cursor(&mut self) {
-    //     // debug!("Move save cursor left, cursor[0] = {} ", self.cursor_position[0]);
-    //     if self.cursor_position[0] > 0 {
-    //         self.cursor_position[0] -= 1;
-    //         self.cursor_offset += 1;
-    //     } else {
-    //         debug!("Not moving?");
-    //     }
-    // }
-
-    // pub fn right_save_cursor(&mut self) {
-    //     // debug!("Move save cursor right, cursor[0] = {} ", self.cursor_position[0]);
-    //     if self.cursor_position[0] < self.file_path().len() as u16 {
-    //         self.cursor_position[0] += 1;
-    //         self.cursor_offset -= 1;
-    //     }
-    // }
-
+    ///In save dialog, add character
     pub fn add_save_input_char(&mut self, c: char) {
         //we insert at the cursor position
         let insert_index = self.file_path().len() as u16 - self.cursor_offset;
@@ -1234,6 +1185,7 @@ impl RutuduList {
         self.cursor_position[0] -= 1;
     }
 
+    ///Returns the name (which is the filename) of this list
     pub fn list_name(&mut self) -> String {
         //we add an asterisk if it is unsaved
         let save_needed = if self.unsaved { "*" } else { "" };
@@ -1350,6 +1302,7 @@ impl RutuduList {
                         debug!("Ran clock command {}", cmd);
                         //now we update it in the tree
                     }
+
                     self.dirty_list = true;
                 self.unsaved = true;
             }
@@ -1361,7 +1314,10 @@ impl RutuduList {
     pub fn highlight_color(&self) -> Color{
         match self.selected_item(){
             None => Color::Cyan,
-            Some(item) => if item.tracking_time { Color::Red } else { Color::Cyan }
+            // Some(item) => if item.tracking_time { Color::Red } else { Color::Cyan }
+            Some(item) => if item.tracking_time { Color::Red }
+                                else if item.color != Color::White { item.color }
+                                else { Color::Cyan }
         }
     }
 

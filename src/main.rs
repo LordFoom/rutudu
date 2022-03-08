@@ -306,6 +306,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                         tudu_list.track_time(tf);
                     },
 
+                    Key::Ctrl('m') => tudu_list.mark_selected_item(),
+
                     #[cfg(feature="clockrust")]
                     Key::Alt('t') => tudu_list.enter_print_tracking_report_mode(),
 
