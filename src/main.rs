@@ -260,7 +260,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 InputMode::InsertAtRoot | InputMode::InsertChild| InputMode::InsertParent | InputMode::InsertSibling =>  show_new_item_input(&mut tudu_list, f),
                 InputMode::Quit => draw_quit_dialog(f),
                 InputMode::Save => draw_save_dialog(&mut tudu_list,f),
-                InputMode::Open =>  draw_open_dialog(&mut tudu_list,f),
+                InputMode::Open | InputMode::Import =>  draw_open_dialog(&mut tudu_list,f),
                 InputMode::Edit =>  {},
                 #[cfg(feature ="clockrust")]
                 InputMode::PrintReport => draw_print_report_dialog(&mut tudu_list, f),
@@ -363,6 +363,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('j') | Key::Down => tudu_list.open_file_down(),
                     Key::Char('k') | Key::Up => tudu_list.open_file_up(),
                     Key::Char('l') | Key::Right | Key::Char('\n') | Key::Ctrl('n') =>tudu_list.load_list_from_file_dialog(),
+                    Key::Esc => tudu_list.enter_edit_mode(),
+                    _ => {},
+                },
+                InputMode::Import => match input{//allow moving up and down to select
+                    Key::Char('j') | Key::Down => tudu_list.open_file_down(),
+                    Key::Char('k') | Key::Up => tudu_list.open_file_up(),
+                    Key::Char('l') | Key::Right | Key::Char('\n') | Key::Ctrl('n') =>tudu_list.import_list_from_file_dialog(),
                     Key::Esc => tudu_list.enter_edit_mode(),
                     _ => {},
                 },

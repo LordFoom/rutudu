@@ -846,6 +846,13 @@ impl RutuduList {
         self.enter_edit_mode();
     }
 
+    ///Import unfinished items from selected list
+    pub fn import_list_from_file_dialog(&mut self){
+
+        let s = self.open_file_dialog_files.state.clone();
+        let filename = self.open_file_dialog_files.items[s.selected().unwrap_or(0)].clone();
+    }
+
     ///Go up in the open file dialog
     pub fn open_file_up(&mut self) {
         self.open_file_dialog_files.previous();
