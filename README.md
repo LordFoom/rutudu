@@ -46,6 +46,7 @@ Busy adding some time tracking integration. The rust of clocks is timesheets.
 * o or < move item *o*ut (become the sibling of its parent)
 * delete or backspace to delete an item - but NOT its children
 * ctrl+e to *e*rase an item (delete it AND its children)
+* alt+m to *m*ark an item (orange)
 
 ### Persistence
 * s to save to sqlite file 

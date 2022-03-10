@@ -288,6 +288,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('k') | Key::Up =>  tudu_list.up(),
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
 
+                    Key::Alt('m') => tudu_list.mark_selected_item(),
+
                     Key::Delete | Key::Backspace => tudu_list.delete_selected(),
                     //ctrl+e ...really? why no ctrl+backspace - guess cos it's a weird hex code not a char...
                     Key::Ctrl('e') => tudu_list.erase_selected(),//does not preserve children
@@ -306,7 +308,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                         tudu_list.track_time(tf);
                     },
 
-                    Key::Ctrl('m') => tudu_list.mark_selected_item(),
 
                     #[cfg(feature="clockrust")]
                     Key::Alt('t') => tudu_list.enter_print_tracking_report_mode(),

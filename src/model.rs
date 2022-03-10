@@ -1354,11 +1354,13 @@ impl RutuduList {
 
     ///Will mark/unmark an item
     pub fn mark_selected_item(&mut self){
+        debug!("Marking the item...");
         if let Some(mut item) = self.selected_item_mut(){
+            debug!("Found item: {}", item.id);
             if item.color != Color::White {
                 item.color = Color::White;
             }else {
-                item.color = Color::LightBlue;
+                item.color = Color::LightRed;
             }
         }
     }
