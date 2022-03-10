@@ -68,28 +68,8 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
     debug!("About to load new list");
     //import the new items into our list
     tudu_list.set_file_path(file_name);
-    let conn = Connection::open(Path::new(file_name))?;
-    let mut stmt = conn
-        .prepare("select id, title, entry, parent_id, completeStatus, expandStatus from rutudu_list")?;
 
-    //need to do child ids someho        Item { id: 0, title, entry, parent_id: parent.id.clone(), child_ids: Vec::new(), expand: ExpandStatus::Closed, complete: CompleteStatus::Incomplete }
-    let mut items:Vec<Item> = stmt.query_map([],|row|{
-        Ok(Item{
-            id: row.get("id")?,
-            title: row.get("title")?,
-            entry: row.get("entry")?,
-            parent_id: row.get("parent_id")?,
-            child_ids: Vec::new(),
-            complete: FromPrimitive::from_u8(row.get("completeStatus")?).unwrap_or(CompleteStatus::Incomplete),
-            expand: FromPrimitive::from_u8(row.get("expandStatus")?).unwrap_or(ExpandStatus::Closed),
-            depth:0,
-            order:0,
-            tracking_time: false,
-            color: Color::White,
-            })
-        })?
-        .map(|i| i.unwrap()).collect();
-
+    let mut items:Vec<Item> = load_items(file_name)?;
     tudu_list.item_tree.clear();
     //don't need to clear the list
     // tudu_list.items.items.clear();
@@ -117,4 +97,30 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
     // tudu_list.dirty_list = true;
 
     Ok(())
+}
+
+pub fn load_items(file_name:&str) -> Result<Vec<Item>, Box<dyn Error>>{
+    let conn = Connection::open(Path::new(file_name))?;
+    let mut stmt = conn
+        .prepare("select id, title, entry, parent_id, completeStatus, expandStatus from rutudu_list")?;
+
+    //need to do child ids someho        Item { id: 0, title, entry, parent_id: parent.id.clone(), child_ids: Vec::new(), expand: ExpandStatus::Closed, complete: CompleteStatus::Incomplete }
+     let items = stmt.query_map([],|row|{
+        Ok(Item{
+            id: row.get("id")?,
+            title: row.get("title")?,
+            entry: row.get("entry")?,
+            parent_id: row.get("parent_id")?,
+            child_ids: Vec::new(),
+            complete: FromPrimitive::from_u8(row.get("completeStatus")?).unwrap_or(CompleteStatus::Incomplete),
+            expand: FromPrimitive::from_u8(row.get("expandStatus")?).unwrap_or(ExpandStatus::Closed),
+            depth:0,
+            order:0,
+            tracking_time: false,
+            color: Color::White,
+        })
+    })?
+        .map(|i| i.unwrap()).collect();
+
+    Ok(items)
 }
