@@ -308,6 +308,7 @@ pub enum InputMode {
     Edit,
     Save,
     Open,
+    Import,
     Quit,
     #[cfg(feature="clockrust")]
     PrintReport,
