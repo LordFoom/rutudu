@@ -449,6 +449,10 @@ impl RutuduList {
         self.input_mode = InputMode::Open;
     }
 
+    pub fn enter_import_mode(&mut self){
+        self.input_mode = InputMode::Import;
+    }
+
     ///Collapse selected item (don't show children, don't show description)
     /// i.e. reduce expansion status
     pub fn collapse_selected(&mut self) {
@@ -848,9 +852,10 @@ impl RutuduList {
 
     ///Import unfinished items from selected list
     pub fn import_list_from_file_dialog(&mut self){
-
         let s = self.open_file_dialog_files.state.clone();
         let filename = self.open_file_dialog_files.items[s.selected().unwrap_or(0)].clone();
+        db::import_unfinished_items(self, &filename);
+        self.enter_edit_mode();
     }
 
     ///Go up in the open file dialog

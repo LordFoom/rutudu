@@ -1,3 +1,4 @@
+use std::cmp::max;
 use std::error::Error;
 use log::{debug, error};
 use num_traits::{ToPrimitive, FromPrimitive};
@@ -99,10 +100,32 @@ pub fn load_list(tudu_list: &mut RutuduList, file_name: &str) ->Result<(), Box<d
     Ok(())
 }
 
+pub fn import_unfinished_items(tudu_list: &mut RutuduList, file_name: &str)->Result<(), Box<dyn Error>>{
+   let mut items = load_items(file_name)?;
+    //update all the import items ids, and their children
+    //those in the root list stay in the root list, but their ids and childrens buckets must increase
+    let next_id_start = tudu_list.get_max_id()+1;
+    items.iter_mut()
+        .for_each(|i| {
+            if i.parent_id > 0 {
+                i.parent_id += next_id_start;
+            };
+            i.id += next_id_start;
+            tudu_list.insert_item(i);
+        });
+
+    tudu_list.dirty_list = true;
+    //now we add them to the bottom of the list
+    //we will need to update the buckets of the children as the parents get new ids
+    // tudu_list.insert_item()
+    Ok(())
+
+}
+
 pub fn load_items(file_name:&str) -> Result<Vec<Item>, Box<dyn Error>>{
     let conn = Connection::open(Path::new(file_name))?;
     let mut stmt = conn
-        .prepare("select id, title, entry, parent_id, completeStatus, expandStatus from rutudu_list")?;
+        .prepare("select id, title, entry, parent_id, completeStatus, expandStatus from rutudu_list order by parent_id")?;
 
     //need to do child ids someho        Item { id: 0, title, entry, parent_id: parent.id.clone(), child_ids: Vec::new(), expand: ExpandStatus::Closed, complete: CompleteStatus::Incomplete }
      let items = stmt.query_map([],|row|{
