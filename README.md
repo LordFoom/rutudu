@@ -37,6 +37,8 @@ Busy adding some time tracking integration. The rust of clocks is timesheets.
   * Can't seem to modify enter on the terminal?
   * HOORAH! Managed to get Alt+Enter working
   * CTRL+Enter would be nice, though
+* I to *i*mport unused items
+  * Select a file and import
 
 ### Manipulate items in the list
 * x to (un)cross out item
@@ -49,10 +51,12 @@ Busy adding some time tracking integration. The rust of clocks is timesheets.
 * alt+m to *m*ark an item (orange)
 
 ### Persistence
-* s to save to sqlite file 
+* s to *s*ave to sqlite file 
 * shift+S to 'save as...'
-* o to load (up/down to select, press right/enter/ctrl+n to open)
-* It's a sqlite file so now you have the data in a db, maybe that's cool for you.
+* o to *o*pen or l*o*ad (up/down to select, press right/enter/ctrl+n to open)
+  * It's a sqlite file so now you have the data in a db, maybe that's cool for you.
+* I to *i*mport unused items
+  * Select a file and import
 
 ###If built/running with 'clockrust' feature
 * ctrl+t run "clock-in" or "clock-out" command to store clock_rust_tasks table in the sqlite db file
