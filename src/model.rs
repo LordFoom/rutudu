@@ -994,9 +994,11 @@ impl RutuduList {
             }
         }
 
+        self.select_item(item.id);
         self.dirty_list = true;
         self.unsaved = true;
     }
+
 
     ///Will add item as the parent of the currently selected item, if one is selected
     fn add_item_as_parent(&mut self, item: &mut Item) {
