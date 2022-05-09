@@ -289,7 +289,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('k') | Key::Up =>  tudu_list.up(),
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
 
-                    Key::Alt('m') => tudu_list.mark_selected_item(),
+                    Key::Char('m') => tudu_list.mark_selected_item(),
 
                     Key::Delete | Key::Backspace => tudu_list.delete_selected(),
                     //ctrl+e ...really? why no ctrl+backspace - guess cos it's a weird hex code not a char...
