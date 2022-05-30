@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::Display;
 use std::mem;
+use std::ops::Index;
 use std::path::Path;
 
 #[cfg(feature="clockrust")]
@@ -944,26 +945,27 @@ impl RutuduList {
 
 
     pub fn insert_item(&mut self, item: &mut Item) {
-        debug!("Adding item, id: {} ", item.id);
+        debug!("Adding item, id: {} ", item.id.clone());
+        let mut select_id = 0;
         if item.parent_id == 0 {//do we need to set a parent?
-            item.parent_id = match self.input_mode {
+            (item.parent_id, select_id) = match self.input_mode {
                 InputMode::InsertChild => {//parent is the node we selected
                     if let Some(i) = self.items.state.selected() {
                         //children lists are by implication - mapped by item.id in the hashmap
-                        self.items.items[i].id
-                    } else { 0 }
+                        (self.items.items[i].id.clone(), self.items.items[i].id.clone())
+                    } else { (0, 0) }
                 }
                 InputMode::InsertSibling => {//parent is parent of node we selected
                     if let Some(i) = self.items.state.selected() {
-                        self.items.items[i].parent_id
-                    } else { 0 }
+                        (self.items.items[i].parent_id.clone(), self.items.items[i].id.clone())
+                    } else { (0, 0) }
                 }
                 InputMode::InsertParent => {//
                     //we make it it's own parent, after insertion we're going to swap it
                     //with the selected item and swap their parent ids
-                    item.id
+                    (item.id.clone(), 0)
                 }
-                _ => { 0 }
+                _ => { (0,0) }
             }
         }
         //this will leave parent ids intact, which is good for when we open up lists
@@ -974,8 +976,19 @@ impl RutuduList {
         let bucket = self.item_tree
                          .entry(item.parent_id)
                          .or_insert_with(Vec::new);
+        //this....never gets used....
         new_item.order = bucket.len() as u16;
-        bucket.push(new_item);
+        //nothing selected, then push
+        if select_id == 0 {
+            bucket.push(new_item);
+        }else{//we add it next to the list item we want
+            if let Some(pos) = bucket.iter()
+                .position(|i| i.id == select_id){
+                bucket.insert(pos+1, new_item);
+            }else{
+                bucket.push(new_item);
+            }
+        }
 
         //now we do postprocessing
         if self.input_mode == InputMode::InsertParent {
