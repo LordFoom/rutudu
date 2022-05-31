@@ -1082,7 +1082,6 @@ impl RutuduList {
             .or_insert_with(Vec::new)
             .iter_mut()
             .find(|i| { i.id == item.id })
-
     }
 
     ///Get the maximum id of the items in the list
@@ -1383,14 +1382,18 @@ impl RutuduList {
     ///Will mark/unmark an item
     pub fn mark_selected_item(&mut self){
         debug!("Marking the item...");
-        if let Some(mut item) = self.selected_item_mut(){
-            debug!("Found item: {}", item.id);
-            if item.color != Color::White {
-                item.color = Color::White;
-            }else {
-                item.color = Color::LightRed;
+        if let Some(idx) = self.items.state.selected(){
+            let item = self.items.items[idx].clone();
+            if let Some(mut tree_item) = self.get_item_in_tree_mut(&item){
+                if tree_item.color != Color::White {
+                    tree_item.color = Color::White;
+                }else {
+                    tree_item.color = Color::LightRed;
+                }
+
             }
         }
+        self.dirty_list = true;
     }
 
 }
