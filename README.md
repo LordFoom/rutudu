@@ -42,6 +42,7 @@ Busy adding some time tracking integration. The rust of clocks is timesheets.
 
 ### Manipulate items in the list
 * x to (un)cross out item
+* X to (un)cross out item and set its children to same completion status
 * u move item *u*p (increase its rank among its siblings)
 * d move item *d*own (decrease its rank among its siblings)
 * i or \> move item *i*n (become the child of preceding sibling)

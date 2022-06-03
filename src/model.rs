@@ -4,6 +4,7 @@ use std::error::Error;
 use std::fmt::Display;
 use std::mem;
 use std::ops::Index;
+use std::os::linux::raw::stat;
 use std::path::Path;
 
 #[cfg(feature="clockrust")]
@@ -176,6 +177,7 @@ impl Item {
             CompleteStatus::Complete => CompleteStatus::Incomplete,
         }
     }
+
 
     // pub fn depth(&self)->u8{
     //     if self.parent_id == 0{
@@ -823,7 +825,34 @@ impl RutuduList {
     ///Cross or uncross selected item (but not children)
     pub fn toggle_selected_item_completion_status(&mut self) {
         let i = self.items.state.selected().unwrap_or(0);
+        self.toggle_item(i);
         //mark it on the list
+        // if let Some(item) = self.items.items.get_mut(i) {
+        //     self.toggle_item(item);
+        //     // item.toggle_complete_status();
+        //     // //mark it on the tree
+        //     // if let Some(container_vec_) = self.item_tree.get_mut(&item.parent_id) {
+        //     //     container_vec_.iter_mut()
+        //     //                   .filter(|i| i.id == item.id)
+        //     //                   .for_each(|i| i.toggle_complete_status());
+        //     // }
+        // } else {
+        //     warn!("Tried to toggle complete status with nothing selected")
+        // };
+    }
+
+    pub fn toggle_selected_item_and_children_completion_status(&mut self) {
+        let i = self.items.state.selected().unwrap_or(0);
+        let status = self.toggle_item(i);
+        let item = self.items.items.get_mut(i).unwrap();
+        if let Some(container_vec_) = self.item_tree.get_mut(&item.id) {
+            container_vec_.iter_mut()
+                          .for_each(|i| i.complete = status.clone());
+        }
+       self.dirty_list = true;
+    }
+
+    fn toggle_item(&mut self, i:usize) -> CompleteStatus {
         if let Some(item) = self.items.items.get_mut(i) {
             item.toggle_complete_status();
             //mark it on the tree
@@ -831,11 +860,13 @@ impl RutuduList {
                 container_vec_.iter_mut()
                               .filter(|i| i.id == item.id)
                               .for_each(|i| i.toggle_complete_status());
-            }
+            };
             self.unsaved = true;
+            item.complete.clone()
         } else {
-            warn!("Tried to toggle complete status with nothing selected")
-        };
+            warn!("Tried to toggle complete status with nothing selected");
+            CompleteStatus::Incomplete
+        }
     }
 
     ///Load the list selected in the open file dialog
@@ -855,7 +886,7 @@ impl RutuduList {
     pub fn import_list_from_file_dialog(&mut self){
         let s = self.open_file_dialog_files.state.clone();
         let filename = self.open_file_dialog_files.items[s.selected().unwrap_or(0)].clone();
-        db::import_unfinished_items(self, &filename);
+        db::import_unfinished_items(self, &filename).unwrap();
         self.enter_edit_mode();
     }
 

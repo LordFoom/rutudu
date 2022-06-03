@@ -276,9 +276,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('s') => tudu_list.save(),
                     Key::Char('o') => tudu_list.enter_open_mode(),
                     Key::Char('I') => tudu_list.enter_import_mode(),
-                    Key::Char('x') => tudu_list.toggle_selected_item_completion_status(),//println!("{}", clear::All);
-                        // break;
-
+                    Key::Char('x') => tudu_list.toggle_selected_item_completion_status(),
+                    Key::Char('X') => tudu_list.toggle_selected_item_and_children_completion_status(),
                     Key::Char('d') => tudu_list.move_item(MoveDirection::Down),
                     Key::Char('u') => tudu_list.move_item(MoveDirection::Up),
                     Key::Char('>') | Key::Char('i') => tudu_list.move_item(MoveDirection::In),
