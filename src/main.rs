@@ -27,6 +27,8 @@ use log4rs::config::{Appender, Root};
 mod events;
 mod model;
 mod db;
+mod export;
+
 use num_traits::cast::ToPrimitive;
 
 // const DATE_FMT: &str = "%Y%m%d%H%M%s";

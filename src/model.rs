@@ -1,7 +1,7 @@
 use core::fmt;
 use std::collections::HashMap;
 use std::error::Error;
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 use std::mem;
 use std::ops::Index;
 use std::os::linux::raw::stat;
@@ -207,6 +207,11 @@ impl Item {
     // }
 }
 
+impl Display for Item{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.title)
+    }
+}
 // pub struct MapState {
 //     /// for root items==0, then id 1 has a list of its children at index 1, id 2 at idx 2, and so forth
 //     item_idx: usize,
@@ -826,19 +831,6 @@ impl RutuduList {
     pub fn toggle_selected_item_completion_status(&mut self) {
         let i = self.items.state.selected().unwrap_or(0);
         self.toggle_item(i);
-        //mark it on the list
-        // if let Some(item) = self.items.items.get_mut(i) {
-        //     self.toggle_item(item);
-        //     // item.toggle_complete_status();
-        //     // //mark it on the tree
-        //     // if let Some(container_vec_) = self.item_tree.get_mut(&item.parent_id) {
-        //     //     container_vec_.iter_mut()
-        //     //                   .filter(|i| i.id == item.id)
-        //     //                   .for_each(|i| i.toggle_complete_status());
-        //     // }
-        // } else {
-        //     warn!("Tried to toggle complete status with nothing selected")
-        // };
     }
 
     pub fn toggle_selected_item_and_children_completion_status(&mut self) {
