@@ -20,7 +20,7 @@ use clockrusting::db::ClockRuster;
 #[cfg(feature ="clockrust")]
 use clockrusting::command::{Command, CommandType};
 
-use crate::{db};
+use crate::{db, export};
 
 #[ cfg(feature="clockrust") ]
 pub const DEFAULT_REPORT_PATH: &str = "_time_report";
@@ -209,7 +209,8 @@ impl Item {
 
 impl Display for Item{
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.title)
+        let write_str = format!("{}\n{}", self.title, self.entry);
+        write!(f, "{}\n{}", self.title, self.entry)
     }
 }
 // pub struct MapState {
@@ -1400,6 +1401,11 @@ impl RutuduList {
         let fp = self.paths.entry(key.to_string())
                       .or_insert(String::new());
         *fp = String::from(val);
+    }
+
+    pub fn export_as_markup(&mut self) -> Result<(), Box<dyn Error>>{
+        let name = self.list_name().clone();
+        export::write_list_as_markdown(&name, &self.item_tree, &format!("{}.md", name))
     }
 
     ///Will mark/unmark an item

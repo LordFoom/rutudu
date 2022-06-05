@@ -3,7 +3,7 @@ use std::io::Stdout;
 
 use chrono::prelude::*;
 use clap::{Command, ArgMatches, Arg};
-use log::{debug, LevelFilter};
+use log::{debug, error, LevelFilter};
 use termion::{clear, raw::IntoRawMode};
 use termion::event::Key;
 use termion::raw::RawTerminal;
@@ -291,6 +291,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
 
                     Key::Char('m') => tudu_list.mark_selected_item(),
+                    Key::Ctrl('x') => match tudu_list.export_as_markup(){
+                    Ok(s) => debug!("Successfully exported as markup"),
+                        Err(why) => error!("Failed to export as markup {}", why),
+                }
 
                     Key::Delete | Key::Backspace => tudu_list.delete_selected(),
                     //ctrl+e ...really? why no ctrl+backspace - guess cos it's a weird hex code not a char...
