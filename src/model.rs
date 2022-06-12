@@ -525,7 +525,11 @@ impl RutuduList {
                             idx - 1
                         };
 
-                        parent_child_bucket.swap(idx, idx_to_swap);
+                        //this doesn't work with the last/first item
+                        // parent_child_bucket.swap(idx, idx_to_swap);
+
+                        let original = parent_child_bucket.remove(idx);
+                        parent_child_bucket.insert(idx_to_swap, original);
 
                     }
                     MoveDirection::Down => {
@@ -536,8 +540,10 @@ impl RutuduList {
                         };
                         // debug!("Going down idx: {} idx_to_swap {}", idx, idx_to_swap);
                         // self.items.next();
-                        parent_child_bucket.swap(idx, idx_to_swap);
+                        // parent_child_bucket.swap(idx, idx_to_swap);
 
+                        let original = parent_child_bucket.remove(idx);
+                        parent_child_bucket.insert(idx_to_swap, original);
                         // self.select_item(id);
                         // self.dirty_list = true;
                         // self.rebuild_list();
