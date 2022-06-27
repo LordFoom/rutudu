@@ -1182,6 +1182,7 @@ impl RutuduList {
     pub fn cursor_left(&mut self) {
         if self.cursor_position[0] > 0 {
             self.cursor_position[0] -= 1;
+            self.cursor_offset += 1;
         }
     }
 
@@ -1189,6 +1190,7 @@ impl RutuduList {
     pub fn cursor_right(&mut self, len:usize) {
         if self.cursor_position[0] < len as u16 {
             self.cursor_position[0] += 1;
+            self.cursor_offset -= 1;
         }
     }
 
