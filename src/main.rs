@@ -1,14 +1,19 @@
 use std::error::Error;
-use std::io::Stdout;
+use std::io;
+use std::io::{Stdout, stdout};
 
 use chrono::prelude::*;
 use clap::{Command, ArgMatches, Arg};
 use log::{debug, error, LevelFilter};
-use termion::{clear, raw::IntoRawMode};
-use termion::event::Key;
-use termion::raw::RawTerminal;
-use tui::{Frame, Terminal};
-use tui::backend::TermionBackend;
+//use termion::{clear, raw::IntoRawMode};
+//use termion::event::Key;
+//use termion::raw::RawTerminal;
+// use tui::backend::TermionBackend;
+use crossterm::event::{read, Event, KeyCode, KeyEvent};
+use crossterm::{ExecutableCommand, execute, terminal};
+use crossterm::event::EnableMouseCapture;
+use crossterm::terminal::{ClearType, EnterAlternateScreen, enable_raw_mode};
+use tui::{Frame, backend::CrosstermBackend, Terminal};
 use tui::layout::{Constraint, Direction, Layout, Rect, Alignment};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
@@ -16,7 +21,7 @@ use tui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, BorderType}
 
 use model::InputMode;
 
-use crate::events::{Event, Events};
+// use crate::events::{Event, Events};
 use crate::model::{ MoveDirection, RutuduList};
 
 use log4rs::append::console::ConsoleAppender;
@@ -24,7 +29,6 @@ use log4rs::append::file::FileAppender;
 use log4rs::{Config};
 use log4rs::config::{Appender, Root};
 
-mod events;
 mod model;
 mod db;
 mod export;
@@ -168,20 +172,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     }else{
         None
     };
-    //setup the gui display
-    let stdout = match std::io::stdout().into_raw_mode() {
-        Ok(outstream) => outstream,
-        Err(e) => panic!("Couldn't open up the outstream: {}", e),
-    };
-    let backend = TermionBackend::new(stdout);
+
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-    let events = Events::new();
     // println!("{}", clear::All);
     //display first/appropriate todolist
     //display all cell and it's children (recursively)
     //display add new list
         //we want the screen to be cleared
-    println!("{}", clear::All);
+
+    stdout.execute(terminal::Clear(ClearType::All))?;
     //like in vim, 2 modes, edit and insert
         //few more modes now, we in state machine territory
     // let mut edit_mode = true;
@@ -270,43 +273,44 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }).unwrap();
 
-        if let Event::Input(input) = events.next()? {
+        // if let Event::Input(input) = events.next()? {
+        if let Ok(Event::Key(input)) = read()?{
             match tudu_list.input_mode {
                 InputMode::Edit => match input {
-                    Key::Char('q') => tudu_list.enter_quit_mode(),
-                    Key::Char('S') => tudu_list.enter_save_mode(),
-                    Key::Char('s') => tudu_list.save(),
-                    Key::Char('o') => tudu_list.enter_open_mode(),
-                    Key::Char('I') => tudu_list.enter_import_mode(),
-                    Key::Char('x') => tudu_list.toggle_selected_item_completion_status(),
-                    Key::Char('X') => tudu_list.toggle_selected_item_and_children_completion_status(),
-                    Key::Char('d') => tudu_list.move_item(MoveDirection::Down),
-                    Key::Char('u') => tudu_list.move_item(MoveDirection::Up),
-                    Key::Char('>') | Key::Char('i') => tudu_list.move_item(MoveDirection::In),
-                    Key::Char('<') => tudu_list.move_item(MoveDirection::Out),
+                    KeyEvent::KeyCode::Char('q') => tudu_list.enter_quit_mode(),
+                    KeyCode::Char('S') => tudu_list.enter_save_mode(),
+                    KeyCode::Char('s') => tudu_list.save(),
+                    KeyCode::Char('o') => tudu_list.enter_open_mode(),
+                    KeyCode::Char('I') => tudu_list.enter_import_mode(),
+                    KeyCode::Char('x') => tudu_list.toggle_selected_item_completion_status(),
+                    KeyCode::Char('X') => tudu_list.toggle_selected_item_and_children_completion_status(),
+                    KeyCode::Char('d') => tudu_list.move_item(MoveDirection::Down),
+                    KeyCode::Char('u') => tudu_list.move_item(MoveDirection::Up),
+                    KeyCode::Char('>') | KeyCode::Char('i') => tudu_list.move_item(MoveDirection::In),
+                    KeyCode::Char('<') => tudu_list.move_item(MoveDirection::Out),
 
-                    Key::Char('h') | Key::Left => tudu_list.collapse_selected(),
-                    Key::Char('j') | Key::Down => tudu_list.down(),
-                    Key::Char('k') | Key::Up =>  tudu_list.up(),
-                    Key::Char('l') | Key::Right =>  tudu_list.expand_selected(),
+                    KeyCode::Char('h') | KeyEvent::Left => tudu_list.collapse_selected(),
+                    KeyCode::Char('j') | KeyCode::Down => tudu_list.down(),
+                    KeyCode::Char('k') | KeyCode::Up =>  tudu_list.up(),
+                    KeyCode::Char('l') | KeyCode::Right =>  tudu_list.expand_selected(),
 
-                    Key::Char('m') => tudu_list.mark_selected_item(),
-                    Key::Ctrl('x') => match tudu_list.export_as_markup(){
+                    KeyCode::Char('m') => tudu_list.mark_selected_item(),
+                    KeyCode::Ctrl('x') => match tudu_list.export_as_markup(){
                     Ok(s) => debug!("Successfully exported as markup"),
                         Err(why) => error!("Failed to export as markup {}", why),
                 }
 
-                    Key::Delete | Key::Backspace => tudu_list.delete_selected(),
+                    KeyCode::Delete | KeyCode::Backspace => tudu_list.delete_selected(),
                     //ctrl+e ...really? why no ctrl+backspace - guess cos it's a weird hex code not a char...
-                    Key::Ctrl('e') => tudu_list.erase_selected(),//does not preserve children
+                    KeyCode::Ctrl('e') => tudu_list.erase_selected(),//does not preserve children
 
-                    Key::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertSibling),
-                    Key::Char('A') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
-                    Key::Ctrl('a') => tudu_list.enter_insert_mode(InputMode::InsertChild),
-                    Key::Alt('a') => tudu_list.enter_insert_mode(InputMode::InsertParent),
+                    KeyCode::Char('a') => tudu_list.enter_insert_mode(InputMode::InsertSibling),
+                    KeyCode::Char('A') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
+                    KeyCode::Ctrl('a') => tudu_list.enter_insert_mode(InputMode::InsertChild),
+                    KeyCode::Alt('a') => tudu_list.enter_insert_mode(InputMode::InsertParent),
 
                     #[cfg(feature ="clockrust")]
-                    Key::Ctrl('t') => if let Some(track_file) = tracking_name{
+                    KeyCode::Ctrl('t') => if let Some(track_file) = tracking_name{
                         tudu_list.track_time(Some(track_file));
                     }else{
                         let fp = tudu_list.file_path();
@@ -316,7 +320,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 
                     #[cfg(feature="clockrust")]
-                    Key::Alt('t') => tudu_list.enter_print_tracking_report_mode(),
+                    KeyCode::Alt('t') => tudu_list.enter_print_tracking_report_mode(),
 
                     _ => {}
                 },
@@ -325,8 +329,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                     //what's a better key combo? ctrl+[ does weird things...
                     //terminal doesn't support ctrl+\n, ctrl/shift don't modify the key being pressed dammit
                     //alt+\n just does not seem to work?
-                    Key::Ctrl('n') =>  tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
-                    Key::Alt(c) => if c as u32 == 13 {
+                    KeyCode::Ctrl('n') =>  tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
+                    KeyCode::Alt(c) => if c as u32 == 13 {
                         debug!("Alt was pressed with enter!!");
                         tudu_list.add_input_text_as_item_to_list();
                     }
@@ -334,71 +338,73 @@ fn main() -> Result<(), Box<dyn Error>> {
                         debug!("We pressed alt+{}", c);
                         debug!("Ascii val == {}", c as u32);
                     }
-                    Key::Backspace => tudu_list.remove_character(),
-                    Key::Left => tudu_list.cursor_left(),
-                    Key::Right => tudu_list.cursor_right(tudu_list.file_path().len()),
-                    Key::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
-                    Key::Esc => tudu_list.enter_edit_mode(),
-                    // Key::Char(c) => {println!("{}", c)}
-                    Key::Ctrl(c) => { println!("{}", c) }
+                    KeyCode::Backspace => tudu_list.remove_character(),
+                    KeyCode::Left => tudu_list.cursor_left(),
+                    KeyCode::Right => tudu_list.cursor_right(tudu_list.file_path().len()),
+                    KeyCode::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
+                    KeyCode::Esc => tudu_list.enter_edit_mode(),
+                    // KeyCode::Char(c) => {println!("{}", c)}
+                    KeyCode::Ctrl(c) => { println!("{}", c) }
                     _ => {}
                 },
                 InputMode::Save => match input{
-                    Key::Ctrl('n') => {
+                    KeyCode::Ctrl('n') => {
                         db::save_list(&tudu_list).unwrap();
                         tudu_list.mark_saved();
                     }
-                    Key::Char(c) => if '\n' == c {
+                    KeyCode::Char(c) => if '\n' == c {
                         db::save_list(&tudu_list).unwrap();
                         tudu_list.mark_saved();
                     }else{
                         tudu_list.add_save_input_char(c);
                     },
-                    Key::Ctrl('\n') => {//how can I combine with the above?
+                    KeyCode::Ctrl('\n') => {//how can I combine with the above?
                         db::save_list(&tudu_list).unwrap();
                         tudu_list.mark_saved();
 
                     }
-                    Key::Left => tudu_list.cursor_left(),
-                    Key::Right => tudu_list.cursor_right(tudu_list.file_path().len()),
-                    Key::Backspace => tudu_list.remove_save_file_char(),
-                    Key::Esc => tudu_list.enter_edit_mode(),
+                    KeyCode::Left => tudu_list.cursor_left(),
+                    KeyCode::Right => tudu_list.cursor_right(tudu_list.file_path().len()),
+                    KeyCode::Backspace => tudu_list.remove_save_file_char(),
+                    KeyCode::Esc => tudu_list.enter_edit_mode(),
                     _ => {}
                 },
                 InputMode::Open => match input{//allow moving up and down to select
-                    Key::Char('j') | Key::Down => tudu_list.open_file_down(),
-                    Key::Char('k') | Key::Up => tudu_list.open_file_up(),
-                    Key::Char('l') | Key::Right | Key::Char('\n') | Key::Ctrl('n') =>tudu_list.load_list_from_file_dialog(),
-                    Key::Esc => tudu_list.enter_edit_mode(),
+                    KeyCode::Char('j') | KeyCode::Down => tudu_list.open_file_down(),
+                    KeyCode::Char('k') | KeyCode::Up => tudu_list.open_file_up(),
+                    KeyCode::Char('l') | KeyCode::Right | KeyCode::Char('\n') | KeyCode::Ctrl('n') =>tudu_list.load_list_from_file_dialog(),
+                    KeyCode::Esc => tudu_list.enter_edit_mode(),
                     _ => {},
                 },
                 InputMode::Import => match input{//allow moving up and down to select
-                    Key::Char('j') | Key::Down => tudu_list.open_file_down(),
-                    Key::Char('k') | Key::Up => tudu_list.open_file_up(),
-                    Key::Char('l') | Key::Right | Key::Char('\n') | Key::Ctrl('n') =>tudu_list.import_list_from_file_dialog(),
-                    Key::Esc => tudu_list.enter_edit_mode(),
+                    KeyCode::Char('j') | KeyCode::Down => tudu_list.open_file_down(),
+                    KeyCode::Char('k') | KeyCode::Up => tudu_list.open_file_up(),
+                    KeyCode::Char('l') | KeyCode::Right | KeyCode::Char('\n') | KeyCode::Ctrl('n') =>tudu_list.import_list_from_file_dialog(),
+                    KeyCode::Esc => tudu_list.enter_edit_mode(),
                     _ => {},
                 },
                 InputMode::Quit => match input {
-                    Key::Char('y') | Key::Char('\n') => {
-                        println!("{}", clear::All);
+                    KeyCode::Char('y') | KeyCode::Char('\n') => {
+
+                        let mut stdout = io::stdout();
+                        stdout.execute(terminal::Clear(ClearType::All))?;
                         break;
                     },
-                    Key::Char('n') | Key::Esc => tudu_list.enter_edit_mode(),
+                    KeyCode::Char('n') | KeyCode::Esc => tudu_list.enter_edit_mode(),
                     _ => {}
                 }
                 #[cfg(feature ="clockrust")]
                 InputMode::PrintReport => match input{
-                    // Key::Char('\n') => tudu_list.create_report(),//wtf, why did this not work?
-                    Key::Char(c) => if c=='\n'{//won't pick it up if it's standalone for some reason, the \n
+                    // KeyCode::Char('\n') => tudu_list.create_report(),//wtf, why did this not work?
+                    KeyCode::Char(c) => if c=='\n'{//won't pick it up if it's standalone for some reason, the \n
                         tudu_list.create_report();
                     }else{
                         tudu_list.add_char_to_report_dialog(c);
                     }
-                    Key::Left => tudu_list.cursor_left(),
-                    Key::Right => tudu_list.cursor_right(tudu_list.report_path().len()),
-                    Key::Backspace => tudu_list.remove_char_from_report_dialog(),
-                    Key::Esc => tudu_list.enter_edit_mode(),
+                    KeyCode::Left => tudu_list.cursor_left(),
+                    KeyCode::Right => tudu_list.cursor_right(tudu_list.report_path().len()),
+                    KeyCode::Backspace => tudu_list.remove_char_from_report_dialog(),
+                    KeyCode::Esc => tudu_list.enter_edit_mode(),
                     _ => {},
                 }
 
@@ -413,7 +419,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn draw_popup(txt: &str, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+fn draw_popup(txt: &str, f: &mut Frame<Terminal<CrosstermBackend<Stdout>>>) {
     let size = f.size();
     let text = Paragraph::new(txt)
         .style(Style::default().fg(Color::Cyan))
@@ -423,7 +429,7 @@ fn draw_popup(txt: &str, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
     // f.render_widget(quit_text, quit_chunks[0]);
     f.render_widget(text, area);
 }
-fn show_new_item_input(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+fn show_new_item_input(tudu_list: &mut RutuduList, f: &mut Frame<CrosstermBackend<Terminal<Stdout>>>) {
     let size = f.size();
     let input_box = Paragraph::new(tudu_list.current_item.as_ref())
         .style(Style::default().fg(Color::Yellow))
@@ -436,7 +442,7 @@ fn show_new_item_input(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<
     f.set_cursor(area.x as u16 + tudu_list.cursor_position[0], area.y as u16 + tudu_list.cursor_position[1]);
 }
 
-fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+fn draw_quit_dialog(f: &mut Frame<CrosstermBackend<Terminal<Stdout>>>) {
     let rect = f.size();
     // let quit_text = Paragraph::new("Really quit?")
     //     .style(Style::default().fg(Color::Cyan))
@@ -454,7 +460,7 @@ fn draw_quit_dialog(f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
 
 ///Draw dialog that allows saving of the tudulist
 /// Allows changing of the filename
-fn draw_save_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>){
+fn draw_save_dialog(tudu_list: &mut RutuduList, f: &mut Frame<CrosstermBackend<Terminal<Stdout>>>){
     let rect = f.size();
     let save_text = Paragraph::new(tudu_list.file_path())
         .style(Style::default().fg(Color::Cyan))
@@ -487,7 +493,7 @@ fn draw_print_report_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBac
 }
 
 ///Draw dialog with a display of the files in the current directory
-fn draw_open_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBackend<RawTerminal<Stdout>>>) {
+fn draw_open_dialog(tudu_list: &mut RutuduList, f: &mut Frame<CrosstermBackend<Terminal<Stdout>>>) {
     tudu_list.scan_files_once();
 
     // debug!("Trying to draw open dialog");
