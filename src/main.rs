@@ -291,8 +291,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                         KeyCode::Char('s') => tudu_list.save(),
                         KeyCode::Char('o') => tudu_list.enter_open_mode(),
                         KeyCode::Char('I') => tudu_list.enter_import_mode(),
-                        KeyCode::Char('x') => tudu_list.toggle_selected_item_completion_status(),
-                        KeyCode::Char('X') => tudu_list.toggle_selected_item_and_children_completion_status(),
+
+                        KeyCode::Char('x') => match input.modifiers {
+                            KeyModifiers::NONE => match tudu_list.export_as_markup() {
+                                Ok(s) => debug!("Successfully exported as markup"),
+                                Err(why) => error!("Failed to export as markup {}", why),
+                            },
+                            KeyModifiers::CONTROL => tudu_list.toggle_selected_item_completion_status(),
+                            KeyModifiers::SHIFT.toggle_selected_item_and_children_completion_status(),
+                        }
                         KeyCode::Char('d') => tudu_list.move_item(MoveDirection::Down),
                         KeyCode::Char('u') => tudu_list.move_item(MoveDirection::Up),
                         KeyCode::Char('>') | KeyCode::Char('i') => tudu_list.move_item(MoveDirection::In),
@@ -304,10 +311,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                         KeyCode::Char('l') | KeyCode::Right => tudu_list.expand_selected(),
 
                         KeyCode::Char('m') => tudu_list.mark_selected_item(),
-                        KeyCode::Ctrl('x') => match tudu_list.export_as_markup() {
-                            Ok(s) => debug!("Successfully exported as markup"),
-                            Err(why) => error!("Failed to export as markup {}", why),
-                        }
 
                         KeyCode::Delete | KeyCode::Backspace => tudu_list.delete_selected(),
                         //ctrl+e ...really? why no ctrl+backspace - guess cos it's a weird hex code not a char...
