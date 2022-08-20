@@ -293,12 +293,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                         KeyCode::Char('I') => tudu_list.enter_import_mode(),
 
                         KeyCode::Char('x') => match input.modifiers {
-                            KeyModifiers::NONE => match tudu_list.export_as_markup() {
+                            KeyModifiers::NONE => tudu_list.toggle_selected_item_completion_status(),
+                            KeyModifiers::SHIFT => tudu_list.toggle_selected_item_and_children_completion_status(),
+                            KeyModifiers::CONTROL => match tudu_list.export_as_markup() {
                                 Ok(s) => debug!("Successfully exported as markup"),
                                 Err(why) => error!("Failed to export as markup {}", why),
                             },
-                            KeyModifiers::CONTROL => tudu_list.toggle_selected_item_completion_status(),
-                            KeyModifiers::SHIFT.toggle_selected_item_and_children_completion_status(),
                         }
                         KeyCode::Char('d') => tudu_list.move_item(MoveDirection::Down),
                         KeyCode::Char('u') => tudu_list.move_item(MoveDirection::Up),
@@ -314,7 +314,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                         KeyCode::Delete | KeyCode::Backspace => tudu_list.delete_selected(),
                         //ctrl+e ...really? why no ctrl+backspace - guess cos it's a weird hex code not a char...
-                        KeyCode::Ctrl('e') => tudu_list.erase_selected(),//does not preserve children
+                        KeyCode::Char('e') =>  tudu_list.erase_selected(),//does not preserve children
+                        // KeyCode::Ctrl('e') => tudu_list.erase_selected(),//does not preserve children
 
                         KeyCode::Char('a') => match input.modifiers{
                             KeyModifiers::NONE => tudu_list.enter_insert_mode(InputMode::InsertSibling),
@@ -340,48 +341,65 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                         _ => {}
                     },
-                    InputMode::InsertAtRoot | InputMode::InsertChild | InputMode::InsertParent | InputMode::InsertSibling => match input {
-
+                    InputMode::InsertAtRoot
+                    | InputMode::InsertChild
+                    | InputMode::InsertParent
+                    | InputMode::InsertSibling => match input.code {
                         //what's a better key combo? ctrl+[ does weird things...
                         //terminal doesn't support ctrl+\n, ctrl/shift don't modify the key being pressed dammit
                         //alt+\n just does not seem to work?
-                        KeyCode::Ctrl('n') => tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
-                        KeyCode::Alt(c) => if c as u32 == 13 {
-                            debug!("Alt was pressed with enter!!");
-                            tudu_list.add_input_text_as_item_to_list();
-                        } else {
-                            debug!("We pressed alt+{}", c);
-                            debug!("Ascii val == {}", c as u32);
+                        //Alt+enter now works too hoorah
+                        KeyCode::Char('n') => match input.modifiers {
+                            KeyModifiers::CONTROL => tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
+                        },
+                        // KeyCode::Ctrl('n') => tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
+
+                        KeyCode::Char(c) => match input.modifiers {
+                            KeyModifiers::ALT => if c as u32 == 13 {
+                                debug!("Alt was pressed with enter!!");
+                                tudu_list.add_input_text_as_item_to_list();
+                            } else {
+                                debug!("We pressed alt+{}", c);
+                                debug!("Ascii val == {}", c as u32);
+                            }
                         }
+                        // KeyCode::Alt(c) => if c as u32 == 13 {
+                        //     debug!("Alt was pressed with enter!!");
+                        //     tudu_list.add_input_text_as_item_to_list();
+                        // } else {
+                        //     debug!("We pressed alt+{}", c);
+                        //     debug!("Ascii val == {}", c as u32);
+                        // }
                         KeyCode::Backspace => tudu_list.remove_character(),
                         KeyCode::Left => tudu_list.cursor_left(),
                         KeyCode::Right => tudu_list.cursor_right(tudu_list.file_path().len()),
                         KeyCode::Char(c) => tudu_list.add_character(c),//tudu_list.current_item.push(c),
                         KeyCode::Esc => tudu_list.enter_edit_mode(),
                         // KeyCode::Char(c) => {println!("{}", c)}
-                        KeyCode::Ctrl(c) => { println!("{}", c) }
+                        // KeyCode::Ctrl(c) => { println!("{}", c) }
                         _ => {}
                     },
-                    InputMode::Save => match input {
-                        KeyCode::Ctrl('n') => {
+                    InputMode::Save => match input.code {
+                        KeyCode::Char('n')=> if  input.modifiers == KeyModifiers::CONTROL {
+                                    db::save_list(&tudu_list).unwrap();
+                                    tudu_list.mark_saved();
+                        },
+                        KeyCode::Char('\n') => if input.modifiers == KeyModifiers::CONTROL{
                             db::save_list(&tudu_list).unwrap();
                             tudu_list.mark_saved();
                         }
-                        KeyCode::Char(c) => if '\n' == c {
+                        KeyCode::Char(c) =>  if '\n' == c {
                             db::save_list(&tudu_list).unwrap();
                             tudu_list.mark_saved();
                         } else {
                             tudu_list.add_save_input_char(c);
                         },
-                        KeyCode::Ctrl('\n') => {//how can I combine with the above?
-                            db::save_list(&tudu_list).unwrap();
-                            tudu_list.mark_saved();
-                        }
                         KeyCode::Left => tudu_list.cursor_left(),
                         KeyCode::Right => tudu_list.cursor_right(tudu_list.file_path().len()),
                         KeyCode::Backspace => tudu_list.remove_save_file_char(),
                         KeyCode::Esc => tudu_list.enter_edit_mode(),
                         _ => {}
+
                     },
                     InputMode::Open => match input {//allow moving up and down to select
                         KeyCode::Char('j') | KeyCode::Down => tudu_list.open_file_down(),
