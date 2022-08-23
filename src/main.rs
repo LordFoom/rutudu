@@ -187,7 +187,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     //display add new list
         //we want the screen to be cleared
 
-    stdout.execute(terminal::Clear(ClearType::All))?;
+    // stdout.execute(terminal::Clear(ClearType::All))?;
     //like in vim, 2 modes, edit and insert
         //few more modes now, we in state machine territory
     // let mut edit_mode = true;
@@ -249,6 +249,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                                                                        .fg(Color::LightCyan)
                                                                        .add_modifier(Modifier::BOLD))));
 
+
+            f.render_widget(Clear, size);
             f.render_widget(top_text, chunks[0]);
             let bottom_text = Paragraph::new(menu)
                 .style(Style::default().fg(Color::Cyan))
@@ -265,16 +267,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             f.render_widget(bottom_text, chunks[2]);
 
             match tudu_list.input_mode {
-                InputMode::InsertAtRoot | InputMode::InsertChild| InputMode::InsertParent | InputMode::InsertSibling =>  show_new_item_input(&mut tudu_list, &mut terminal),
-                InputMode::Quit => draw_quit_dialog(&mut terminal),
-                InputMode::Save => draw_save_dialog(&mut tudu_list,&mut terminal),
-                InputMode::Open | InputMode::Import =>  draw_open_dialog(&mut tudu_list,&mut terminal),
+                InputMode::InsertAtRoot | InputMode::InsertChild| InputMode::InsertParent | InputMode::InsertSibling =>  show_new_item_input(&mut tudu_list, f),
+                InputMode::Quit => draw_quit_dialog(f),
+                InputMode::Save => draw_save_dialog(&mut tudu_list,f),
+                InputMode::Open | InputMode::Import =>  draw_open_dialog(&mut tudu_list,f),
                 InputMode::Edit =>  {},
                 #[cfg(feature ="clockrust")]
                 InputMode::PrintReport => draw_print_report_dialog(&mut tudu_list, f),
-                InputMode::DisplaySuccess => draw_popup("Success!", &mut terminal, tick_rate),
+                InputMode::DisplaySuccess => draw_popup("Success!", f, tick_rate),
             }
-        }).unwrap();
+        })?;//.unwrap();
 
 
         let mut last_tick = Instant::now();
@@ -299,6 +301,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                                 Ok(s) => debug!("Successfully exported as markup"),
                                 Err(why) => error!("Failed to export as markup {}", why),
                             },
+                            _ => debug!("We are in undefined territory"),
                         }
                         KeyCode::Char('d') => tudu_list.move_item(MoveDirection::Down),
                         KeyCode::Char('u') => tudu_list.move_item(MoveDirection::Up),
@@ -322,6 +325,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                             KeyModifiers::CONTROL => tudu_list.enter_insert_mode(InputMode::InsertChild),
                             KeyModifiers::SHIFT => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
                             KeyModifiers::ALT => tudu_list.enter_insert_mode(InputMode::InsertParent),
+                            _ => debug!("We are in undefined territory"),
                         },
                         // KeyCode::Char('A') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
                         // KeyCode::Ctrl('a') => tudu_list.enter_insert_mode(InputMode::InsertChild),
@@ -351,6 +355,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         //Alt+enter now works too hoorah
                         KeyCode::Char('n') => match input.modifiers {
                             KeyModifiers::CONTROL => tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
+                            _ => debug!("We are in undefined territory"),
                         },
                         // KeyCode::Ctrl('n') => tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
 
@@ -362,6 +367,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                                 debug!("We pressed alt+{}", c);
                                 debug!("Ascii val == {}", c as u32);
                             }
+                            KeyModifiers::NONE | KeyModifiers::SHIFT =>tudu_list.add_character(c),
+                            _ => debug!("You are in undefined territory"),
                         }
                         // KeyCode::Alt(c) => if c as u32 == 13 {
                         //     debug!("Alt was pressed with enter!!");
@@ -401,21 +408,22 @@ fn main() -> Result<(), Box<dyn Error>> {
                         _ => {}
 
                     },
-                    InputMode::Open => match input {//allow moving up and down to select
+                    InputMode::Open => match input.code {//allow moving up and down to select
                         KeyCode::Char('j') | KeyCode::Down => tudu_list.open_file_down(),
                         KeyCode::Char('k') | KeyCode::Up => tudu_list.open_file_up(),
-                        KeyCode::Char('l') | KeyCode::Right | KeyCode::Char('\n') | KeyCode::Ctrl('n') => tudu_list.load_list_from_file_dialog(),
+                        KeyCode::Char('l') | KeyCode::Right | KeyCode::Char('\n') =>
+                            tudu_list.load_list_from_file_dialog(),
                         KeyCode::Esc => tudu_list.enter_edit_mode(),
                         _ => {},
                     },
-                    InputMode::Import => match input {//allow moving up and down to select
+                    InputMode::Import => match input.code {//allow moving up and down to select
                         KeyCode::Char('j') | KeyCode::Down => tudu_list.open_file_down(),
                         KeyCode::Char('k') | KeyCode::Up => tudu_list.open_file_up(),
-                        KeyCode::Char('l') | KeyCode::Right | KeyCode::Char('\n') | KeyCode::Ctrl('n') => tudu_list.import_list_from_file_dialog(),
+                        KeyCode::Char('l') | KeyCode::Right | KeyCode::Char('\n')  => tudu_list.import_list_from_file_dialog(),
                         KeyCode::Esc => tudu_list.enter_edit_mode(),
                         _ => {},
                     },
-                    InputMode::Quit => match input {
+                    InputMode::Quit => match input.code {
                         KeyCode::Char('y') | KeyCode::Char('\n') => {
                             let mut stdout = io::stdout();
                             stdout.execute(terminal::Clear(ClearType::All))?;
@@ -451,58 +459,55 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn draw_popup<B:Backend>(txt: &str, terminal: &mut Terminal<B>, tick_rate:Duration) {
-    let size = terminal.size()?;
+fn draw_popup<B:Backend>(txt: &str, f: &mut Frame<B>, tick_rate:Duration) {
+    let size = f.size();
     let text = Paragraph::new(txt)
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL));
     let area = little_popup(20, 3, size);
-    terminal.render_widget(Clear, area);
+    f.render_widget(Clear, area);
+    f.render_widget(text, area);
     // f.render_widget(quit_text, quit_chunks[0]);
-    terminal.render_widget(text, area);
+    // terminal.render_widget(text, area);
 }
-fn show_new_item_input<B:Backend>(tudu_list: &mut RutuduList, terminal: &mut Terminal<B>) {
-    let size = terminal.size();
+fn show_new_item_input<B:Backend>(tudu_list: &mut RutuduList, f: &mut Frame<B>) {
+    let size = f.size();
     let input_box = Paragraph::new(tudu_list.current_item.as_ref())
         .style(Style::default().fg(Color::Yellow))
         .block(Block::default().title("Todo Item").borders(Borders::ALL));
     // let input_box_rect = Rect::new(rect.x + 20, rect.y + 20, 150, 16);
     let area = centered_rect(60, 20, size);
-    terminal.render_widget(Clear, area); //this clears out the background
-    terminal.render_widget(input_box, area);
+        f.render_widget(Clear, area); //this clears out the background
+        f.render_widget(input_box, area);
 
-    terminal.set_cursor(area.x as u16 + tudu_list.cursor_position[0], area.y as u16 + tudu_list.cursor_position[1]);
+    f.set_cursor(area.x as u16 + tudu_list.cursor_position[0], area.y as u16 + tudu_list.cursor_position[1]);
 }
 
-fn draw_quit_dialog<B:Backend>(terminal: &mut Terminal<B>) {
-    let rect = terminal.size();
-    // let quit_text = Paragraph::new("Really quit?")
-    //     .style(Style::default().fg(Color::Cyan))
-    //     .block(Block::default().borders(Borders::ALL));
+fn draw_quit_dialog<B:Backend>(f: &mut Frame<B>) {
+    let rect = f.size();
     let button_text = Paragraph::new("[Y][N]")
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL).title("Really Quit?"));
     // let area = centered_rect(10, 16, size);
-    let area = little_popup(20, 3, rect);
+    let area = little_popup(20, 3, f.size());
 
-    terminal.render_widget(Clear, area);
-    // f.render_widget(quit_text, quit_chunks[0]);
-    terminal.render_widget(button_text, area);
+        f.render_widget(Clear, area);
+        f.render_widget(button_text, area);
 }
 
 ///Draw dialog that allows saving of the tudulist
 /// Allows changing of the filename
-fn draw_save_dialog<B:Backend>(tudu_list: &mut RutuduList, terminal: &mut Terminal<B>){
-    let rect = terminal.size()?;
+fn draw_save_dialog<B:Backend>(tudu_list: &mut RutuduList, frame: &mut Frame<B>){
+    let rect = frame.size();
     let save_text = Paragraph::new(tudu_list.file_path())
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::ALL).title("[S]ave?"));
     let area = little_popup(40,5, rect);
 
-    terminal.render_widget(Clear, area);
-    terminal.render_widget(save_text, area);
+        frame.render_widget(Clear, area);
+        frame.render_widget(save_text, area);
     // tudu_list.cursor_position[0] =
-    terminal.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16 +1, area.y as u16 + tudu_list.cursor_position[1] );
+    frame.set_cursor(area.x as u16 + tudu_list.cursor_position[0] as u16 +1, area.y as u16 + tudu_list.cursor_position[1] );
 }
 
 ///Draw dialog that allows printing of time tracking report.
@@ -525,7 +530,7 @@ fn draw_print_report_dialog(tudu_list: &mut RutuduList, f: &mut Frame<TermionBac
 }
 
 ///Draw dialog with a display of the files in the current directory
-fn draw_open_dialog<B:Backend>(tudu_list: &mut RutuduList, terminal: &mut Terminal<B>) {
+fn draw_open_dialog<B:Backend>(tudu_list: &mut RutuduList, f: &mut Frame<B>) {
     tudu_list.scan_files_once();
 
     // debug!("Trying to draw open dialog");
@@ -537,7 +542,7 @@ fn draw_open_dialog<B:Backend>(tudu_list: &mut RutuduList, terminal: &mut Termin
     let mut tudu_file_state = tudu_list.open_file_dialog_files.state.clone();
     let uheight = tudu_files.len();
     let uh = uheight.to_u16().unwrap_or(10)*10;
-    let rect = little_popup(40, uh, terminal.size());
+    let rect = little_popup(40, uh, f.size());
 
     let tudu_spans:Vec<ListItem> = tudu_files.iter()
                                              .map(|f|{
@@ -556,7 +561,7 @@ fn draw_open_dialog<B:Backend>(tudu_list: &mut RutuduList, terminal: &mut Termin
             .add_modifier(Modifier::BOLD).fg(Color::LightBlue))
         .highlight_symbol("o");
 
-    terminal.render_widget(Clear, rect);
-    terminal.render_stateful_widget(file_items, rect, &mut tudu_file_state);
+        f.render_widget(Clear, rect);
+        f.render_stateful_widget(file_items, rect, &mut tudu_file_state);
 
 }
