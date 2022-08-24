@@ -10,10 +10,9 @@ use log::{debug, error, LevelFilter};
 //use termion::event::Key;
 //use termion::raw::RawTerminal;
 // use tui::backend::TermionBackend;
-use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyModifiers, EnableMouseCapture, DisableMouseCapture};
 use crossterm::{event, ExecutableCommand, execute, terminal};
-use crossterm::event::EnableMouseCapture;
-use crossterm::terminal::{ClearType, EnterAlternateScreen, enable_raw_mode};
+use crossterm::terminal::{ClearType, EnterAlternateScreen, LeaveAlternateScreen, enable_raw_mode, disable_raw_mode};
 use tui::{Frame, backend::CrosstermBackend, Terminal};
 use tui::layout::{Constraint, Direction, Layout, Rect, Alignment};
 use tui::style::{Color, Modifier, Style};
@@ -427,6 +426,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                         KeyCode::Char('y') | KeyCode::Char('\n') => {
                             let mut stdout = io::stdout();
                             stdout.execute(terminal::Clear(ClearType::All))?;
+                            // restore terminal
+                            disable_raw_mode()?;
+                            execute!(
+                                terminal.backend_mut(),
+                                LeaveAlternateScreen,
+                                DisableMouseCapture
+                            )?;
+                            terminal.show_cursor()?;
                             break;
                         },
                         KeyCode::Char('n') | KeyCode::Esc => tudu_list.enter_edit_mode(),
