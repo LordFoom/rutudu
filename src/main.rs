@@ -358,17 +358,25 @@ fn main() -> Result<(), Box<dyn Error>> {
                         },
                         // KeyCode::Ctrl('n') => tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
 
-                        KeyCode::Char(c) => match input.modifiers {
-                            KeyModifiers::ALT => if c as u32 == 13 {
-                                debug!("Alt was pressed with enter!!");
+
+                        KeyCode::Enter => match input.modifiers{
+                            KeyModifiers::ALT =>{
                                 tudu_list.add_input_text_as_item_to_list();
-                            } else {
-                                debug!("We pressed alt+{}", c);
-                                debug!("Ascii val == {}", c as u32);
-                            }
-                            KeyModifiers::NONE | KeyModifiers::SHIFT =>tudu_list.add_character(c),
+                            },
+                            KeyModifiers::NONE | KeyModifiers::SHIFT =>tudu_list.add_character('\n'),
                             _ => debug!("You are in undefined territory"),
                         }
+                        // KeyCode::Char(c) => match input.modifiers {
+                        //     KeyModifiers::ALT => if c as u32 == 13 {
+                        //         debug!("Alt was pressed with enter!!");
+                        //         tudu_list.add_input_text_as_item_to_list();
+                        //     } else {
+                        //         debug!("We pressed alt+{}", c);
+                        //         debug!("Ascii val == {}", c as u32);
+                        //     }
+                        //     KeyModifiers::NONE | KeyModifiers::SHIFT =>tudu_list.add_character(c),
+                        //     _ => debug!("You are in undefined territory"),
+                        // }
                         // KeyCode::Alt(c) => if c as u32 == 13 {
                         //     debug!("Alt was pressed with enter!!");
                         //     tudu_list.add_input_text_as_item_to_list();
@@ -390,14 +398,18 @@ fn main() -> Result<(), Box<dyn Error>> {
                                     db::save_list(&tudu_list).unwrap();
                                     tudu_list.mark_saved();
                         },
-                        KeyCode::Char('\n') => if input.modifiers == KeyModifiers::CONTROL{
-                            db::save_list(&tudu_list).unwrap();
-                            tudu_list.mark_saved();
-                        }
+                        KeyCode::Char('\r') => //if input.modifiers == KeyModifiers::CONTROL{
+                            {
+                                db::save_list(&tudu_list).unwrap();
+                                tudu_list.mark_saved();
+                            }
+                        // }
                         KeyCode::Char(c) =>  if '\n' == c {
+                            debug!("This is the char: {}", c );
                             db::save_list(&tudu_list).unwrap();
                             tudu_list.mark_saved();
                         } else {
+                            debug!("This is the char: {}", c );
                             tudu_list.add_save_input_char(c);
                         },
                         KeyCode::Left => tudu_list.cursor_left(),
