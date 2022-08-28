@@ -326,6 +326,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                             KeyModifiers::ALT => tudu_list.enter_insert_mode(InputMode::InsertParent),
                             _ => debug!("We are in undefined territory"),
                         },
+
+                        KeyCode::Char('A') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
                         // KeyCode::Char('A') => tudu_list.enter_insert_mode(InputMode::InsertAtRoot),
                         // KeyCode::Ctrl('a') => tudu_list.enter_insert_mode(InputMode::InsertChild),
                         // KeyCode::Alt('a') => tudu_list.enter_insert_mode(InputMode::InsertParent),
@@ -352,15 +354,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                         //terminal doesn't support ctrl+\n, ctrl/shift don't modify the key being pressed dammit
                         //alt+\n just does not seem to work?
                         //Alt+enter now works too hoorah
-                        KeyCode::Char('n') => match input.modifiers {
-                            KeyModifiers::CONTROL => tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
-                            _ => debug!("We are in undefined territory"),
-                        },
+                        // KeyCode::Char('n') => match input.modifiers {
+                        //     KeyModifiers::CONTROL => tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
+                        //     _ => debug!("We are in undefined territory"),
+                        // },
                         // KeyCode::Ctrl('n') => tudu_list.add_input_text_as_item_to_list(),//any way to combine with bottom row? so far not found....
 
 
                         KeyCode::Enter => match input.modifiers{
-                            KeyModifiers::ALT =>{
+                            KeyModifiers::ALT | KeyModifiers::CONTROL=>{
                                 tudu_list.add_input_text_as_item_to_list();
                             },
                             KeyModifiers::NONE | KeyModifiers::SHIFT =>tudu_list.add_character('\n'),
@@ -398,17 +400,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                                     db::save_list(&tudu_list).unwrap();
                                     tudu_list.mark_saved();
                         },
-                        KeyCode::Char('\r') => //if input.modifiers == KeyModifiers::CONTROL{
+                        KeyCode::Enter => //if input.modifiers == KeyModifiers::CONTROL{
                             {
                                 db::save_list(&tudu_list).unwrap();
                                 tudu_list.mark_saved();
                             }
                         // }
-                        KeyCode::Char(c) =>  if '\n' == c {
-                            debug!("This is the char: {}", c );
-                            db::save_list(&tudu_list).unwrap();
-                            tudu_list.mark_saved();
-                        } else {
+                        KeyCode::Char(c) =>  {
                             debug!("This is the char: {}", c );
                             tudu_list.add_save_input_char(c);
                         },
@@ -419,10 +417,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                         _ => {}
 
                     },
+                    // InputMode::Open => do_function(&input.code, &mut tudu_list, tudu_list.load_list_from_file_dialog),
                     InputMode::Open => match input.code {//allow moving up and down to select
                         KeyCode::Char('j') | KeyCode::Down => tudu_list.open_file_down(),
                         KeyCode::Char('k') | KeyCode::Up => tudu_list.open_file_up(),
-                        KeyCode::Char('l') | KeyCode::Right | KeyCode::Char('\n') =>
+                        KeyCode::Char('l') | KeyCode::Right | KeyCode::Enter =>
                             tudu_list.load_list_from_file_dialog(),
                         KeyCode::Esc => tudu_list.enter_edit_mode(),
                         _ => {},
@@ -430,12 +429,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                     InputMode::Import => match input.code {//allow moving up and down to select
                         KeyCode::Char('j') | KeyCode::Down => tudu_list.open_file_down(),
                         KeyCode::Char('k') | KeyCode::Up => tudu_list.open_file_up(),
-                        KeyCode::Char('l') | KeyCode::Right | KeyCode::Char('\n')  => tudu_list.import_list_from_file_dialog(),
+                        KeyCode::Char('l') | KeyCode::Right | KeyCode::Enter  => tudu_list.import_list_from_file_dialog(),
                         KeyCode::Esc => tudu_list.enter_edit_mode(),
                         _ => {},
                     },
                     InputMode::Quit => match input.code {
-                        KeyCode::Char('y') | KeyCode::Char('\n') => {
+                        KeyCode::Char('y') | KeyCode::Enter => {
                             let mut stdout = io::stdout();
                             stdout.execute(terminal::Clear(ClearType::All))?;
                             // restore terminal
@@ -452,13 +451,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                         _ => {}
                     }
                     #[cfg(feature = "clockrust")]
-                    InputMode::PrintReport => match input {
-                        // KeyCode::Char('\n') => tudu_list.create_report(),//wtf, why did this not work?
-                        KeyCode::Char(c) => if c == '\n' {//won't pick it up if it's standalone for some reason, the \n
-                            tudu_list.create_report();
-                        } else {
-                            tudu_list.add_char_to_report_dialog(c);
-                        }
+                    InputMode::PrintReport => match input.code {
+                        KeyCode::Enter => tudu_list.create_report(),
+                        KeyCode::Char(c) => tudu_list.add_char_to_report_dialog(c),
                         KeyCode::Left => tudu_list.cursor_left(),
                         KeyCode::Right => tudu_list.cursor_right(tudu_list.report_path().len()),
                         KeyCode::Backspace => tudu_list.remove_char_from_report_dialog(),
@@ -476,6 +471,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     Ok(())
+}
+
+fn do_function<F>(c:&KeyCode, tudu_list:&mut RutuduList, func:F)
+where F:Fn()->(){
+    match c{
+        KeyCode::Char('j') | KeyCode::Down => tudu_list.open_file_down(),
+        KeyCode::Char('k') | KeyCode::Up => tudu_list.open_file_up(),
+        KeyCode::Char('l') | KeyCode::Right | KeyCode::Enter =>
+            func(),//tudu_list.load_list_from_file_dialog(),
+        KeyCode::Esc => tudu_list.enter_edit_mode(),
+        _ => {},
+        }
 }
 
 fn draw_popup<B:Backend>(txt: &str, f: &mut Frame<B>, tick_rate:Duration) {
